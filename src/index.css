@@ -1,0 +1,10 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-cover bg-center bg-no-repeat h-screen w-screen flex items-center justify-center;
+    background-image: url('/src/assets/img/background.jpg'); /* imagem do body */
+  }
+}

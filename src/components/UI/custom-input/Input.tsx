@@ -1,6 +1,6 @@
 import { forwardRef } from "react";
 import classNames from "classnames";
-import type { InputProps } from "./interface/IpuntInterface";
+import type { InputProps } from "./Input.types";
 
 // Usando forwardRef para integração com react-hook-form
 export const Input = forwardRef<HTMLInputElement, InputProps>(

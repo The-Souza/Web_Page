@@ -23,5 +23,5 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },
-  "include": ["src", "src/components/core"]
+  "include": ["src", "src/components/core", "backend/User.types.ts"]
 }

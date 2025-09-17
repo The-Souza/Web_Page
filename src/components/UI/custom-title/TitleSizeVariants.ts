@@ -1,4 +1,4 @@
-import type { TitleProps } from "../interface/TitleInterface";
+import type { TitleProps } from "./Title.types";
 
 // 'NonNullable' remove o undefined
 export type TitleSize = NonNullable<TitleProps["size"]>;

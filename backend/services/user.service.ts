@@ -1,47 +1,74 @@
-import fs from "fs";
-import path from "path";
-import { fileURLToPath } from "url";
-import { dirname } from "path";
+import sql from "mssql";
+import { getConnection } from "../utils/db.ts";
 import type { User } from "../models/user.types.ts";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+export const exists = async (email: string): Promise<boolean> => {
+  const conn = await getConnection();
+  const result = await conn
+    .request()
+    .input("email", sql.NVarChar, email)
+    .query("SELECT 1 FROM Users WHERE Email = @email");
 
-const usersFile = path.join(__dirname, "../data/users.json");
-
-const getUsers = (): User[] => {
-  if (!fs.existsSync(usersFile)) return [];
-  return JSON.parse(fs.readFileSync(usersFile, "utf-8"));
+  console.log("💾 exists:", email, "->", result.recordset.length > 0);
+  return result.recordset.length > 0;
 };
 
-const saveUsers = (users: User[]) => {
-  fs.writeFileSync(usersFile, JSON.stringify(users, null, 2));
+export const add = async (user: User): Promise<void> => {
+  const conn = await getConnection();
+  await conn
+    .request()
+    .input("name", sql.NVarChar, user.name ?? null)
+    .input("email", sql.NVarChar, user.email)
+    .input("address", sql.NVarChar, user.address ?? null)
+    .input("password", sql.NVarChar, user.password).query(`
+      INSERT INTO Users (Name, Email, Address, Password)
+      VALUES (@name, @email, @address, @password)
+    `);
+  console.log("💾 add user:", user.email);
 };
 
-export const exists = (email: string): boolean => {
-  return getUsers().some((u) => u.email === email);
+export const authenticate = async (
+  email: string,
+  password: string
+): Promise<User | null> => {
+  const conn = await getConnection();
+  const result = await conn
+    .request()
+    .input("email", sql.NVarChar, email)
+    .input("password", sql.NVarChar, password)
+    .query("SELECT * FROM Users WHERE Email = @email AND Password = @password");
+
+  console.log("💾 authenticate:", email, "->", result.recordset.length);
+  return result.recordset[0] ?? null;
 };
 
-export const add = (user: User) => {
-  const users = getUsers();
-  users.push(user);
-  saveUsers(users);
+export const updatePassword = async (
+  email: string,
+  password: string
+): Promise<User | null> => {
+  const conn = await getConnection();
+  await conn
+    .request()
+    .input("email", sql.NVarChar, email)
+    .input("password", sql.NVarChar, password)
+    .query("UPDATE Users SET Password = @password WHERE Email = @email");
+
+  const updated = await conn
+    .request()
+    .input("email", sql.NVarChar, email)
+    .query("SELECT * FROM Users WHERE Email = @email");
+
+  console.log("💾 updatePassword:", email);
+  return updated.recordset[0] ?? null;
 };
 
-export const authenticate = (email: string, password: string): User | null => {
-  return getUsers().find((u) => u.email === email && u.password === password) ?? null;
-};
+export const getUserEmail = async (email: string): Promise<User | null> => {
+  const conn = await getConnection();
+  const result = await conn
+    .request()
+    .input("email", sql.NVarChar, email)
+    .query("SELECT * FROM Users WHERE Email = @email");
 
-export const updatePassword = (email: string, password: string): User | null => {
-  const users = getUsers();
-  const index = users.findIndex((u) => u.email === email);
-  if (index === -1) return null;
-  users[index].password = password;
-  saveUsers(users);
-  return users[index];
+  console.log("💾 getUserEmail:", email, "->", result.recordset.length);
+  return result.recordset[0] ?? null;
 };
-
-export const getUserEmail = (email: string): User | null => {
-  return getUsers().find(u => u.email === email) ?? null;
-};
-

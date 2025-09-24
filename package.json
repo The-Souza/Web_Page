@@ -6,8 +6,9 @@
   "scripts": {
     "dev": "vite",
     "backend": "cd backend && ts-node server.ts",
-    "setup": "ts-node backend/scripts/runSetupAndTests.ts",
-    "tests": "ts-node backend/test/runAllTests.ts",
+    "setup": "cd backend && ts-node ./test/runSetupOrTests.ts --setup",
+    "reset": "cd backend && ts-node ./test/runSetupOrTests.ts --force",
+    "test": "cd backend && ts-node ./test/runSetupOrTests.ts",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview"

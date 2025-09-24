@@ -15,9 +15,8 @@ export const registerUser = async (user: User): Promise<LoginResponse> => {
     if (!res.ok) return { success: false, message: json.message };
 
     logFrontend("USER REGISTERED");
-    return { success: true };
-  } catch (err) {
-    console.error(err);
+    return { success: true, message: json.message };
+  } catch {
     return { success: false, message: "Network error" };
   }
 };
@@ -37,9 +36,8 @@ export const loginUser = async (
     if (!res.ok) return { success: false, message: json.message };
 
     logFrontend("USER LOGGED IN");
-    return { success: true };
-  } catch (err) {
-    console.error(err);
+    return { success: true, message: json.message };
+  } catch {
     return { success: false, message: "Network error" };
   }
 };
@@ -59,14 +57,15 @@ export const resetPassword = async (
     if (!res.ok) return { success: false, message: json.message };
 
     logFrontend("USER CHANGED PASSWORD");
-    return { success: true };
-  } catch (err) {
-    console.error(err);
+    return { success: true, message: json.message };
+  } catch {
     return { success: false, message: "Network error" };
   }
 };
 
-export const checkUserExists = async (email: string): Promise<boolean> => {
+export const checkUserExists = async (
+  email: string
+): Promise<LoginResponse & { exists?: boolean }> => {
   try {
     const res = await fetch(`${BASE_URL}/users/check-user-exists`, {
       method: "POST",
@@ -75,10 +74,12 @@ export const checkUserExists = async (email: string): Promise<boolean> => {
     });
 
     const json = await res.json();
-    return json.exists ?? false;
-  } catch (err) {
-    console.error(err);
-    return false;
+    return {
+      success: res.ok && json.success,
+      message: json.message,
+      exists: json.exists,
+    };
+  } catch {
+    return { success: false, message: "Network error" };
   }
 };
-

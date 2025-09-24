@@ -5,7 +5,12 @@ import { useNavigate } from "react-router-dom";
 import * as z from "zod";
 import { registerUser } from "@/services";
 import { useToast } from "@/components/providers/useToast";
-import { AuthForm, AuthLinkButton, AuthLinksContainer } from "@/components/auth";
+import {
+  AuthForm,
+  AuthLinkButton,
+  AuthLinksContainer,
+} from "@/components/auth";
+import { handleToastResponse } from "@/helpers/handleToastResponse";
 
 const schema = z
   .object({
@@ -24,34 +29,30 @@ type FormData = z.infer<typeof schema>;
 export default function SignUp() {
   const { showToast } = useToast();
   const navigate = useNavigate();
+
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<FormData>({
-    resolver: zodResolver(schema),
-  });
+  } = useForm<FormData>({ resolver: zodResolver(schema) });
 
   const onSubmit = async (data: FormData) => {
-    const success = await registerUser({
+    const response = await registerUser({
       name: data.name,
       email: data.email,
       password: data.password,
     });
-    if (success) {
-      showToast({
-        type: "success",
-        title: "User registered successfully!",
-        text: "You can now log in with your credentials.",
-      });
-      navigate("/");
-    } else {
-      showToast({
-        type: "error",
-        title: "Registration Failed",
-        text: "Email already in use",
-      });
-    }
+
+    handleToastResponse(
+      response,
+      showToast,
+      "User registered successfully!",
+      "Registration Failed",
+      "You can now log in with your credentials.",
+      "Email already in use"
+    );
+
+    if (response.success) navigate("/");
   };
 
   return (

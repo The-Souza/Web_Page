@@ -4,13 +4,14 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Button, Input, Title } from "@/components";
 import { useNavigate } from "react-router-dom";
 import * as z from "zod";
-import { checkUserExists } from "@/services";
+import { checkUserExists, resetPassword } from "@/services";
 import { useToast } from "@/components/providers/useToast";
 import {
   AuthForm,
   AuthLinkButton,
   AuthLinksContainer,
 } from "@/components/auth";
+import { handleToastResponse } from "@/helpers/handleToastResponse";
 
 const schema = z
   .object({
@@ -41,23 +42,21 @@ export default function ResetPassword() {
     handleSubmit,
     watch,
     formState: { errors },
-  } = useForm<FormData>({
-    resolver: zodResolver(schema),
-  });
+  } = useForm<FormData>({ resolver: zodResolver(schema) });
 
   const emailValue = watch("email");
 
   useEffect(() => {
     const checkEmail = async () => {
       if (emailValue) {
-        const exists = await checkUserExists(emailValue);
-        setUserExists(exists);
+        const result = await checkUserExists(emailValue);
+        setUserExists(result.exists ?? false);
 
-        if (!exists) {
+        if (!result.success) {
           showToast({
             type: "error",
             title: "User not found",
-            text: "This email is not registered",
+            text: result.message || "This email is not registered",
           });
         }
       }
@@ -66,43 +65,18 @@ export default function ResetPassword() {
   }, [emailValue, showToast]);
 
   const onSubmit = async (data: FormData) => {
-    try {
-      const res = await fetch(`http://localhost:5000/users/reset-password`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: data.email, password: data.newPassword }),
-      });
-      const response = await res.json();
+    const response = await resetPassword(data.email, data.newPassword);
 
-      if (res.ok) {
-        showToast({
-          type: "success",
-          title: "Password changed successfully",
-          text: "You can now log in with your new password.",
-        });
-        navigate("/");
-      } else if (
-        response.message === "New password cannot be the same as current"
-      ) {
-        showToast({
-          type: "error",
-          title: "New password invalid",
-          text: "The new password cannot be the same as your current password.",
-        });
-      } else {
-        showToast({
-          type: "error",
-          title: "Error changing password",
-          text: response.message || "Please try again later.",
-        });
-      }
-    } catch {
-      showToast({
-        type: "error",
-        title: "Error",
-        text: "Something went wrong. Please try again.",
-      });
-    }
+    handleToastResponse(
+      response,
+      showToast,
+      "Password changed successfully",
+      "Error changing password",
+      "You can now log in with your new password.",
+      "The new password cannot be the same as your current password."
+    );
+
+    if (response.success) navigate("/");
   };
 
   return (

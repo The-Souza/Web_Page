@@ -5,7 +5,7 @@ import {
 } from "../services/account.service.ts";
 
 export default async function testAccounts() {
-  console.log("🔹 Testing getAllAccounts");
+  console.log("\n🔹 Testing getAllAccounts");
   const allAccounts = await getAllAccounts();
   console.log("💾 Total accounts:", allAccounts.length);
 

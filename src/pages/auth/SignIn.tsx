@@ -5,7 +5,12 @@ import { useNavigate } from "react-router-dom";
 import * as z from "zod";
 import { loginUser } from "@/services";
 import { useToast } from "@/components/providers/useToast";
-import { AuthForm, AuthLinkButton, AuthLinksContainer } from "@/components/auth";
+import {
+  AuthForm,
+  AuthLinkButton,
+  AuthLinksContainer,
+} from "@/components/auth";
+import { handleToastResponse } from "@/helpers/handleToastResponse";
 
 const schema = z.object({
   email: z
@@ -18,32 +23,28 @@ const schema = z.object({
 type FormData = z.infer<typeof schema>;
 
 export default function SignIn() {
-  const toast = useToast();
+  const { showToast } = useToast();
   const navigate = useNavigate();
+
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<FormData>({
-    resolver: zodResolver(schema),
-  });
+  } = useForm<FormData>({ resolver: zodResolver(schema) });
 
   const onSubmit = async (data: FormData) => {
-    const success = await loginUser(data.email, data.password);
-    if (success) {
-      toast.showToast({
-        type: "success",
-        title: "Login Successful",
-        text: "Welcome back!",
-      });
-      navigate("/");
-    } else {
-      toast.showToast({
-        type: "error",
-        title: "Login Failed",
-        text: "Invalid email or password",
-      });
-    }
+    const response = await loginUser(data.email, data.password);
+
+    handleToastResponse(
+      response,
+      showToast,
+      "Login Successful",
+      "Login Failed",
+      "Welcome back!",
+      "Invalid email or password"
+    );
+
+    if (response.success) navigate("/");
   };
 
   return (

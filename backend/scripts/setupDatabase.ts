@@ -2,9 +2,8 @@ import sql from "mssql";
 import { faker } from "@faker-js/faker";
 import chalk from "chalk";
 
-// Cria as tabelas se não existirem
 export async function createTables(conn: sql.ConnectionPool) {
-  console.log(chalk.cyan("🚀 Creating tables..."));
+  console.log(chalk.cyan("\n🚀 Creating tables..."));
 
   await conn.query(`
     IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='Users' and xtype='U')
@@ -33,7 +32,6 @@ export async function createTables(conn: sql.ConnectionPool) {
   console.log(chalk.green("✅ Tables created!"));
 }
 
-// Gera usuários fictícios
 export async function generateUsers(conn: sql.ConnectionPool) {
   console.log(chalk.cyan("👤 Generating users..."));
 
@@ -53,8 +51,7 @@ export async function generateUsers(conn: sql.ConnectionPool) {
       .input("name", user.name)
       .input("email", user.email)
       .input("address", user.address)
-      .input("password", user.password)
-      .query(`
+      .input("password", user.password).query(`
         INSERT INTO Users (Name, Email, Address, Password)
         VALUES (@name, @email, @address, @password)
       `);
@@ -63,24 +60,33 @@ export async function generateUsers(conn: sql.ConnectionPool) {
   console.log(chalk.green("✅ Users inserted!"));
 }
 
-// Gera contas mensais
 const generateConsumption = (type: string) => {
   switch (type) {
-    case "Water": return parseFloat((Math.random() * 30 + 10).toFixed(2));
-    case "Electricity": return parseFloat((Math.random() * 500 + 100).toFixed(2));
-    case "Gas": return parseFloat((Math.random() * 50 + 10).toFixed(2));
-    case "Internet": return parseFloat((Math.random() * 500 + 50).toFixed(2));
-    default: return parseFloat((Math.random() * 100).toFixed(2));
+    case "Water":
+      return parseFloat((Math.random() * 30 + 10).toFixed(2));
+    case "Electricity":
+      return parseFloat((Math.random() * 500 + 100).toFixed(2));
+    case "Gas":
+      return parseFloat((Math.random() * 50 + 10).toFixed(2));
+    case "Internet":
+      return parseFloat((Math.random() * 500 + 50).toFixed(2));
+    default:
+      return parseFloat((Math.random() * 100).toFixed(2));
   }
 };
 
 const generateValue = (type: string, consumption: number) => {
   switch (type) {
-    case "Water": return parseFloat((consumption * 5).toFixed(2));
-    case "Electricity": return parseFloat((consumption * 0.9).toFixed(2));
-    case "Gas": return parseFloat((consumption * 4).toFixed(2));
-    case "Internet": return parseFloat((consumption * 0.2).toFixed(2));
-    default: return consumption;
+    case "Water":
+      return parseFloat((consumption * 5).toFixed(2));
+    case "Electricity":
+      return parseFloat((consumption * 0.9).toFixed(2));
+    case "Gas":
+      return parseFloat((consumption * 4).toFixed(2));
+    case "Internet":
+      return parseFloat((consumption * 0.2).toFixed(2));
+    default:
+      return consumption;
   }
 };
 
@@ -113,8 +119,7 @@ export async function generateAccounts(conn: sql.ConnectionPool) {
             .input("month", month)
             .input("consumption", consumption)
             .input("days", days)
-            .input("value", value)
-            .query(`
+            .input("value", value).query(`
               INSERT INTO Accounts (UserId, Address, Account, Year, Month, Consumption, Days, Value)
               VALUES (@userId, @address, @account, @year, @month, @consumption, @days, @value)
             `);

@@ -9,7 +9,6 @@ export const exists = async (email: string): Promise<boolean> => {
     .input("email", sql.NVarChar, email)
     .query("SELECT 1 FROM Users WHERE Email = @email");
 
-  console.log("💾 exists:", email, "->", result.recordset.length > 0);
   return result.recordset.length > 0;
 };
 
@@ -24,7 +23,6 @@ export const add = async (user: User): Promise<void> => {
       INSERT INTO Users (Name, Email, Address, Password)
       VALUES (@name, @email, @address, @password)
     `);
-  console.log("💾 add user:", user.email);
 };
 
 export const authenticate = async (
@@ -38,7 +36,6 @@ export const authenticate = async (
     .input("password", sql.NVarChar, password)
     .query("SELECT * FROM Users WHERE Email = @email AND Password = @password");
 
-  console.log("💾 authenticate:", email, "->", result.recordset.length);
   return result.recordset[0] ?? null;
 };
 
@@ -58,7 +55,6 @@ export const updatePassword = async (
     .input("email", sql.NVarChar, email)
     .query("SELECT * FROM Users WHERE Email = @email");
 
-  console.log("💾 updatePassword:", email);
   return updated.recordset[0] ?? null;
 };
 
@@ -69,6 +65,5 @@ export const getUserEmail = async (email: string): Promise<User | null> => {
     .input("email", sql.NVarChar, email)
     .query("SELECT * FROM Users WHERE Email = @email");
 
-  console.log("💾 getUserEmail:", email, "->", result.recordset.length);
   return result.recordset[0] ?? null;
 };

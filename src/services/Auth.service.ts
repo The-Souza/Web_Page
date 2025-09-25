@@ -1,4 +1,8 @@
-import type { User, LoginResponse } from "./Auth.types";
+import type {
+  User,
+  LoginResponse,
+  CheckUserResponse,
+} from "./Auth.types";
 import { logFrontend } from "@/utils/Logger";
 
 const BASE_URL = "http://localhost:5000";
@@ -15,8 +19,14 @@ export const registerUser = async (user: User): Promise<LoginResponse> => {
     if (!res.ok) return { success: false, message: json.message };
 
     logFrontend("USER REGISTERED");
-    return { success: true, message: json.message };
-  } catch {
+
+    return {
+      success: true,
+      message: json.message,
+      user: json.user,
+    };
+  } catch (err) {
+    console.error(err);
     return { success: false, message: "Network error" };
   }
 };
@@ -36,8 +46,14 @@ export const loginUser = async (
     if (!res.ok) return { success: false, message: json.message };
 
     logFrontend("USER LOGGED IN");
-    return { success: true, message: json.message };
-  } catch {
+
+    return {
+      success: true,
+      message: json.message,
+      user: json.user,
+    };
+  } catch (err) {
+    console.error(err);
     return { success: false, message: "Network error" };
   }
 };
@@ -57,15 +73,21 @@ export const resetPassword = async (
     if (!res.ok) return { success: false, message: json.message };
 
     logFrontend("USER CHANGED PASSWORD");
-    return { success: true, message: json.message };
-  } catch {
+
+    return {
+      success: true,
+      message: json.message,
+      user: json.user,
+    };
+  } catch (err) {
+    console.error(err);
     return { success: false, message: "Network error" };
   }
 };
 
 export const checkUserExists = async (
   email: string
-): Promise<LoginResponse & { exists?: boolean }> => {
+): Promise<CheckUserResponse> => {
   try {
     const res = await fetch(`${BASE_URL}/users/check-user-exists`, {
       method: "POST",
@@ -74,12 +96,14 @@ export const checkUserExists = async (
     });
 
     const json = await res.json();
+
     return {
-      success: res.ok && json.success,
+      success: json.success ?? res.ok,
+      exists: json.exists ?? false,
       message: json.message,
-      exists: json.exists,
-    };
-  } catch {
-    return { success: false, message: "Network error" };
+    } as CheckUserResponse;
+  } catch (err) {
+    console.error(err);
+    return { success: false, exists: false, message: "Network error" };
   }
 };

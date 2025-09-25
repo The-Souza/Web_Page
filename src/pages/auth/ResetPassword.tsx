@@ -50,15 +50,16 @@ export default function ResetPassword() {
     const checkEmail = async () => {
       if (emailValue) {
         const result = await checkUserExists(emailValue);
-        setUserExists(result.exists ?? false);
+        setUserExists(result.exists);
 
-        if (!result.success) {
-          showToast({
-            type: "error",
-            title: "User not found",
-            text: result.message || "This email is not registered",
-          });
-        }
+        handleToastResponse(
+          result,
+          showToast,
+          "User found",
+          "User not found",
+          "This email is registered",
+          "This email is not registered"
+        );
       }
     };
     checkEmail();

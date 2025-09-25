@@ -53,7 +53,6 @@ export function prettyPrint(obj: object, indent = 2, level = 0): string {
 
 export function logData(label: string, data: object) {
   const timestamp = new Date().toLocaleString("pt-BR", { hour12: false });
-  console.log(chalk.cyan(`[${label}] - ${timestamp}`));
+  console.log(chalk.cyan(`\n[${label}] - ${timestamp}`));
   console.log(prettyPrint(data));
-  console.log("\n");
 }

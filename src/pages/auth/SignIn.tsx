@@ -40,7 +40,7 @@ export default function SignIn() {
       showToast,
       "Login Successful",
       "Login Failed",
-      "Welcome back!",
+      `Welcome back, ${response.user?.name || "user"}!`,
       "Invalid email or password"
     );
 

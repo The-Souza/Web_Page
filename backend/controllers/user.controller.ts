@@ -1,10 +1,20 @@
 import pkg from "express";
 import { logData } from "../utils/logger.ts";
 import * as userService from "../services/user.service.ts";
+import type { User, PublicUser } from "../models/user.types.ts";
+
+const publicUser = userService.mapRecordToUserSafe;
 
 export const register = async (req: pkg.Request, res: pkg.Response) => {
   try {
-    const user = req.body;
+    const user = req.body as User;
+
+    if (!user || !user.email || !user.password) {
+      return res.status(400).json({
+        success: false,
+        message: "Name, email and password are required",
+      });
+    }
 
     if (await userService.exists(user.email)) {
       return res
@@ -13,9 +23,17 @@ export const register = async (req: pkg.Request, res: pkg.Response) => {
     }
 
     await userService.add(user);
-    logData("CREATE ACCOUNT", { user });
 
-    return res.json({ success: true, message: "User registered successfully" });
+    const created = await userService.getUserEmail(user.email);
+    const pub: PublicUser | null = publicUser(created);
+
+    logData("CREATE ACCOUNT", { user: pub });
+
+    return res.status(201).json({
+      success: true,
+      message: "User registered successfully",
+      user: pub,
+    });
   } catch (err) {
     console.error("❌ Error in register:", err);
     res.status(500).json({ success: false, message: "Internal server error" });
@@ -24,7 +42,17 @@ export const register = async (req: pkg.Request, res: pkg.Response) => {
 
 export const login = async (req: pkg.Request, res: pkg.Response) => {
   try {
-    const { email, password } = req.body;
+    const { email, password } = req.body as {
+      email?: string;
+      password?: string;
+    };
+
+    if (!email || !password) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Email and password are required" });
+    }
+
     const user = await userService.authenticate(email, password);
 
     if (!user) {
@@ -33,8 +61,14 @@ export const login = async (req: pkg.Request, res: pkg.Response) => {
         .json({ success: false, message: "Invalid credentials" });
     }
 
-    logData("LOGIN", { user: { name: user.name, email: user.email } });
-    return res.json({ success: true, message: "Login successful" });
+    const pub: PublicUser | null = publicUser(user);
+    logData("LOGIN", { user: pub });
+
+    return res.json({
+      success: true,
+      message: "Login successful",
+      user: pub,
+    });
   } catch (err) {
     console.error("❌ Error in login:", err);
     res.status(500).json({ success: false, message: "Internal server error" });
@@ -43,30 +77,41 @@ export const login = async (req: pkg.Request, res: pkg.Response) => {
 
 export const resetPassword = async (req: pkg.Request, res: pkg.Response) => {
   try {
-    const { email, password } = req.body;
+    const { email, password } = req.body as {
+      email?: string;
+      password?: string;
+    };
+
+    if (!email || !password) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Email and password are required" });
+    }
+
     const user = await userService.getUserEmail(email);
 
     if (!user) {
       return res
-        .status(400)
+        .status(404)
         .json({ success: false, message: "User not found" });
     }
 
     if (user.password === password) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "New password cannot be the same as current",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "New password cannot be the same as current",
+      });
     }
 
     const updated = await userService.updatePassword(email, password);
-    logData("USER CHANGED PASSWORD", { user: updated });
+    const pub: PublicUser | null = publicUser(updated);
+
+    logData("USER CHANGED PASSWORD", { user: pub });
 
     return res.json({
       success: true,
       message: "Password changed successfully",
+      user: pub,
     });
   } catch (err) {
     console.error("❌ Error in resetPassword:", err);
@@ -76,25 +121,31 @@ export const resetPassword = async (req: pkg.Request, res: pkg.Response) => {
 
 export const checkUserExists = async (req: pkg.Request, res: pkg.Response) => {
   try {
-    const { email } = req.body;
+    const { email } = req.body as { email?: string };
 
     if (!email) {
       return res
         .status(400)
-        .json({ success: false, message: "Email is required" });
+        .json({ success: false, message: "Email is required", exists: false });
     }
 
     const exists = await userService.exists(email);
 
     if (exists) {
-      return res.json({ success: true, exists, message: "User exists" });
+      return res.json({ success: true, exists: true, message: "User exists" });
     } else {
       return res
         .status(404)
-        .json({ success: false, exists, message: "User not found" });
+        .json({ success: false, exists: false, message: "User not found" });
     }
   } catch (err) {
     console.error("❌ Error in checkUserExists:", err);
-    res.status(500).json({ success: false, message: "Internal server error" });
+    res
+      .status(500)
+      .json({
+        success: false,
+        message: "Internal server error",
+        exists: false,
+      });
   }
 };

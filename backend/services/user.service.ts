@@ -1,47 +1,90 @@
-import fs from "fs";
-import path from "path";
-import { fileURLToPath } from "url";
-import { dirname } from "path";
-import type { User } from "../models/user.types.ts";
+import sql from "mssql";
+import { getConnection } from "../utils/db.ts";
+import type { User, UserRecord } from "../models/user.types.ts";
+import { omitFields } from "../helpers/omitFields.ts";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+export function mapRecordToUserRaw(record: UserRecord): User | null {
+  if (!record) return null;
 
-const usersFile = path.join(__dirname, "../data/users.json");
+  return {
+    id: record.Id ?? record.id,
+    name: record.Name ?? record.name,
+    email: record.Email ?? record.email,
+    address: record.Address ?? record.address,
+    password: record.Password ?? record.password,
+  };
+}
 
-const getUsers = (): User[] => {
-  if (!fs.existsSync(usersFile)) return [];
-  return JSON.parse(fs.readFileSync(usersFile, "utf-8"));
+export function mapRecordToUserSafe(
+  record: UserRecord | User | null
+): Omit<User, "password" | "address"> | null {
+  const rawUser = mapRecordToUserRaw(record as UserRecord);
+  if (!rawUser) return null;
+  return omitFields(rawUser, ["password", "address"]);
+}
+
+export const exists = async (email: string): Promise<boolean> => {
+  const conn = await getConnection();
+  const result = await conn
+    .request()
+    .input("email", sql.NVarChar, email)
+    .query("SELECT 1 FROM Users WHERE Email = @email");
+
+  return result.recordset.length > 0;
 };
 
-const saveUsers = (users: User[]) => {
-  fs.writeFileSync(usersFile, JSON.stringify(users, null, 2));
+export const add = async (user: User): Promise<void> => {
+  const conn = await getConnection();
+  await conn
+    .request()
+    .input("name", sql.NVarChar, user.name ?? null)
+    .input("email", sql.NVarChar, user.email)
+    .input("address", sql.NVarChar, user.address ?? null)
+    .input("password", sql.NVarChar, user.password ?? null).query(`
+      INSERT INTO Users (Name, Email, Address, Password)
+      VALUES (@name, @email, @address, @password)
+    `);
 };
 
-export const exists = (email: string): boolean => {
-  return getUsers().some((u) => u.email === email);
+export const authenticate = async (
+  email: string,
+  password: string
+): Promise<User | null> => {
+  const conn = await getConnection();
+  const result = await conn
+    .request()
+    .input("email", sql.NVarChar, email)
+    .input("password", sql.NVarChar, password)
+    .query("SELECT * FROM Users WHERE Email = @email AND Password = @password");
+
+  return mapRecordToUserRaw(result.recordset[0]) ?? null;
 };
 
-export const add = (user: User) => {
-  const users = getUsers();
-  users.push(user);
-  saveUsers(users);
+export const updatePassword = async (
+  email: string,
+  password: string
+): Promise<User | null> => {
+  const conn = await getConnection();
+  await conn
+    .request()
+    .input("email", sql.NVarChar, email)
+    .input("password", sql.NVarChar, password)
+    .query("UPDATE Users SET Password = @password WHERE Email = @email");
+
+  const updated = await conn
+    .request()
+    .input("email", sql.NVarChar, email)
+    .query("SELECT * FROM Users WHERE Email = @email");
+
+  return mapRecordToUserRaw(updated.recordset[0]) ?? null;
 };
 
-export const authenticate = (email: string, password: string): User | null => {
-  return getUsers().find((u) => u.email === email && u.password === password) ?? null;
-};
+export const getUserEmail = async (email: string): Promise<User | null> => {
+  const conn = await getConnection();
+  const result = await conn
+    .request()
+    .input("email", sql.NVarChar, email)
+    .query("SELECT * FROM Users WHERE Email = @email");
 
-export const updatePassword = (email: string, password: string): User | null => {
-  const users = getUsers();
-  const index = users.findIndex((u) => u.email === email);
-  if (index === -1) return null;
-  users[index].password = password;
-  saveUsers(users);
-  return users[index];
+  return mapRecordToUserRaw(result.recordset[0]) ?? null;
 };
-
-export const getUserEmail = (email: string): User | null => {
-  return getUsers().find(u => u.email === email) ?? null;
-};
-

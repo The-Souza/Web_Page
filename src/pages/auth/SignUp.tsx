@@ -82,7 +82,7 @@ export default function SignUp() {
         error={errors.confirmPassword?.message}
       />
 
-      <Button text="Sign up" type="submit" />
+      <Button text="Sign up" type="submit" size={"full"} variant="solid" />
 
       <AuthLinksContainer>
         <AuthLinkButton text="Already have an account? Login" to="/" />

@@ -106,7 +106,7 @@ export default function ResetPassword() {
         disabled={!userExists}
       />
 
-      <Button text="Change Password" type="submit" disabled={!userExists} />
+      <Button text="Change Password" type="submit" size={"full"} variant="solid" disabled={!userExists} />
 
       <AuthLinksContainer>
         <AuthLinkButton text="Back to Login" to="/" />

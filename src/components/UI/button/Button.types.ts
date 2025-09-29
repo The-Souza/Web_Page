@@ -6,7 +6,7 @@ export interface ButtonProps {
   disabled?: boolean;
   type?: "button" | "submit" | "reset";
   size?: "full" | "auto" | string | number;
-  variant?: "solid" | "border";
+  variant?: "solid" | "border" | "bottomless";
   onClick?: () => void;
 }
 

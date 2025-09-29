@@ -5,7 +5,7 @@ import classNames from "classnames";
 import type { ToastContextType } from "@/components/providers/provider.types";
 import type { ToastProps, ToastState } from "./Toast.types";
 import { defaultToast } from "./Toast.dafaults";
-import { UseMediaQuery } from "@/hooks/UseMediaQuery";
+import { useMediaQuery } from "@/hooks/UseMediaQuery";
 
 export const Toast = forwardRef<ToastContextType, object>((_, ref) => {
   const [toastData, setToastData] = useState<ToastState>({
@@ -15,7 +15,7 @@ export const Toast = forwardRef<ToastContextType, object>((_, ref) => {
 
   const [opacity, setOpacity] = useState(0);
   const hideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const isDesktop = UseMediaQuery("(min-width: 768px)");
+  const isDesktop = useMediaQuery("(min-width: 768px)");
 
   const showToast = (options: ToastProps = {}) => {
     if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current);

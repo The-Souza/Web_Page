@@ -4,6 +4,7 @@ import SignUp from "@/pages/auth/SignUp";
 import ResetPassword from "@/pages/auth/ResetPassword";
 import Home from "@/pages/private/Home";
 import Dashboard from "@/pages/private/Dashboard";
+import ResgisterAccount from "@/pages/private/RegisterAccount"
 import { PrivateRoute } from "@/hooks/PrivateRoute";
 import { AuthLayout } from "@/layouts/AuthLayout";
 import { MainLayout } from "@/layouts/MainLayout";
@@ -22,6 +23,7 @@ export function App() {
           <Route element={<MainLayout />}>
             <Route path="/home" element={<Home/>} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/register-account" element={<ResgisterAccount />} />
           </Route>
         </Route>
       </Routes>

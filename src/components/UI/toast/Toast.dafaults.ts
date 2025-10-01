@@ -4,6 +4,6 @@ export const defaultToast: Required<Omit<ToastProps, "onClose">> = {
   type: "info",
   title: "Notification",
   text: "",
-  duration: 5, // segundos
+  duration: 3, // segundos
   dock: "top-left",
 };

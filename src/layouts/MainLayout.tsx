@@ -1,6 +1,6 @@
 import { Header, UserIcon, Button } from "@/components";
 import { useAuth } from "@/hooks/UseAuth";
-import { Outlet, useNavigate } from "react-router-dom";
+import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useState } from "react";
 import classNames from "classnames";
 import { useMediaQuery } from "@/hooks/UseMediaQuery";
@@ -16,6 +16,16 @@ export function MainLayout() {
     setMenuOpen(false);
   };
 
+  const location = useLocation();
+
+  const pageTitles: Record<string, string> = {
+    "/home": "Home",
+    "/dashboard": "Dashboard",
+    "/register-account": "Register Account",
+  };
+
+  const headerText = pageTitles[location.pathname] || "Página";
+
   const isMobile = useMediaQuery("(max-width: 639px)");
 
   return (
@@ -24,7 +34,7 @@ export function MainLayout() {
       bg-cover bg-right sm:bg-center bg-no-repeat"
     >
       <Header
-        text="Home"
+        text={headerText}
         userName={user?.name}
         onClick={handleLogout}
         menuOpen={menuOpen}
@@ -85,7 +95,7 @@ export function MainLayout() {
         </div>
 
         <main
-          className={classNames("flex-1 transition-all duration-300 p-4", {
+          className={classNames("flex-1 transition-all duration-300 p-4 sm:p-8", {
             "ml-56 sm:ml-64": menuOpen && !isMobile,
           })}
         >

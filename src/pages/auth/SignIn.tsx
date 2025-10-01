@@ -11,6 +11,7 @@ import {
   AuthLinksContainer,
 } from "@/components/auth";
 import { handleToastResponse } from "@/helpers/handleToastResponse";
+import { useAuth } from "@/hooks/UseAuth";
 
 const schema = z.object({
   email: z
@@ -25,6 +26,7 @@ type FormData = z.infer<typeof schema>;
 export default function SignIn() {
   const { showToast } = useToast();
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const {
     register,
@@ -44,7 +46,10 @@ export default function SignIn() {
       "Invalid email or password"
     );
 
-    if (response.success) navigate("/");
+    if (response.success) {
+      login(response.user?.id?.toString() || "true", response.user!);
+      navigate("/home");
+    }
   };
 
   return (
@@ -63,7 +68,7 @@ export default function SignIn() {
         error={errors.password?.message}
       />
 
-      <Button text="Sign in" type="submit" />
+      <Button text="Sign in" type="submit" size={"full"} variant="solid" />
 
       <AuthLinksContainer>
         <AuthLinkButton text="Create account" to="/signup" />

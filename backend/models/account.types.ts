@@ -9,6 +9,7 @@ export type Account = {
   consumption: number;
   days: number;
   value: number;
+  paid: boolean;
 };
 
 export type AccountRecord = {
@@ -22,4 +23,5 @@ export type AccountRecord = {
   Consumption: number;
   Days: number;
   Value: number;
+  Paid: boolean;
 };

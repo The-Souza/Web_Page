@@ -19,7 +19,7 @@ export function prettyPrint(obj: object, indent = 2, level = 0): string {
   if (Array.isArray(obj)) {
     if (obj.length === 0) return "[]";
 
-    const preview = obj.length === 1 ? obj : obj.slice(0, 3);
+    const preview = obj.length === 1 ? obj : obj.slice(0, 2);
     const items = preview.map((item) => prettyPrint(item, indent, level + 1));
 
     return (
@@ -30,7 +30,7 @@ export function prettyPrint(obj: object, indent = 2, level = 0): string {
       padding +
       "]" +
       (obj.length > 3
-        ? ` ${chalk.yellow(`\n(Mostrando ${preview.length} de ${obj.length})`)}`
+        ? ` ${chalk.yellow(`\n(Showing ${preview.length} of ${obj.length})`)}`
         : "")
     );
   } else if (obj && typeof obj === "object") {

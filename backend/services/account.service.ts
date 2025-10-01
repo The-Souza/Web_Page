@@ -14,67 +14,87 @@ function mapAccount(record: AccountRecord): Account {
     consumption: record.Consumption,
     days: record.Days,
     value: record.Value,
+    paid: record.Paid,
   };
 }
 
 export async function getAllAccounts(): Promise<Account[]> {
-  try {
-    const conn = await getConnection();
-    const result = await conn.query(`
-      SELECT 
-        a.Id, a.UserId, u.Email as UserEmail, a.Address, a.Account,
-        a.Year, a.Month, a.Consumption, a.Days, a.Value
-      FROM Accounts a
-      INNER JOIN Users u ON u.Id = a.UserId
-      ORDER BY a.Year DESC, a.Month DESC
-    `);
-    return result.recordset.map(mapAccount);
-  } catch (err) {
-    console.error("❌ Error in getAllAccounts:", err);
-    throw err;
-  }
+  const conn = await getConnection();
+  const result = await conn.query(`
+    SELECT 
+      a.Id, a.UserId, u.Email as UserEmail, a.Address, a.Account,
+      a.Year, a.Month, a.Consumption, a.Days, a.Value, a.Paid
+    FROM Accounts a
+    INNER JOIN Users u ON u.Id = a.UserId
+    ORDER BY a.Year DESC, a.Month DESC
+  `);
+  return result.recordset.map(mapAccount);
 }
 
-export async function getAccountsByUserId(userId: number): Promise<Account[]> {
-  try {
-    const conn = await getConnection();
-    const result = await conn
-      .request()
-      .input("userId", sql.Int, userId)
-      .query(`
-        SELECT 
-          a.Id, a.UserId, u.Email as UserEmail, a.Address, a.Account,
-          a.Year, a.Month, a.Consumption, a.Days, a.Value
-        FROM Accounts a
-        INNER JOIN Users u ON u.Id = a.UserId
-        WHERE a.UserId = @userId
-        ORDER BY a.Year DESC, a.Month DESC
-      `);
-    return result.recordset.map(mapAccount);
-  } catch (err) {
-    console.error("❌ Error in getAccountsByUserId:", err);
-    throw err;
+export async function getAccountsByUserId(
+  userId: number,
+  paid?: boolean
+): Promise<Account[]> {
+  const conn = await getConnection();
+
+  let query = `
+    SELECT 
+      a.Id, a.UserId, u.Email as UserEmail, a.Address, a.Account,
+      a.Year, a.Month, a.Consumption, a.Days, a.Value, a.Paid
+    FROM Accounts a
+    INNER JOIN Users u ON u.Id = a.UserId
+    WHERE a.UserId = @userId
+  `;
+
+  const request = conn.request().input("userId", sql.Int, userId);
+
+  if (typeof paid === "boolean") {
+    query += ` AND a.Paid = @paid`;
+    request.input("paid", sql.Bit, paid);
   }
+
+  query += ` ORDER BY a.Year DESC, a.Month DESC`;
+
+  const result = await request.query(query);
+  return result.recordset.map(mapAccount);
 }
 
-export async function getAccountsByUserEmail(email: string): Promise<Account[]> {
-  try {
-    const conn = await getConnection();
-    const result = await conn
-      .request()
-      .input("email", sql.NVarChar, email)
-      .query(`
-        SELECT 
-          a.Id, a.UserId, u.Email as UserEmail, a.Address, a.Account,
-          a.Year, a.Month, a.Consumption, a.Days, a.Value
-        FROM Accounts a
-        INNER JOIN Users u ON u.Id = a.UserId
-        WHERE u.Email = @email
-        ORDER BY a.Year DESC, a.Month DESC
-      `);
-    return result.recordset.map(mapAccount);
-  } catch (err) {
-    console.error("❌ Error in getAccountsByUserEmail:", err);
-    throw err;
+export async function getAccountsByUserEmail(
+  email: string,
+  paid?: boolean
+): Promise<Account[]> {
+  const conn = await getConnection();
+
+  let query = `
+    SELECT 
+      a.Id, a.UserId, u.Email as UserEmail, a.Address, a.Account,
+      a.Year, a.Month, a.Consumption, a.Days, a.Value, a.Paid
+    FROM Accounts a
+    INNER JOIN Users u ON u.Id = a.UserId
+    WHERE u.Email = @email
+  `;
+
+  const request = conn.request().input("email", sql.NVarChar, email);
+
+  if (typeof paid === "boolean") {
+    query += ` AND a.Paid = @paid`;
+    request.input("paid", sql.Bit, paid);
   }
+
+  query += ` ORDER BY a.Year DESC, a.Month DESC`;
+
+  const result = await request.query(query);
+  return result.recordset.map(mapAccount);
+}
+
+export async function updateAccountPaid(
+  id: number,
+  paid: boolean
+): Promise<void> {
+  const conn = await getConnection();
+  await conn
+    .request()
+    .input("id", sql.Int, id)
+    .input("paid", sql.Bit, paid)
+    .query(`UPDATE Accounts SET Paid = @paid WHERE Id = @id`);
 }

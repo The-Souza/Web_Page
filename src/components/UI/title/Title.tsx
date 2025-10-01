@@ -1,5 +1,4 @@
-import type { JSX } from "react";
-import { Component } from "react";
+import { Component, type JSX } from "react";
 import type { TitleProps } from "./Title.types";
 import { TITLE_SIZE_VARIANTS, type TitleSize } from "./TitleSize.variants";
 import classNames from "classnames";

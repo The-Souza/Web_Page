@@ -1,4 +1,3 @@
-// backend/test/runSetupOrTests.ts
 import { getConnection } from "../utils/db.ts";
 import dropTables from "../scripts/dropTables.ts";
 import {

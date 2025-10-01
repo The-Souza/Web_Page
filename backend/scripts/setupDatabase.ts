@@ -25,7 +25,8 @@ export async function createTables(conn: sql.ConnectionPool) {
       Month INT,
       Consumption FLOAT,
       Days INT,
-      Value FLOAT
+      Value FLOAT,
+      Paid BIT NOT NULL DEFAULT 0
     );
   `);
 
@@ -51,7 +52,8 @@ export async function generateUsers(conn: sql.ConnectionPool) {
       .input("name", user.name)
       .input("email", user.email)
       .input("address", user.address)
-      .input("password", user.password).query(`
+      .input("password", user.password)
+      .query(`
         INSERT INTO Users (Name, Email, Address, Password)
         VALUES (@name, @email, @address, @password)
       `);
@@ -104,7 +106,7 @@ export async function generateAccounts(conn: sql.ConnectionPool) {
     for (const accountType of accountsList) {
       for (let year = startYear; year <= endYear; year++) {
         for (let month = 1; month <= 12; month++) {
-          if (year === 2025 && month > 8) break;
+          if (year === 2025 && month > 9) break;
 
           const consumption = generateConsumption(accountType);
           const value = generateValue(accountType, consumption);
@@ -119,9 +121,11 @@ export async function generateAccounts(conn: sql.ConnectionPool) {
             .input("month", month)
             .input("consumption", consumption)
             .input("days", days)
-            .input("value", value).query(`
-              INSERT INTO Accounts (UserId, Address, Account, Year, Month, Consumption, Days, Value)
-              VALUES (@userId, @address, @account, @year, @month, @consumption, @days, @value)
+            .input("value", value)
+            .input("paid", false)
+            .query(`
+              INSERT INTO Accounts (UserId, Address, Account, Year, Month, Consumption, Days, Value, Paid)
+              VALUES (@userId, @address, @account, @year, @month, @consumption, @days, @value, @paid)
             `);
         }
       }

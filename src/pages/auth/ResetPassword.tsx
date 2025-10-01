@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Button, Input, Title } from "@/components";
+import { Button, FormField, Title } from "@/components";
 import { useNavigate } from "react-router-dom";
 import * as z from "zod";
 import { checkUserExists, resetPassword } from "@/services";
@@ -84,13 +84,13 @@ export default function ResetPassword() {
     <AuthForm onSubmit={handleSubmit(onSubmit)}>
       <Title text="Change Password" size="2xl" />
 
-      <Input
+      <FormField
         {...register("email")}
         placeholder="Email"
         error={errors.email?.message}
       />
 
-      <Input
+      <FormField
         {...register("newPassword")}
         placeholder="New Password"
         type="password"
@@ -98,7 +98,7 @@ export default function ResetPassword() {
         disabled={!userExists}
       />
 
-      <Input
+      <FormField
         {...register("confirmNewPassword")}
         placeholder="Confirm New Password"
         type="password"

@@ -1,6 +1,6 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Button, Input, Title } from "@/components";
+import { Button, FormField, Title } from "@/components";
 import { useNavigate } from "react-router-dom";
 import * as z from "zod";
 import { registerUser } from "@/services";
@@ -59,23 +59,23 @@ export default function SignUp() {
     <AuthForm onSubmit={handleSubmit(onSubmit)}>
       <Title text="Create Account" size="2xl" />
 
-      <Input
+      <FormField
         {...register("name")}
         placeholder="Full name"
         error={errors.name?.message}
       />
-      <Input
+      <FormField
         {...register("email")}
         placeholder="Email"
         error={errors.email?.message}
       />
-      <Input
+      <FormField
         {...register("password")}
         placeholder="Password"
         type="password"
         error={errors.password?.message}
       />
-      <Input
+      <FormField
         {...register("confirmPassword")}
         placeholder="Confirm Password"
         type="password"

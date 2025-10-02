@@ -59,30 +59,36 @@ export default function SignUp() {
     <AuthForm onSubmit={handleSubmit(onSubmit)}>
       <Title text="Create Account" size="2xl" />
 
-      <FormField
-        {...register("name")}
-        placeholder="Full name"
-        error={errors.name?.message}
-      />
-      <FormField
-        {...register("email")}
-        placeholder="Email"
-        error={errors.email?.message}
-      />
-      <FormField
-        {...register("password")}
-        placeholder="Password"
-        type="password"
-        error={errors.password?.message}
-      />
-      <FormField
-        {...register("confirmPassword")}
-        placeholder="Confirm Password"
-        type="password"
-        error={errors.confirmPassword?.message}
-      />
+      <div className="flex flex-col w-full gap-2">
+        <FormField
+          {...register("name")}
+          label="Full Name"
+          error={errors.name?.message}
+        />
 
-      <Button text="Sign up" type="submit" size={"full"} variant="solid" />
+        <FormField
+          {...register("email")}
+          label="Email:"
+          type="email"
+          error={errors.email?.message}
+        />
+
+        <FormField
+          {...register("password")}
+          label="Password:"
+          type="password"
+          error={errors.password?.message}
+        />
+
+        <FormField
+          {...register("confirmPassword")}
+          label="Confirm Password:"
+          type="password"
+          error={errors.confirmPassword?.message}
+        />
+      </div>
+
+      <Button text="Sign up" type="submit" size="full" variant="solid" />
 
       <AuthLinksContainer>
         <AuthLinkButton text="Already have an account? Login" to="/" />

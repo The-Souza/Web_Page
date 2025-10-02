@@ -56,21 +56,22 @@ export default function SignIn() {
     <AuthForm onSubmit={handleSubmit(onSubmit)}>
       <Title text="Login" size="2xl" />
 
-      <FormField
-        {...register("email")}
-        label="Email"
-        placeholder="Email"
-        error={errors.email?.message}
-      />
-      <FormField
-        {...register("password")}
-        label="Password"
-        placeholder="Password"
-        type="password"
-        error={errors.password?.message}
-      />
+      <div className="flex flex-col w-full gap-2">
+        <FormField
+          {...register("email")}
+          label="Email:"
+          error={errors.email?.message}
+        />
 
-      <Button text="Sign in" type="submit" size={"full"} variant="solid" />
+        <FormField
+          {...register("password")}
+          label="Password:"
+          type="password"
+          error={errors.password?.message}
+        />
+      </div>
+
+      <Button text="Sign in" type="submit" size="full" variant="solid" />
 
       <AuthLinksContainer>
         <AuthLinkButton text="Create account" to="/signup" />

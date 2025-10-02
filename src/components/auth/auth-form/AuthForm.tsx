@@ -9,10 +9,10 @@ export const AuthForm = ({
 }: AuthFormProps): JSX.Element => {
   const isMobile = useMediaQuery("(max-width: 640px)");
   const formClass = classNames(
-    "bg-dark shadow-greenLight rounded-lg flex flex-col items-center justify-center gap-4",
+    "bg-dark shadow-greenLight rounded-lg flex flex-col p-8 sm:p-10 items-center justify-center gap-6 border-2 border-greenLight",
     {
-      "p-4 w-full": isMobile,
-      "p-10 w-[31.25rem]": !isMobile,
+      "w-full": isMobile,
+      "w-[31.25rem]": !isMobile,
     }
   );
 

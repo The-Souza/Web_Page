@@ -70,7 +70,7 @@ export const Toast = forwardRef<ToastContextType, object>((_, ref) => {
       </div>
       <div className="flex-1 sm:max-w-[26.8125rem] h-auto">
         <div className="flex justify-between">
-          <h2 className="text-[#2D3748] font-[lato] font-extrabold text-md leading-6 tracking-normal">
+          <h2 className="text-[#2D3748] font-lato font-extrabold text-md leading-6 tracking-normal">
             {toastData.title}
           </h2>
           <button aria-label="close" onClick={hideToast}>
@@ -79,7 +79,7 @@ export const Toast = forwardRef<ToastContextType, object>((_, ref) => {
             ></i>
           </button>
         </div>
-        <p className="text-[#2D3748] font-[lato] font-bold text-sm leading-6 tracking-normal">
+        <p className="text-[#2D3748] font-lato font-bold text-sm leading-6 tracking-normal">
           {toastData.text}
         </p>
       </div>

@@ -1,10 +1,4 @@
-import {
-  forwardRef,
-  useState,
-  useEffect,
-  useRef,
-  type ChangeEvent,
-} from "react";
+import { forwardRef, useState, useEffect, useRef, type ChangeEvent } from "react";
 import classNames from "classnames";
 import type { FormFieldProps, Option } from "./Input.types";
 
@@ -21,26 +15,28 @@ export const FormField = forwardRef<HTMLInputElement, FormFieldProps>(
       value,
       onChange,
       onBlur,
+      autoComplete,
       ...props
     },
     ref
   ) => {
     const isControlled = value !== undefined;
 
-    const [showPassword, setShowPassword] = useState(false);
+    // Estado interno
     const [inputValue, setInputValue] = useState(String(value || ""));
+    const [showPassword, setShowPassword] = useState(false);
     const [isOpen, setIsOpen] = useState(false);
     const [filteredOptions, setFilteredOptions] = useState<Option[]>(options);
 
     const inputRef = useRef<HTMLInputElement>(null);
     const dropdownRef = useRef<HTMLUListElement>(null);
 
-    // sincroniza value externo
+    // Sincroniza value externo
     useEffect(() => {
       if (value !== undefined) setInputValue(String(value));
     }, [value]);
 
-    // Fechar dropdown ao clicar fora
+    // Fecha dropdown ao clicar fora
     useEffect(() => {
       const handleClickOutside = (e: MouseEvent) => {
         if (
@@ -53,82 +49,77 @@ export const FormField = forwardRef<HTMLInputElement, FormFieldProps>(
         }
       };
       document.addEventListener("mousedown", handleClickOutside);
-      return () =>
-        document.removeEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-    const togglePassword = () => setShowPassword((p) => !p);
+    // Alterna visibilidade da senha
+    const togglePassword = () => setShowPassword((prev) => !prev);
 
+    // Handle seleção de opção
     const handleSelectChange = (opt: Option) => {
       setInputValue(opt.label);
-      const fakeEvent = { target: { value: opt.value } } as ChangeEvent<
-        HTMLInputElement
-      >;
+      const fakeEvent = { target: { value: opt.value } } as ChangeEvent<HTMLInputElement>;
       onChange?.(fakeEvent);
       setIsOpen(false);
     };
 
+    // Navegação por teclado no select
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
       if (type !== "select" || !isOpen) return;
 
-      const currentIndex = filteredOptions.findIndex(
-        (o) => o.label === inputValue
-      );
+      const currentIndex = filteredOptions.findIndex((o) => o.label === inputValue);
 
       if (e.key === "ArrowDown") {
         e.preventDefault();
         const nextIndex = (currentIndex + 1) % filteredOptions.length;
         const nextOption = filteredOptions[nextIndex];
         setInputValue(nextOption.label);
-        const fakeEvent = { target: { value: nextOption.value } } as ChangeEvent<
-          HTMLInputElement
-        >;
-        onChange?.(fakeEvent);
+        onChange?.({ target: { value: nextOption.value } } as ChangeEvent<HTMLInputElement>);
       } else if (e.key === "ArrowUp") {
         e.preventDefault();
-        const prevIndex =
-          (currentIndex - 1 + filteredOptions.length) % filteredOptions.length;
+        const prevIndex = (currentIndex - 1 + filteredOptions.length) % filteredOptions.length;
         const prevOption = filteredOptions[prevIndex];
         setInputValue(prevOption.label);
-        const fakeEvent = { target: { value: prevOption.value } } as ChangeEvent<
-          HTMLInputElement
-        >;
-        onChange?.(fakeEvent);
+        onChange?.({ target: { value: prevOption.value } } as ChangeEvent<HTMLInputElement>);
       } else if (e.key === "Enter" || e.key === "Escape") {
         e.preventDefault();
         setIsOpen(false);
       }
     };
 
+    // Classes de estilo
     const inputClass = classNames(
       "w-full p-2 rounded-lg border-2",
       {
-        "border-greenLight focus:outline-none focus:ring-1 focus:ring-greenLight":
-          !disabled && !error,
+        "border-greenLight focus:outline-none focus:ring-1 focus:ring-greenLight": !disabled && !error,
         "opacity-50 cursor-not-allowed bg-gray-100": disabled,
-        "border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500":
-          error && !disabled,
+        "border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500": error && !disabled,
       }
     );
 
-    const labelClass = classNames(
-      "font-semibold text-md font-[lato]",
-      {
-        "text-greenLight": !disabled,
-        "text-greenMid": disabled,
-      }
-    );
-    const errorClass = "text-sm font-[lato] text-red-500";
+    const labelClass = classNames("font-semibold text-md font-lato", {
+      "text-greenLight": !disabled,
+      "text-greenMid": disabled,
+    });
+
+    const errorClass = "text-sm font-lato text-red-500";
 
     const inputId = props.id || name;
 
+    // Definindo autocomplete padrão inteligente
+    const defaultAutoComplete =
+      autoComplete ??
+      (type === "password"
+        ? "new-password"
+        : type === "email"
+        ? "email"
+        : type === "text"
+        ? "name"
+        : "off");
+
     return (
       <div className="w-full flex flex-col gap-1 relative">
-        {label && (
-          <label htmlFor={inputId} className={labelClass}>
-            {label}
-          </label>
-        )}
+        {label && <label htmlFor={inputId} className={labelClass}>{label}</label>}
 
         {type === "select" ? (
           <div className="relative">
@@ -142,11 +133,9 @@ export const FormField = forwardRef<HTMLInputElement, FormFieldProps>(
               onChange={(e) => {
                 const val = e.target.value;
                 setInputValue(val);
-                setFilteredOptions(
-                  options.filter((opt) =>
-                    opt.label.toLowerCase().includes(val.toLowerCase())
-                  )
-                );
+                setFilteredOptions(options.filter((opt) =>
+                  opt.label.toLowerCase().includes(val.toLowerCase())
+                ));
                 setIsOpen(true);
                 onChange?.(e);
               }}
@@ -190,13 +179,7 @@ export const FormField = forwardRef<HTMLInputElement, FormFieldProps>(
               id={inputId}
               ref={ref}
               name={name}
-              type={
-                type === "password"
-                  ? showPassword
-                    ? "text"
-                    : "password"
-                  : type
-              }
+              type={type === "password" ? (showPassword ? "text" : "password") : type}
               placeholder={placeholder}
               className={inputClass}
               disabled={disabled}
@@ -206,14 +189,7 @@ export const FormField = forwardRef<HTMLInputElement, FormFieldProps>(
                 onChange?.(e);
               }}
               onBlur={onBlur}
-              autoComplete={
-                props.autoComplete ??
-                (type === "password"
-                  ? "new-password"
-                  : type === "email"
-                  ? "email"
-                  : "off")
-              }
+              autoComplete={defaultAutoComplete}
               aria-label={label || placeholder}
               {...props}
             />

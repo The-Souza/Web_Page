@@ -21,6 +21,10 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
+import { Card, Title, Table, FormField } from "@/components";
+
+import type { Account } from "@/models/account.types";
+import { ACCOUNT_TYPE_ICONS } from "@/components/UI/card/Card.variants";
 
 const COLORS = {
   paid: "#00ff9f",
@@ -36,7 +40,6 @@ export default function Home() {
   const [selectedYear, setSelectedYear] = useState<string>("");
   const [selectedMonth, setSelectedMonth] = useState<string>("");
 
-  // Define ano e mês atuais no primeiro render
   useEffect(() => {
     const now = new Date();
     const year = now.getFullYear().toString();
@@ -46,17 +49,14 @@ export default function Home() {
   }, []);
 
   const availableYears = useMemo(() => getAvailableYears(accounts), [accounts]);
-
   const availableMonths = useMemo(
     () => getMonthsByYear(accounts, selectedYear),
     [accounts, selectedYear]
   );
-
   const accountsForSelectedMonth = useMemo(
     () => accounts.filter((acc) => acc.month === selectedMonth),
     [accounts, selectedMonth]
   );
-
   const previousMonth = useMemo(
     () => (selectedMonth ? getPreviousMonth(selectedMonth) : ""),
     [selectedMonth]
@@ -85,7 +85,6 @@ export default function Home() {
 
   const accountTypeSummary = useMemo(() => {
     if (!selectedMonth || accountsForSelectedMonth.length === 0) {
-      // devolve todos os tipos conhecidos mas zerados
       const allTypes = Array.from(new Set(accounts.map((a) => a.accountType)));
       return allTypes.map((type) => ({
         type,
@@ -97,23 +96,24 @@ export default function Home() {
     return calculateAccountTypeSummary(accountsForSelectedMonth, selectedMonth);
   }, [accountsForSelectedMonth, selectedMonth, accounts]);
 
-  // resumo gráfico só do ano selecionado
-  const monthSummaries = useMemo(() => {
-    return availableMonths.map((m) => ({
-      month: m,
-      summary: calculateMonthSummary(
-        accounts.filter((acc) => acc.month === m),
-        m
-      ),
-    }));
-  }, [accounts, availableMonths]);
+  const monthSummaries = useMemo(
+    () =>
+      availableMonths.map((m) => ({
+        month: m,
+        summary: calculateMonthSummary(
+          accounts.filter((acc) => acc.month === m),
+          m
+        ),
+      })),
+    [accounts, availableMonths]
+  );
 
   const chartData = useMemo(
     () =>
       monthSummaries.map(({ month, summary }) => ({
         month,
-        Pago: summary.paidValue,
-        "Não Pago": summary.unpaidValue,
+        Paid: summary.paidValue,
+        Unpaid: summary.unpaidValue,
       })),
     [monthSummaries]
   );
@@ -122,145 +122,125 @@ export default function Home() {
     const color = diff <= 0 ? COLORS.positive : COLORS.negative;
     const sign = diff >= 0 ? "+" : "-";
     return (
-      <p className={`text-2xl font-bold ${color}`}>
+      <span className={`font-lato font-bold text-lg tracking-tight ${color}`}>
         {sign}
         {formatCurrency(Math.abs(diff))}
-      </p>
+      </span>
     );
   };
 
   return (
-    <div className="flex flex-col gap-4 text-greenLight font-raleway">
-      {loading && <p className="text-greenLight font-raleway">Carregando...</p>}
+    <div className="flex flex-col gap-4 text-greenLight">
+      {loading && <p className="text-greenLight items-center justify-center font-raleway">Carregando...</p>}
+
       {!loading && (
         <>
           <div className="flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between">
-            <h1 className="text-3xl font-bold">Resumo de Contas</h1>
-            <div className="flex gap-2">
-              <select
-                className="bg-dark border border-greenLight rounded p-2 text-greenLight"
+            <Title text="Resumo de Contas" size="2xl" />
+
+            <div className="flex gap-2 w-full sm:w-auto">
+              <FormField
+                type="select"
+                label="Ano"
                 value={selectedYear}
                 onChange={(e) => {
-                  setSelectedYear(e.target.value);
-                  const months = getMonthsByYear(accounts, e.target.value);
-                  if (months.length > 0) setSelectedMonth(months[0]);
-                  else setSelectedMonth("");
+                  const val = e.target.value;
+                  setSelectedYear(val);
+                  const months = getMonthsByYear(accounts, val);
+                  setSelectedMonth(months.length > 0 ? months[0] : "");
                 }}
-              >
-                {availableYears.map((year) => (
-                  <option key={year} value={year}>
-                    {year}
-                  </option>
-                ))}
-              </select>
+                options={availableYears.map((y) => ({ label: y, value: y }))}
+              />
 
-              <select
-                className="bg-dark border border-greenLight rounded p-2 text-greenLight"
+              <FormField
+                type="select"
+                label="Mês"
                 value={selectedMonth}
                 onChange={(e) => setSelectedMonth(e.target.value)}
-              >
-                {availableMonths.map((month) => (
-                  <option key={month} value={month}>
-                    {month}
-                  </option>
-                ))}
-              </select>
+                options={availableMonths.map((m) => ({ label: m, value: m }))}
+              />
             </div>
           </div>
 
-          {/* Cards gerais */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div className="bg-dark shadow-greenLight p-4 rounded-lg flex-1">
-              <h2 className="font-semibold">Total do mês</h2>
-              <p className="text-2xl font-bold">
-                {formatCurrency(currentSummary.totalValue)}
-              </p>
-            </div>
-
-            <div className="bg-dark shadow-greenLight p-4 rounded-lg flex-1">
-              <h2 className="font-semibold">Pago</h2>
-              <p className="text-2xl font-bold">
-                {formatCurrency(currentSummary.paidValue)}
-              </p>
-            </div>
-
-            <div className="bg-dark shadow-greenLight p-4 rounded-lg flex-1">
-              <h2 className="font-semibold">Diferença mês anterior</h2>
-              {renderDiff(diffFromLastMonth)}
-            </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            <Card
+              title="Total for the month"
+              icon="money"
+              value={formatCurrency(currentSummary.totalValue)}
+            />
+            <Card
+              title="Paid"
+              icon="money"
+              value={formatCurrency(currentSummary.paidValue)}
+            />
+            <Card
+              title="Previous month"
+              icon="money"
+              value={renderDiff(diffFromLastMonth)}
+            />
           </div>
 
-          {/* Cards por tipo */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 flex-1">
             {accountTypeSummary.map(
               ({ type, totalValue, paidValue, unpaidValue }) => (
-                <div
+                <Card
                   key={type}
-                  className="bg-dark shadow-greenLight p-4 rounded-lg flex flex-col"
-                >
-                  <h2 className="font-semibold mb-2">{type}</h2>
-                  <p>Total: {formatCurrency(totalValue)}</p>
-                  <p>Pago: {formatCurrency(paidValue)}</p>
-                  <p className="text-red-400">
-                    Faltando: {formatCurrency(unpaidValue)}
-                  </p>
-                </div>
+                  title={type}
+                  icon={ACCOUNT_TYPE_ICONS[type] || "money"}
+                  value={
+                    <>
+                      <p>Total: {formatCurrency(totalValue)}</p>
+                      <p>Paid: {formatCurrency(paidValue)}</p>
+                      <p className="text-red-400">
+                        Missing: {formatCurrency(unpaidValue)}
+                      </p>
+                    </>
+                  }
+                />
               )
             )}
           </div>
 
-          {/* Gráfico */}
-          <div className="bg-dark shadow-greenLight rounded-lg p-4">
-            <h2 className="font-semibold mb-2">Comparativo por mês</h2>
+          <div className="bg-dark shadow-greenLight rounded-xl border-2 border-greenLight p-6 flex flex-col gap-2">
+            <Title text="Comparison by month" size="xl"></Title>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={chartData}>
                 <XAxis dataKey="month" stroke={COLORS.paid} />
                 <YAxis stroke={COLORS.paid} />
                 <Tooltip />
                 <Legend />
-                <Bar dataKey="Pago" stackId="a" fill={COLORS.paid} />
-                <Bar dataKey="Não Pago" stackId="a" fill={COLORS.unpaid} />
+                <Bar dataKey="Paid" stackId="a" fill={COLORS.paid} />
+                <Bar dataKey="Unpaid" stackId="a" fill={COLORS.unpaid} />
               </BarChart>
             </ResponsiveContainer>
           </div>
 
-          {/* Tabela */}
-          <div className="overflow-x-auto">
-            <table className="table-auto w-full bg-dark shadow-greenLight rounded-lg">
-              <thead className="bg-greenDark text-greenLight">
-                <tr>
-                  <th className="px-4 py-2">Conta</th>
-                  <th className="px-4 py-2">Endereço</th>
-                  <th className="px-4 py-2">Valor (R$)</th>
-                  <th className="px-4 py-2">Pago</th>
-                </tr>
-              </thead>
-              <tbody>
-                {(selectedMonth ? accountsForSelectedMonth : []).map((acc) => (
-                  <tr key={acc.id} className="border-b border-greenMid">
-                    <td className="px-4 py-2">{acc.accountType}</td>
-                    <td className="px-4 py-2">{acc.address}</td>
-                    <td className="px-4 py-2">{formatCurrency(acc.value)}</td>
-                    <td className="px-4 py-2 text-center">
-                      <input
-                        type="checkbox"
-                        checked={acc.paid}
-                        onChange={(e) => updatePaid(acc.id, e.target.checked)}
-                        className="accent-greenLight"
-                      />
-                    </td>
-                  </tr>
-                ))}
-                {selectedMonth && accountsForSelectedMonth.length === 0 && (
-                  <tr>
-                    <td colSpan={4} className="text-center py-4 text-greenLight">
-                      Nenhuma conta para este mês.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+          <Table<Account>
+            data={accountsForSelectedMonth}
+            rowKey={(acc) => acc.id}
+            columns={[
+              { key: "accountType", label: "Account" },
+              { key: "address", label: "Address" },
+              {
+                key: "value",
+                label: "Value (R$)",
+                render: (val) => formatCurrency(val as number),
+              },
+              {
+                key: "paid",
+                label: "Paid/Unpaid",
+                render: (val, acc) => (
+                  <input
+                    type="checkbox"
+                    checked={!!val}
+                    onChange={(e) => updatePaid(acc.id, e.target.checked)}
+                    className="accent-greenLight"
+                  />
+                ),
+              },
+            ]}
+            emptyMessage="No accounts for this month"
+          />
         </>
       )}
     </div>

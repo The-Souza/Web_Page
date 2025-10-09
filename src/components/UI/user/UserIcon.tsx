@@ -15,7 +15,7 @@ export class UserIcon extends Component<UserIconProps> {
       <div className="flex items-center gap-3">
         <span className="text-greenLight">{USER_ICON[icon]()}</span>
 
-        <span className="text-greenLight text-lg font-extrabold font-[lato]">
+        <span className="text-greenLight text-lg font-extrabold font-lato">
           {userName}
         </span>
       </div>

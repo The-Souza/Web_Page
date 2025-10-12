@@ -21,7 +21,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { Card, Title, Table, FormField } from "@/components";
+import { Card, Title, Table, Select } from "@/components";
 
 import type { Account } from "@/models/account.types";
 import { ACCOUNT_TYPE_ICONS } from "@/components/UI/card/Card.variants";
@@ -131,7 +131,11 @@ export default function Home() {
 
   return (
     <div className="flex flex-col gap-4 text-greenLight">
-      {loading && <p className="text-greenLight items-center justify-center font-raleway">Carregando...</p>}
+      {loading && (
+        <p className="text-greenLight items-center justify-center font-raleway">
+          Carregando...
+        </p>
+      )}
 
       {!loading && (
         <>
@@ -139,25 +143,24 @@ export default function Home() {
             <Title text="Resumo de Contas" size="2xl" />
 
             <div className="flex gap-2 w-full sm:w-auto">
-              <FormField
-                type="select"
-                label="Ano"
-                value={selectedYear}
-                onChange={(e) => {
-                  const val = e.target.value;
+              <Select
+                label="Yaer"
+                options={availableYears.map((y) => ({ label: y, value: y }))}
+                placeholder="Select a year"
+                defaultValue={selectedYear}
+                onChange={(val) => {
                   setSelectedYear(val);
                   const months = getMonthsByYear(accounts, val);
                   setSelectedMonth(months.length > 0 ? months[0] : "");
                 }}
-                options={availableYears.map((y) => ({ label: y, value: y }))}
               />
 
-              <FormField
-                type="select"
-                label="Mês"
-                value={selectedMonth}
-                onChange={(e) => setSelectedMonth(e.target.value)}
+              <Select
+                label="Month"
                 options={availableMonths.map((m) => ({ label: m, value: m }))}
+                placeholder="Select a month"
+                defaultValue={selectedMonth}
+                onChange={(val) => setSelectedMonth(val)}
               />
             </div>
           </div>

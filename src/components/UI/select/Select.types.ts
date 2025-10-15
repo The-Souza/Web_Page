@@ -12,6 +12,13 @@ export interface UseSelectProps {
   defaultValue?: string;
 }
 
+export interface SelectProps extends UseSelectProps {
+  label?: string;
+  error?: string;
+  onChange?: (value: string) => void;
+  maxHeight?: string;
+}
+
 export interface UseSelectReturn {
   selectedValue: string | null;
   selectedLabel: string | null;
@@ -20,7 +27,7 @@ export interface UseSelectReturn {
   selectOption: (option: SelectOption) => void;
   filteredOptions: SelectOption[];
   filter: string;
-  setFilter: (value: string) => void;
+  setFilter: React.Dispatch<React.SetStateAction<string>>;
   resetSelect: () => void;
   isValid: boolean;
   highlightedIndex: number;
@@ -29,20 +36,13 @@ export interface UseSelectReturn {
   placeholder: string;
 }
 
-export interface SelectProps extends UseSelectProps {
-  label?: string;
-  error?: string;
-  onChange?: (value: string) => void;
-  maxHeight?: string;
-}
-
 export interface SelectButtonProps {
   isOpen: boolean;
   disabled: boolean;
   selectedLabel: string | null;
   toggleOpen: () => void;
   filter: string;
-  setFilter: (value: string) => void;
+  setFilter: React.Dispatch<React.SetStateAction<string>>;
   handleKeyDown: (event: React.KeyboardEvent<HTMLInputElement>) => void;
   placeholder: string;
 }
@@ -53,7 +53,7 @@ export interface SelectDropdownProps {
   handleSelect: (option: SelectOption) => void;
   maxHeight?: string;
   filter: string;
-  setFilter: (value: string) => void;
+  setFilter: React.Dispatch<React.SetStateAction<string>>;
   highlightedIndex: number;
   setHighlightedIndex: (index: number) => void;
   handleKeyDown: (event: React.KeyboardEvent<HTMLInputElement>) => void;

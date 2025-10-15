@@ -29,8 +29,8 @@ import { ACCOUNT_TYPE_ICONS } from "@/components/UI/card/Card.variants";
 const COLORS = {
   paid: "#00ff9f",
   unpaid: "#ff4444",
-  positive: "text-greenLight",
-  negative: "text-red-500",
+  positive: "text-green-400",
+  negative: "text-red-400",
 };
 
 export default function Home() {
@@ -139,14 +139,14 @@ export default function Home() {
 
       {!loading && (
         <>
-          <div className="flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between">
+          <div className="flex flex-col lg:flex-row gap-2 lg:items-end lg:justify-between">
             <Title text="Resumo de Contas" size="2xl" />
 
-            <div className="flex gap-2 w-full sm:w-auto">
+            <div className="flex flex-col sm:flex-row gap-6 lg:gap-2 w-full sm:w-auto">
               <Select
-                label="Yaer"
+                label="Year"
                 options={availableYears.map((y) => ({ label: y, value: y }))}
-                placeholder="Select a year"
+                placeholder="Select an year"
                 defaultValue={selectedYear}
                 onChange={(val) => {
                   setSelectedYear(val);
@@ -157,9 +157,8 @@ export default function Home() {
 
               <Select
                 label="Month"
-                // disabled={true}
                 options={availableMonths.map((m) => ({ label: m, value: m }))}
-                placeholder="Select a month"
+                placeholder="Select an month"
                 defaultValue={selectedMonth}
                 onChange={(val) => setSelectedMonth(val)}
               />
@@ -195,7 +194,7 @@ export default function Home() {
                     <>
                       <p>Total: {formatCurrency(totalValue)}</p>
                       <p>Paid: {formatCurrency(paidValue)}</p>
-                      <p className="text-red-400">
+                      <p className={COLORS.negative}>
                         Missing: {formatCurrency(unpaidValue)}
                       </p>
                     </>

@@ -4,10 +4,10 @@ import type { SelectOption, UseSelectProps, UseSelectReturn } from "../Select.ty
 export const useSelect = (props: UseSelectProps): UseSelectReturn => {
   const {
     options = [],
-    placeholder = "Select an Option",
+    placeholder = "Select an option",
     disabled = false,
     required = false,
-    defaultValue
+    defaultValue,
   } = props;
 
   const [isOpen, setIsOpen] = useState(false);
@@ -41,7 +41,6 @@ export const useSelect = (props: UseSelectProps): UseSelectReturn => {
   }, []);
 
   const resetSelect = useCallback(() => {
-    setSelected(null);
     setFilter("");
     setIsOpen(false);
     setHighlightedIndex(-1);
@@ -77,7 +76,8 @@ export const useSelect = (props: UseSelectProps): UseSelectReturn => {
     return true;
   }, [required, disabled, selected]);
 
-  const selectedLabel = selected?.label || placeholder;
+  const selectedLabel =
+    selected?.label && !isOpen ? selected.label : filter || placeholder;
 
   return {
     selectedValue: selected?.value ?? null,
@@ -93,5 +93,6 @@ export const useSelect = (props: UseSelectProps): UseSelectReturn => {
     highlightedIndex,
     setHighlightedIndex,
     handleKeyDown,
+    placeholder,
   };
 };

@@ -39,18 +39,19 @@ export const Select = ({
 
   const [highlightedIndex, setHighlightedIndex] = useState<number>(0);
 
-  // Fecha dropdown ao clicar fora
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
+      if (
+        wrapperRef.current &&
+        !wrapperRef.current.contains(event.target as Node)
+      ) {
         resetSelect();
       }
     };
-    document.addEventListener("click", handleClickOutside);
-    return () => document.removeEventListener("click", handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [resetSelect]);
 
-  // Atualiza highlightedIndex quando lista muda
   useEffect(() => {
     setHighlightedIndex(0);
   }, [filteredOptions]);
@@ -61,6 +62,8 @@ export const Select = ({
   };
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!isOpen) return;
+
     if (filteredOptions.length === 0) return;
 
     let nextIndex = highlightedIndex;
@@ -70,21 +73,40 @@ export const Select = ({
         nextIndex = (highlightedIndex + 1) % filteredOptions.length;
         event.preventDefault();
         break;
+
       case "ArrowUp":
-        nextIndex = (highlightedIndex - 1 + filteredOptions.length) % filteredOptions.length;
+        nextIndex =
+          (highlightedIndex - 1 + filteredOptions.length) %
+          filteredOptions.length;
         event.preventDefault();
         break;
+
       case "Enter":
-        handleSelect(filteredOptions[highlightedIndex]);
+        if (highlightedIndex >= 0 && filteredOptions[highlightedIndex]) {
+          handleSelect(filteredOptions[highlightedIndex]);
+        }
         event.preventDefault();
         break;
+
       case "Escape":
         resetSelect();
         event.preventDefault();
         break;
+
       case "Tab":
-        resetSelect();
+        event.preventDefault();
+        nextIndex = event.shiftKey
+          ? (highlightedIndex - 1 + filteredOptions.length) %
+            filteredOptions.length
+          : (highlightedIndex + 1) % filteredOptions.length;
         break;
+
+      case " ":
+        if (event.target instanceof HTMLInputElement) return;
+        toggleOpen();
+        event.preventDefault();
+        break;
+
       default:
         break;
     }
@@ -98,14 +120,18 @@ export const Select = ({
   });
 
   return (
-    <div ref={wrapperRef} className="relative min-w-[12.5rem] w-full">
+    <div ref={wrapperRef} className="relative min-w-[15rem] w-full">
       {label && <label className={labelClass}>{label}</label>}
 
       <SelectButton
         isOpen={isOpen}
-        disabled={disabled}
+        disabled={disabled ?? false}
         selectedLabel={selectedLabel}
         toggleOpen={toggleOpen}
+        filter={filter}
+        setFilter={setFilter}
+        handleKeyDown={handleKeyDown}
+        placeholder={placeholder}
       />
 
       {isOpen && (

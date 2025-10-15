@@ -1,40 +1,54 @@
+import { useRef, useEffect } from "react";
 import type { SelectOption, SelectDropdownProps } from "../Select.types";
-import classNames from "classnames";
 
 export const SelectDropdown = ({
   filteredOptions,
   selectedValue,
   handleSelect,
-  highlightedIndex,
   maxHeight = "15rem",
-}: SelectDropdownProps) => {
-  return (
-    <div className="absolute z-10 w-full mt-1 rounded-lg overflow-hidden border-2 border-greenLight shadow-greenMid bg-dark">
-      <ul className="overflow-y-auto" style={{ maxHeight }}>
-        {filteredOptions.length > 0 ? (
-          filteredOptions.map((option: SelectOption, index) => {
-            const liClass = classNames(
-              "p-3 cursor-pointer font-lato font-semibold transition-colors",
-              {
-                "bg-greenMid text-white": selectedValue === option.value,
-                "bg-greenDark text-white": highlightedIndex === index && selectedValue !== option.value,
-                "bg-dark text-white": selectedValue !== option.value && highlightedIndex !== index,
-                "hover:bg-greenMid hover:text-white": true,
-              }
-            );
+  highlightedIndex,
+}: SelectDropdownProps & { highlightedIndex: number }) => {
+  const listRef = useRef<HTMLUListElement>(null);
 
-            return (
-              <li
-                key={option.value}
-                className={liClass}
-                onClick={() => handleSelect(option)}
-              >
-                {option.label}
-              </li>
-            );
-          })
+  useEffect(() => {
+    const list = listRef.current;
+    if (!list) return;
+
+    const item = list.children[highlightedIndex] as HTMLElement;
+    if (item) {
+      item.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    }
+  }, [highlightedIndex]);
+
+  return (
+    <div
+      className="absolute z-10 w-full mt-1 border-2 border-greenLight rounded-lg shadow-greenMid bg-dark overflow-hidden"
+      style={{ maxHeight }}
+    >
+      <ul
+        ref={listRef}
+        className="w-full"
+        style={{ maxHeight, overflowY: "auto" }}
+      >
+        {filteredOptions.length > 0 ? (
+          filteredOptions.map((option: SelectOption, index) => (
+            <li
+              key={option.value}
+              tabIndex={0}
+              className={`p-3 cursor-pointer font-lato font-semibold transition-colors ${
+                selectedValue === option.value
+                  ? "bg-greenMid text-white"
+                  : index === highlightedIndex
+                  ? "bg-greenDark text-white"
+                  : "bg-dark text-white hover:bg-greenDark"
+              }`}
+              onClick={() => handleSelect(option)}
+            >
+              {option.label}
+            </li>
+          ))
         ) : (
-          <li className="p-3 text-greenLight">No options found</li>
+          <li className="p-3 font-lato font-semibold text-greenDark">No options found</li>
         )}
       </ul>
     </div>

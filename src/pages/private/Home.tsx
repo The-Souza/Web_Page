@@ -157,6 +157,7 @@ export default function Home() {
 
               <Select
                 label="Month"
+                // disabled={true}
                 options={availableMonths.map((m) => ({ label: m, value: m }))}
                 placeholder="Select a month"
                 defaultValue={selectedMonth}

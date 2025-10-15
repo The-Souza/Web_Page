@@ -29,13 +29,16 @@ export const FormField = forwardRef<HTMLInputElement, FormFieldProps>(
 
     const togglePassword = () => setShowPassword((prev) => !prev);
 
-    const inputClass = classNames("w-full p-2 rounded-lg border-2", {
-      "border-greenLight focus:outline-none focus:ring-1 focus:ring-greenLight":
-        !disabled && !error,
-      "opacity-50 cursor-not-allowed bg-gray-100": disabled,
-      "border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500":
-        error && !disabled,
-    });
+    const inputClass = classNames(
+      "w-full p-2 rounded-lg border-2 font-lato font-semibold",
+      {
+        "border-greenLight focus:outline-none focus:ring-1 focus:ring-greenLight":
+          !disabled && !error,
+        "opacity-50 cursor-not-allowed bg-gray-100": disabled,
+        "border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500":
+          error && !disabled,
+      }
+    );
 
     const labelClass = classNames("font-semibold text-md font-lato", {
       "text-greenLight": !disabled,

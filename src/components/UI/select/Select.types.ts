@@ -9,7 +9,7 @@ export interface UseSelectProps {
   placeholder?: string;
   required?: boolean;
   disabled?: boolean;
-  defaultValue?: string; 
+  defaultValue?: string;
 }
 
 export interface UseSelectReturn {
@@ -23,6 +23,10 @@ export interface UseSelectReturn {
   setFilter: (value: string) => void;
   resetSelect: () => void;
   isValid: boolean;
+  highlightedIndex: number;
+  setHighlightedIndex: (index: number) => void;
+  handleKeyDown: (event: React.KeyboardEvent<HTMLInputElement>) => void;
+  placeholder: string;
 }
 
 export interface SelectProps extends UseSelectProps {
@@ -37,6 +41,10 @@ export interface SelectButtonProps {
   disabled: boolean;
   selectedLabel: string | null;
   toggleOpen: () => void;
+  filter: string;
+  setFilter: (value: string) => void;
+  handleKeyDown: (event: React.KeyboardEvent<HTMLInputElement>) => void;
+  placeholder: string;
 }
 
 export interface SelectDropdownProps {
@@ -44,10 +52,15 @@ export interface SelectDropdownProps {
   selectedValue: string | null;
   handleSelect: (option: SelectOption) => void;
   maxHeight?: string;
+  filter: string;
+  setFilter: (value: string) => void;
+  highlightedIndex: number;
+  setHighlightedIndex: (index: number) => void;
+  handleKeyDown: (event: React.KeyboardEvent<HTMLInputElement>) => void;
+  placeholder: string;
 }
 
 export interface SelectOptionsProps {
   options: SelectOption[];
-  selectedValue: string | null;
   onSelect: (option: SelectOption) => void;
 }

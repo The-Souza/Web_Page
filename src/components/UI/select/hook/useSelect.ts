@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import type { SelectOption, UseSelectProps, UseSelectReturn } from "../Select.types";
 
 export const useSelect = (props: UseSelectProps): UseSelectReturn => {
@@ -17,22 +17,7 @@ export const useSelect = (props: UseSelectProps): UseSelectReturn => {
       : null
   );
   const [filter, setFilter] = useState("");
-
-  const toggleOpen = (): void => {
-    if (!disabled) setIsOpen((prev) => !prev);
-  };
-
-  const selectOption = (option: SelectOption): void => {
-    setSelected(option);
-    setIsOpen(false);
-    setFilter("");
-  };
-
-  const resetSelect = (): void => {
-    setSelected(null);
-    setFilter("");
-    setIsOpen(false);
-  };
+  const [highlightedIndex, setHighlightedIndex] = useState<number>(-1);
 
   const filteredOptions = useMemo(() => {
     if (!filter) return options;
@@ -41,6 +26,50 @@ export const useSelect = (props: UseSelectProps): UseSelectReturn => {
     );
   }, [filter, options]);
 
+  const toggleOpen = useCallback(() => {
+    if (!disabled) {
+      setIsOpen((prev) => !prev);
+      setHighlightedIndex(-1);
+    }
+  }, [disabled]);
+
+  const selectOption = useCallback((option: SelectOption) => {
+    setSelected(option);
+    setIsOpen(false);
+    setFilter("");
+    setHighlightedIndex(-1);
+  }, []);
+
+  const resetSelect = useCallback(() => {
+    setSelected(null);
+    setFilter("");
+    setIsOpen(false);
+    setHighlightedIndex(-1);
+  }, []);
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!isOpen) return;
+
+    const length = filteredOptions.length;
+    if (length === 0) return;
+
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      setHighlightedIndex((prev) => (prev + 1) % length);
+    } else if (event.key === "ArrowUp") {
+      event.preventDefault();
+      setHighlightedIndex((prev) => (prev - 1 + length) % length);
+    } else if (event.key === "Enter") {
+      event.preventDefault();
+      if (highlightedIndex >= 0) {
+        selectOption(filteredOptions[highlightedIndex]);
+      }
+    } else if (event.key === "Escape") {
+      event.preventDefault();
+      resetSelect();
+    }
+  };
+
   const isValid = useMemo(() => {
     if (required && !disabled) {
       return selected !== null;
@@ -48,9 +77,11 @@ export const useSelect = (props: UseSelectProps): UseSelectReturn => {
     return true;
   }, [required, disabled, selected]);
 
+  const selectedLabel = selected?.label || placeholder;
+
   return {
     selectedValue: selected?.value ?? null,
-    selectedLabel: selected?.label ?? placeholder,
+    selectedLabel,
     isOpen,
     toggleOpen,
     selectOption,
@@ -59,5 +90,8 @@ export const useSelect = (props: UseSelectProps): UseSelectReturn => {
     setFilter,
     resetSelect,
     isValid,
+    highlightedIndex,
+    setHighlightedIndex,
+    handleKeyDown,
   };
 };

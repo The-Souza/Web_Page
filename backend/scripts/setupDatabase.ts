@@ -106,7 +106,7 @@ export async function generateAccounts(conn: sql.ConnectionPool) {
     for (const accountType of accountsList) {
       for (let year = startYear; year <= endYear; year++) {
         for (let month = 1; month <= 12; month++) {
-          if (year === 2025 && month > 9) break;
+          if (year === 2025 && month > 12) break;
 
           const consumption = generateConsumption(accountType);
           const value = generateValue(accountType, consumption);

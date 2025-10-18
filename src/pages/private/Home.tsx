@@ -12,16 +12,7 @@ import {
   getMonthsByYear,
 } from "@/helpers/accountHelpers";
 
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from "recharts";
-import { Card, Title, Table, Select } from "@/components";
+import { Card, Title, Table, Select, CustomBarChart } from "@/components";
 
 import type { Account } from "@/models/account.types";
 import { ACCOUNT_TYPE_ICONS } from "@/components/UI/card/Card.variants";
@@ -112,8 +103,8 @@ export default function Home() {
     () =>
       monthSummaries.map(({ month, summary }) => ({
         month,
-        Paid: summary.paidValue,
-        Unpaid: summary.unpaidValue,
+        Paid: Number(summary.paidValue.toFixed(2)),
+        Unpaid: Number(summary.unpaidValue.toFixed(2)),
       })),
     [monthSummaries]
   );
@@ -139,10 +130,10 @@ export default function Home() {
 
       {!loading && (
         <>
-          <div className="flex flex-col lg:flex-row gap-2 lg:items-end lg:justify-between">
+          <div className="flex flex-col lg:flex-row gap-4 lg:items-end lg:justify-between">
             <Title text="Resumo de Contas" size="2xl" />
 
-            <div className="flex flex-col sm:flex-row gap-6 lg:gap-2 w-full sm:w-auto">
+            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
               <Select
                 label="Year"
                 options={availableYears.map((y) => ({ label: y, value: y }))}
@@ -165,7 +156,7 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <Card
               title="Total for the month"
               icon="money"
@@ -183,7 +174,7 @@ export default function Home() {
             />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 flex-1">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 flex-1">
             {accountTypeSummary.map(
               ({ type, totalValue, paidValue, unpaidValue }) => (
                 <Card
@@ -193,7 +184,9 @@ export default function Home() {
                   value={
                     <>
                       <p>Total: {formatCurrency(totalValue)}</p>
-                      <p>Paid: {formatCurrency(paidValue)}</p>
+                      <p className={COLORS.positive}>
+                        Paid: {formatCurrency(paidValue)}
+                      </p>
                       <p className={COLORS.negative}>
                         Missing: {formatCurrency(unpaidValue)}
                       </p>
@@ -204,19 +197,7 @@ export default function Home() {
             )}
           </div>
 
-          <div className="bg-dark shadow-greenLight rounded-xl border-2 border-greenLight p-6 flex flex-col gap-2">
-            <Title text="Comparison by month" size="xl"></Title>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={chartData}>
-                <XAxis dataKey="month" stroke={COLORS.paid} />
-                <YAxis stroke={COLORS.paid} />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="Paid" stackId="a" fill={COLORS.paid} />
-                <Bar dataKey="Unpaid" stackId="a" fill={COLORS.unpaid} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+          <CustomBarChart data={chartData} title="Comparison by month" />
 
           <Table<Account>
             data={accountsForSelectedMonth}

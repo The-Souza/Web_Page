@@ -60,7 +60,10 @@ export function getDiffFromLastMonth(
 /**
  * Calcula o resumo por tipo de conta
  */
-export function calculateAccountTypeSummary(accounts: Account[], month: string) {
+export function calculateAccountTypeSummary(
+  accounts: Account[],
+  month: string
+) {
   const monthAccounts = accounts.filter((acc) => acc.month === month);
   const types = Array.from(new Set(monthAccounts.map((a) => a.accountType)));
 
@@ -83,6 +86,8 @@ export function formatCurrency(value: number): string {
   return value.toLocaleString("pt-BR", {
     style: "currency",
     currency: "BRL",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
   });
 }
 

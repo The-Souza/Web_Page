@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Button, Input, Title } from "@/components";
+import { Button, FormField, Title } from "@/components";
 import { useNavigate } from "react-router-dom";
 import * as z from "zod";
 import { checkUserExists, resetPassword } from "@/services";
@@ -84,29 +84,37 @@ export default function ResetPassword() {
     <AuthForm onSubmit={handleSubmit(onSubmit)}>
       <Title text="Change Password" size="2xl" />
 
-      <Input
-        {...register("email")}
-        placeholder="Email"
-        error={errors.email?.message}
-      />
+      <div className="flex flex-col w-full gap-2">
+        <FormField
+          {...register("email")}
+          label="Email:"
+          error={errors.email?.message}
+        />
 
-      <Input
-        {...register("newPassword")}
-        placeholder="New Password"
-        type="password"
-        error={errors.newPassword?.message}
+        <FormField
+          {...register("newPassword")}
+          label="New Password:"
+          type="password"
+          error={errors.newPassword?.message}
+          disabled={!userExists}
+        />
+
+        <FormField
+          {...register("confirmNewPassword")}
+          label="Confirm New Password:"
+          type="password"
+          error={errors.confirmNewPassword?.message}
+          disabled={!userExists}
+        />
+      </div>
+
+      <Button
+        text="Change Password"
+        type="submit"
+        size="full"
+        variant="solid"
         disabled={!userExists}
       />
-
-      <Input
-        {...register("confirmNewPassword")}
-        placeholder="Confirm New Password"
-        type="password"
-        error={errors.confirmNewPassword?.message}
-        disabled={!userExists}
-      />
-
-      <Button text="Change Password" type="submit" size={"full"} variant="solid" disabled={!userExists} />
 
       <AuthLinksContainer>
         <AuthLinkButton text="Back to Login" to="/" />

@@ -15,7 +15,7 @@ export class Title extends Component<TitleProps> {
     const textSizeClass = TITLE_SIZE_VARIANTS[sizeKey];
 
     const titleClass = classNames(
-      "font-extrabold font-[lato] text-greenLight",
+      "font-extrabold font-raleway text-greenLight",
       textSizeClass
     );
 

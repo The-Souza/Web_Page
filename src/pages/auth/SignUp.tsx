@@ -1,6 +1,6 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Button, Input, Title } from "@/components";
+import { Button, FormField, Title } from "@/components";
 import { useNavigate } from "react-router-dom";
 import * as z from "zod";
 import { registerUser } from "@/services";
@@ -59,30 +59,36 @@ export default function SignUp() {
     <AuthForm onSubmit={handleSubmit(onSubmit)}>
       <Title text="Create Account" size="2xl" />
 
-      <Input
-        {...register("name")}
-        placeholder="Full name"
-        error={errors.name?.message}
-      />
-      <Input
-        {...register("email")}
-        placeholder="Email"
-        error={errors.email?.message}
-      />
-      <Input
-        {...register("password")}
-        placeholder="Password"
-        type="password"
-        error={errors.password?.message}
-      />
-      <Input
-        {...register("confirmPassword")}
-        placeholder="Confirm Password"
-        type="password"
-        error={errors.confirmPassword?.message}
-      />
+      <div className="flex flex-col w-full gap-2">
+        <FormField
+          {...register("name")}
+          label="Full Name"
+          error={errors.name?.message}
+        />
 
-      <Button text="Sign up" type="submit" size={"full"} variant="solid" />
+        <FormField
+          {...register("email")}
+          label="Email:"
+          type="email"
+          error={errors.email?.message}
+        />
+
+        <FormField
+          {...register("password")}
+          label="Password:"
+          type="password"
+          error={errors.password?.message}
+        />
+
+        <FormField
+          {...register("confirmPassword")}
+          label="Confirm Password:"
+          type="password"
+          error={errors.confirmPassword?.message}
+        />
+      </div>
+
+      <Button text="Sign up" type="submit" size="full" variant="solid" />
 
       <AuthLinksContainer>
         <AuthLinkButton text="Already have an account? Login" to="/" />

@@ -1,19 +1,8 @@
-import { useEffect, useState, useMemo } from "react";
 import { useAuth } from "@/hooks/UseAuth";
 import { useAccounts } from "@/hooks/useAccounts";
-import {
-  getPreviousMonth,
-  calculateMonthSummary,
-  calculateAccountTypeSummary,
-  formatCurrency,
-  getDiffFromLastMonth,
-  emptySummary,
-  getAvailableYears,
-  getMonthsByYear,
-} from "@/helpers/accountHelpers";
-
 import { Card, Title, Table, Select, CustomBarChart } from "@/components";
-
+import { useAccountSummary } from "@/hooks/useAccountSummary";
+import { formatCurrency } from "@/helpers/accountHelpers";
 import type { Account } from "@/models/account.types";
 import { ACCOUNT_TYPE_ICONS } from "@/components/UI/card/Card.variants";
 
@@ -27,87 +16,13 @@ const COLORS = {
 export default function Home() {
   const { user } = useAuth();
   const { accounts, loading, updatePaid } = useAccounts(user?.email);
+  const summary = useAccountSummary(accounts);
 
-  const [selectedYear, setSelectedYear] = useState<string>("");
-  const [selectedMonth, setSelectedMonth] = useState<string>("");
-
-  useEffect(() => {
-    const now = new Date();
-    const year = now.getFullYear().toString();
-    const month = (now.getMonth() + 1).toString().padStart(2, "0");
-    setSelectedYear(year);
-    setSelectedMonth(`${month}/${year}`);
-  }, []);
-
-  const availableYears = useMemo(() => getAvailableYears(accounts), [accounts]);
-  const availableMonths = useMemo(
-    () => getMonthsByYear(accounts, selectedYear),
-    [accounts, selectedYear]
-  );
-  const accountsForSelectedMonth = useMemo(
-    () => accounts.filter((acc) => acc.month === selectedMonth),
-    [accounts, selectedMonth]
-  );
-  const previousMonth = useMemo(
-    () => (selectedMonth ? getPreviousMonth(selectedMonth) : ""),
-    [selectedMonth]
-  );
-
-  const currentSummary = useMemo(
-    () =>
-      selectedMonth && accountsForSelectedMonth.length > 0
-        ? calculateMonthSummary(accountsForSelectedMonth, selectedMonth)
-        : emptySummary,
-    [accountsForSelectedMonth, selectedMonth]
-  );
-
-  const previousSummary = useMemo(
-    () =>
-      previousMonth && accountsForSelectedMonth.length > 0
-        ? calculateMonthSummary(accounts, previousMonth)
-        : emptySummary,
-    [accounts, previousMonth, accountsForSelectedMonth.length]
-  );
-
-  const diffFromLastMonth = useMemo(
-    () => getDiffFromLastMonth(currentSummary, previousSummary),
-    [currentSummary, previousSummary]
-  );
-
-  const accountTypeSummary = useMemo(() => {
-    if (!selectedMonth || accountsForSelectedMonth.length === 0) {
-      const allTypes = Array.from(new Set(accounts.map((a) => a.accountType)));
-      return allTypes.map((type) => ({
-        type,
-        totalValue: 0,
-        paidValue: 0,
-        unpaidValue: 0,
-      }));
-    }
-    return calculateAccountTypeSummary(accountsForSelectedMonth, selectedMonth);
-  }, [accountsForSelectedMonth, selectedMonth, accounts]);
-
-  const monthSummaries = useMemo(
-    () =>
-      availableMonths.map((m) => ({
-        month: m,
-        summary: calculateMonthSummary(
-          accounts.filter((acc) => acc.month === m),
-          m
-        ),
-      })),
-    [accounts, availableMonths]
-  );
-
-  const chartData = useMemo(
-    () =>
-      monthSummaries.map(({ month, summary }) => ({
-        month,
-        Paid: Number(summary.paidValue.toFixed(2)),
-        Unpaid: Number(summary.unpaidValue.toFixed(2)),
-      })),
-    [monthSummaries]
-  );
+  const chartData = summary.monthSummaries.map(({ month, summary }) => ({
+    month,
+    Paid: Number(summary.paidValue.toFixed(2)),
+    Unpaid: Number(summary.unpaidValue.toFixed(2)),
+  }));
 
   const renderDiff = (diff: number) => {
     const color = diff <= 0 ? COLORS.positive : COLORS.negative;
@@ -123,35 +38,36 @@ export default function Home() {
   return (
     <div className="flex flex-col gap-4 text-greenLight">
       {loading && (
-        <p className="text-greenLight items-center justify-center font-raleway">
-          Carregando...
-        </p>
+        <p className="text-greenLight font-raleway text-center">Loading...</p>
       )}
 
       {!loading && (
         <>
-          <div className="flex flex-col lg:flex-row gap-4 lg:items-end lg:justify-between">
-            <Title text="Resumo de Contas" size="2xl" />
+          <div className="flex flex-col lg:flex-row gap-4 lg:items-center lg:justify-between">
+            <Title text="Account Summary" size="2xl" />
 
             <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
               <Select
                 label="Year"
-                options={availableYears.map((y) => ({ label: y, value: y }))}
-                placeholder="Select an year"
-                defaultValue={selectedYear}
+                options={summary.availableYears.map((y) => ({
+                  label: y,
+                  value: y,
+                }))}
+                placeholder="Select a year"
                 onChange={(val) => {
-                  setSelectedYear(val);
-                  const months = getMonthsByYear(accounts, val);
-                  setSelectedMonth(months.length > 0 ? months[0] : "");
+                  summary.setSelectedYear(val);
+                  summary.setSelectedMonth("");
                 }}
               />
 
               <Select
                 label="Month"
-                options={availableMonths.map((m) => ({ label: m, value: m }))}
-                placeholder="Select an month"
-                defaultValue={selectedMonth}
-                onChange={(val) => setSelectedMonth(val)}
+                options={summary.availableMonths.map((m) => ({
+                  label: m,
+                  value: m,
+                }))}
+                placeholder="Select a month"
+                onChange={(val) => summary.setSelectedMonth(val)}
               />
             </div>
           </div>
@@ -160,22 +76,22 @@ export default function Home() {
             <Card
               title="Total for the month"
               icon="money"
-              value={formatCurrency(currentSummary.totalValue)}
+              value={formatCurrency(summary.currentSummary.totalValue)}
             />
             <Card
               title="Paid"
               icon="money"
-              value={formatCurrency(currentSummary.paidValue)}
+              value={formatCurrency(summary.currentSummary.paidValue)}
             />
             <Card
               title="Previous month"
               icon="money"
-              value={renderDiff(diffFromLastMonth)}
+              value={renderDiff(summary.diffFromLastMonth)}
             />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 flex-1">
-            {accountTypeSummary.map(
+            {summary.accountTypeSummary.map(
               ({ type, totalValue, paidValue, unpaidValue }) => (
                 <Card
                   key={type}
@@ -200,7 +116,7 @@ export default function Home() {
           <CustomBarChart data={chartData} title="Comparison by month" />
 
           <Table<Account>
-            data={accountsForSelectedMonth}
+            data={summary.accountsForSelectedMonth}
             rowKey={(acc) => acc.id}
             columns={[
               { key: "accountType", label: "Account" },

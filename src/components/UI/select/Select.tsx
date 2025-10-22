@@ -53,7 +53,7 @@ export const Select = ({
   }, [resetSelect]);
 
   useEffect(() => {
-    setHighlightedIndex(0);
+    setHighlightedIndex(-1);
   }, [filteredOptions]);
 
   const handleSelect = (option: SelectOption) => {

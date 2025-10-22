@@ -1,4 +1,4 @@
-import type { Account, MonthSummary } from "@/models/account.types";
+import type { Account, MonthSummary } from "@/types/account.types";
 
 /* -------------------------------------------------------------------------- */
 /* 🧮 Generic Utilities */

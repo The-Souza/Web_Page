@@ -3,7 +3,7 @@ import { useAccounts } from "@/hooks/useAccounts";
 import { Card, Title, Table, Select, CustomBarChart } from "@/components";
 import { useAccountSummary } from "@/hooks/useAccountSummary";
 import { formatCurrency } from "@/helpers/accountHelpers";
-import type { Account } from "@/models/account.types";
+import type { Account } from "@/types/account.types";
 import { ACCOUNT_TYPE_ICONS } from "@/components/UI/card/Card.variants";
 
 const COLORS = {
@@ -57,6 +57,7 @@ export default function Home() {
                 onChange={(val) => {
                   summary.setSelectedYear(val);
                   summary.setSelectedMonth("");
+                  summary.resetMonthSelect?.(); // força o Select a mostrar placeholder
                 }}
               />
 

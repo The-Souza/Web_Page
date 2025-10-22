@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { Account } from "@/models/account.types";
+import type { Account } from "@/types/account.types";
 import { useToast } from "@/components/providers/useToast";
 
 export function useAccounts(email?: string) {

@@ -8,7 +8,7 @@ import {
   getAvailableYears,
   getMonthsByYear,
 } from "@/helpers/accountHelpers";
-import type { Account } from "@/models/account.types";
+import type { Account } from "@/types/account.types";
 
 export function useAccountSummary(accounts: Account[]) {
   const [selectedYear, setSelectedYear] = useState<string>("");

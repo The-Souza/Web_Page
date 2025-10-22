@@ -1,6 +1,6 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Button, FormField, Title } from "@/components";
+import { Button, Input, Title } from "@/components";
 import { useNavigate } from "react-router-dom";
 import * as z from "zod";
 import { loginUser } from "@/services";
@@ -57,13 +57,13 @@ export default function SignIn() {
       <Title text="Login" size="2xl" />
 
       <div className="flex flex-col w-full gap-2">
-        <FormField
+        <Input
           {...register("email")}
           label="Email:"
           error={errors.email?.message}
         />
 
-        <FormField
+        <Input
           {...register("password")}
           label="Password:"
           type="password"

@@ -1,8 +1,8 @@
 import { forwardRef, useState, useEffect } from "react";
 import classNames from "classnames";
-import type { FormFieldProps } from "./Input.types";
+import type { InputProps } from "./Input.types";
 
-export const FormField = forwardRef<HTMLInputElement, FormFieldProps>(
+export const Input  = forwardRef<HTMLInputElement, InputProps>(
   (
     {
       label,
@@ -105,4 +105,4 @@ export const FormField = forwardRef<HTMLInputElement, FormFieldProps>(
   }
 );
 
-FormField.displayName = "FormField";
+Input.displayName = "Input";

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Button, FormField, Title } from "@/components";
+import { Button, Input, Title } from "@/components";
 import { useNavigate } from "react-router-dom";
 import * as z from "zod";
 import { checkUserExists, resetPassword } from "@/services";
@@ -85,13 +85,13 @@ export default function ResetPassword() {
       <Title text="Change Password" size="2xl" />
 
       <div className="flex flex-col w-full gap-2">
-        <FormField
+        <Input
           {...register("email")}
           label="Email:"
           error={errors.email?.message}
         />
 
-        <FormField
+        <Input
           {...register("newPassword")}
           label="New Password:"
           type="password"
@@ -99,7 +99,7 @@ export default function ResetPassword() {
           disabled={!userExists}
         />
 
-        <FormField
+        <Input
           {...register("confirmNewPassword")}
           label="Confirm New Password:"
           type="password"

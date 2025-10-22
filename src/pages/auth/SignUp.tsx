@@ -1,6 +1,6 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Button, FormField, Title } from "@/components";
+import { Button, Input, Title } from "@/components";
 import { useNavigate } from "react-router-dom";
 import * as z from "zod";
 import { registerUser } from "@/services";
@@ -60,27 +60,27 @@ export default function SignUp() {
       <Title text="Create Account" size="2xl" />
 
       <div className="flex flex-col w-full gap-2">
-        <FormField
+        <Input
           {...register("name")}
           label="Full Name"
           error={errors.name?.message}
         />
 
-        <FormField
+        <Input
           {...register("email")}
           label="Email:"
           type="email"
           error={errors.email?.message}
         />
 
-        <FormField
+        <Input
           {...register("password")}
           label="Password:"
           type="password"
           error={errors.password?.message}
         />
 
-        <FormField
+        <Input
           {...register("confirmPassword")}
           label="Confirm Password:"
           type="password"

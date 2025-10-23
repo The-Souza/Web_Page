@@ -29,11 +29,17 @@ export interface UseSelectReturn {
   filter: string;
   setFilter: React.Dispatch<React.SetStateAction<string>>;
   resetSelect: () => void;
+  clearSelection: () => void;
   isValid: boolean;
   highlightedIndex: number;
   setHighlightedIndex: (index: number) => void;
   handleKeyDown: (event: React.KeyboardEvent<HTMLInputElement>) => void;
   placeholder: string;
+}
+
+export interface SelectHandle {
+  reset: () => void;
+  clear: () => void;
 }
 
 export interface SelectButtonProps {

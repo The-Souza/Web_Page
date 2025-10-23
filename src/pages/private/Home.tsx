@@ -5,6 +5,8 @@ import { useAccountSummary } from "@/hooks/useAccountSummary";
 import { formatCurrency } from "@/helpers/accountHelpers";
 import type { Account } from "@/types/account.types";
 import { ACCOUNT_TYPE_ICONS } from "@/components/UI/card/Card.variants";
+import { useRef } from "react";
+import type { SelectHandle } from "@/components/UI/select/Select.types";
 
 const COLORS = {
   paid: "#00ff9f",
@@ -17,6 +19,7 @@ export default function Home() {
   const { user } = useAuth();
   const { accounts, loading, updatePaid } = useAccounts(user?.email);
   const summary = useAccountSummary(accounts);
+  const monthSelectRef = useRef<SelectHandle | null>(null);
 
   const chartData = summary.monthSummaries.map(({ month, summary }) => ({
     month,
@@ -49,24 +52,19 @@ export default function Home() {
             <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
               <Select
                 label="Year"
-                options={summary.availableYears.map((y) => ({
-                  label: y,
-                  value: y,
-                }))}
+                options={summary.availableYears.map((y) => ({ label: y, value: y }))}
                 placeholder="Select a year"
                 onChange={(val) => {
                   summary.setSelectedYear(val);
                   summary.setSelectedMonth("");
-                  summary.resetMonthSelect?.(); // força o Select a mostrar placeholder
+                  monthSelectRef.current?.clear();
                 }}
               />
 
               <Select
+                ref={monthSelectRef}
                 label="Month"
-                options={summary.availableMonths.map((m) => ({
-                  label: m,
-                  value: m,
-                }))}
+                options={summary.availableMonths.map((m) => ({ label: m, value: m }))}
                 placeholder="Select a month"
                 onChange={(val) => summary.setSelectedMonth(val)}
               />

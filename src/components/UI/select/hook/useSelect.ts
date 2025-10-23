@@ -41,6 +41,15 @@ export const useSelect = (props: UseSelectProps): UseSelectReturn => {
   }, []);
 
   const resetSelect = useCallback(() => {
+    // apenas fecha o dropdown e limpa o filtro/highlight
+    setFilter("");
+    setIsOpen(false);
+    setHighlightedIndex(-1);
+  }, []);
+
+  const clearSelection = useCallback(() => {
+    // limpa seleção além de fechar/resetar estado do dropdown
+    setSelected(null);
     setFilter("");
     setIsOpen(false);
     setHighlightedIndex(-1);
@@ -89,6 +98,7 @@ export const useSelect = (props: UseSelectProps): UseSelectReturn => {
     filter,
     setFilter,
     resetSelect,
+  clearSelection,
     isValid,
     highlightedIndex,
     setHighlightedIndex,

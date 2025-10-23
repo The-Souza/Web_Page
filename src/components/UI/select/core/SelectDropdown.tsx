@@ -48,7 +48,7 @@ export const SelectDropdown = ({
             </li>
           ))
         ) : (
-          <li className="p-3 font-lato font-semibold text-greenDark">No options found</li>
+          <li className="p-3 font-lato font-semibold text-greenLight italic">No options found</li>
         )}
       </ul>
     </div>

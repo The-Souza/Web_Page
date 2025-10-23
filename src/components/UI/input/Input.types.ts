@@ -5,4 +5,5 @@ export interface InputProps
   label?: string;
   error?: string;
   onChange?: (e: ChangeEvent<HTMLInputElement>) => void;
+  theme?: "light" | "dark";
 }

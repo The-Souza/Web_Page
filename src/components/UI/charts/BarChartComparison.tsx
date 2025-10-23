@@ -13,6 +13,7 @@ import type { CustomBarChartProps } from "./Chart.types";
 import { defaultChartColors, defaultChartFont } from "./Chart.config";
 import { useMediaQuery } from "@/hooks/UseMediaQuery";
 import { useMemo } from "react";
+import type { ReactNode } from "react";
 
 export const CustomBarChart = ({
   data,
@@ -24,12 +25,18 @@ export const CustomBarChart = ({
   const isMobile = useMediaQuery("(max-width: 768px)");
 
   const sortedData = useMemo(() => {
-    // Converte "MM/YYYY" em número do mês para ordenação
-    return [...data].sort((a, b) => {
-      const monthA = Number(a.month.split("/")[0]);
-      const monthB = Number(b.month.split("/")[0]);
-      return monthA - monthB;
-    });
+    // Normaliza os valores para 2 casas decimais e ordena por mês
+    return [...data]
+      .map((d) => ({
+        ...d,
+        Paid: Number(d.Paid.toFixed(2)),
+        Unpaid: Number(d.Unpaid.toFixed(2)),
+      }))
+      .sort((a, b) => {
+        const monthA = Number(a.month.split("/")[0]);
+        const monthB = Number(b.month.split("/")[0]);
+        return monthA - monthB;
+      });
   }, [data]);
 
   function formatYAxisAbbr(value: number) {
@@ -195,6 +202,15 @@ export const CustomBarChart = ({
               fill: font.color,
               fontSize: isMobile ? font.sizeMobile : font.sizeDesktop,
               fontFamily: font.family,
+              formatter: (label: ReactNode) => {
+                const n = Number(label as number);
+                return !isNaN(n)
+                  ? n.toLocaleString("pt-BR", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })
+                  : label;
+              },
             }}
             barSize={isMobile ? 20 : undefined}
           />
@@ -209,6 +225,15 @@ export const CustomBarChart = ({
               fill: font.color,
               fontSize: isMobile ? font.sizeMobile : font.sizeDesktop,
               fontFamily: font.family,
+              formatter: (label: ReactNode) => {
+                const n = Number(label as number);
+                return !isNaN(n)
+                  ? n.toLocaleString("pt-BR", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })
+                  : label;
+              },
             }}
             barSize={isMobile ? 20 : undefined}
           />

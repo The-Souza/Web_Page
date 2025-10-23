@@ -15,6 +15,7 @@ export const Input  = forwardRef<HTMLInputElement, InputProps>(
       onChange,
       onBlur,
       autoComplete,
+      theme = "light",
       ...props
     },
     ref
@@ -29,18 +30,38 @@ export const Input  = forwardRef<HTMLInputElement, InputProps>(
 
     const togglePassword = () => setShowPassword((prev) => !prev);
 
-    const inputClass = classNames(
-      "w-full p-2 rounded-lg border-2 font-lato font-semibold",
-      {
-        "border-greenLight focus:outline-none focus:ring-1 focus:ring-greenLight":
-          !disabled && !error,
-        "opacity-50 cursor-not-allowed bg-gray-100": disabled,
-        "border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500":
-          error && !disabled,
-      }
-    );
+    const themeStyles: Record<
+      "light" | "dark",
+      { inputBase: string; inputBgWhenDisabled?: string; labelBase: string; wrapperBase: string }
+    > = {
+      light: {
+        wrapperBase: "w-full flex flex-col gap-1 relative",
+        inputBase: "w-full p-2 rounded-lg border-2 font-lato font-semibold",
+        labelBase: "font-semibold text-md font-lato",
+      },
+      dark: {
+        wrapperBase: "w-full flex flex-col gap-1 relative",
+        // visual similar ao SelectButton
+        inputBase:
+          "w-full h-11 px-4 border-2 rounded-lg flex items-center font-lato font-semibold bg-dark",
+        labelBase: "block mb-1 text-md font-bold font-lato",
+      },
+    };
 
-    const labelClass = classNames("font-semibold text-md font-lato", {
+    const base = themeStyles[theme];
+
+    const inputClass = classNames(base.inputBase, {
+      // comum
+      "border-greenLight focus:outline-none focus:ring-1 focus:ring-greenLight":
+        !disabled && !error && theme === "light",
+      "opacity-50 cursor-not-allowed bg-gray-100": disabled && theme === "light",
+      "border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500":
+        error && !disabled && theme === "light",
+      // dark theme tweaks (keeps select-like background)
+      "opacity-50 cursor-not-allowed": disabled && theme === "dark",
+    });
+
+    const labelClass = classNames(base.labelBase, {
       "text-greenLight": !disabled,
       "text-greenMid": disabled,
     });
@@ -59,7 +80,7 @@ export const Input  = forwardRef<HTMLInputElement, InputProps>(
         : "off");
 
     return (
-      <div className="w-full flex flex-col gap-1 relative">
+      <div className={base.wrapperBase}>
         {label && (
           <label htmlFor={inputId} className={labelClass}>
             {label}
@@ -87,7 +108,6 @@ export const Input  = forwardRef<HTMLInputElement, InputProps>(
             aria-label={label || placeholder}
             {...props}
           />
-
           {type === "password" && (
             <i
               className={classNames(

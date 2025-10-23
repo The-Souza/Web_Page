@@ -5,11 +5,19 @@ import type { Account, MonthSummary } from "@/types/account.types";
 /* -------------------------------------------------------------------------- */
 
 /**
+ * Arredonda um número para 2 casas decimais de forma segura.
+ */
+function roundTwo(value: number): number {
+  return Math.round((value + Number.EPSILON) * 100) / 100;
+}
+
+/**
  * Soma os valores de uma lista de contas, com ou sem condição.
  */
 function sumValues(accounts: Account[], predicate?: (acc: Account) => boolean): number {
   const filtered = predicate ? accounts.filter(predicate) : accounts;
-  return filtered.reduce((acc, a) => acc + a.value, 0);
+  const total = filtered.reduce((acc, a) => acc + a.value, 0);
+  return roundTwo(total);
 }
 
 /**
@@ -83,12 +91,12 @@ export function computeMonthSummary(accounts: Account[], month: string): MonthSu
 
   const totalValue = sumValues(monthAccounts);
   const paidValue = sumValues(monthAccounts, (a) => a.paid);
-  const unpaidValue = totalValue - paidValue;
-  const paidPercentage = totalValue > 0 ? (paidValue / totalValue) * 100 : 0;
+  const unpaidValue = roundTwo(totalValue - paidValue);
+  const paidPercentage = totalValue > 0 ? roundTwo((paidValue / totalValue) * 100) : 0;
 
   return {
-    totalValue,
-    paidValue,
+    totalValue: roundTwo(totalValue),
+    paidValue: roundTwo(paidValue),
     unpaidValue,
     paidPercentage,
     diffFromLastMonth: 0,
@@ -99,7 +107,7 @@ export function computeMonthSummary(accounts: Account[], month: string): MonthSu
  * Calcula a diferença de total entre o mês atual e o anterior.
  */
 export function getDiffFromLastMonth(current: MonthSummary, previous: MonthSummary): number {
-  return current.totalValue - previous.totalValue;
+  return roundTwo(current.totalValue - previous.totalValue);
 }
 
 /**
@@ -113,9 +121,9 @@ export function computeAccountTypeSummary(accounts: Account[], month: string) {
     const filtered = monthAccounts.filter((a) => a.accountType === type);
     const totalValue = sumValues(filtered);
     const paidValue = sumValues(filtered, (a) => a.paid);
-    const unpaidValue = totalValue - paidValue;
+    const unpaidValue = roundTwo(totalValue - paidValue);
 
-    return { type, totalValue, paidValue, unpaidValue };
+    return { type, totalValue: roundTwo(totalValue), paidValue: roundTwo(paidValue), unpaidValue };
   });
 }
 

@@ -132,6 +132,7 @@ export default function RegisterAccount() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <Select
             label="Account Type"
+            theme="light"
             placeholder="Select account type"
             options={accountTypeOptions}
             onChange={(val) => setValue("accountType", val)}
@@ -206,6 +207,7 @@ export default function RegisterAccount() {
 
           <Select
             label="Year"
+            theme="light"
             placeholder="Select year"
             options={yearOptions}
             onChange={(val) => setValue("year", val)}
@@ -214,6 +216,7 @@ export default function RegisterAccount() {
 
           <Select
             label="Month"
+            theme="light"
             placeholder="Select month"
             options={monthOptions}
             onChange={(val) => setValue("month", val)}

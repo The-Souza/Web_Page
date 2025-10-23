@@ -17,6 +17,7 @@ export const Select = forwardRef<SelectHandle, SelectProps>(
       error,
       maxHeight = "15rem",
       onChange,
+      theme = "dark",
     }: SelectProps,
     ref
   ) => {
@@ -147,6 +148,7 @@ export const Select = forwardRef<SelectHandle, SelectProps>(
           setFilter={setFilter}
           handleKeyDown={handleKeyDown}
           placeholder={placeholder}
+          theme={theme}
         />
 
         {isOpen && (
@@ -161,6 +163,7 @@ export const Select = forwardRef<SelectHandle, SelectProps>(
             setHighlightedIndex={setHighlightedIndex}
             handleKeyDown={handleKeyDown}
             placeholder={placeholder}
+            theme={theme}
           />
         )}
 

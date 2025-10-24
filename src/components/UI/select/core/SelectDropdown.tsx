@@ -23,13 +23,10 @@ export const SelectDropdown = ({
   }, [highlightedIndex]);
 
   const containerClass = classNames(
-    "absolute z-10 w-full mt-1 border-2 rounded-lg overflow-hidden",
+    "absolute z-10 w-full mt-1 border-2 rounded-lg overflow-hidden border-greenLight shadow-greenMid",
     {
-      // Light theme
-      "border-greenLight bg-white shadow-sm": theme === "light",
-
-      // Dark theme
-      "border-greenLight bg-dark shadow-greenMid": theme === "dark",
+      "bg-white": theme === "light",
+      "bg-dark": theme === "dark",
     }
   );
 
@@ -37,21 +34,15 @@ export const SelectDropdown = ({
     classNames(
       "p-3 cursor-pointer font-lato font-semibold transition-colors",
       {
-        // Light theme - Selected
-        "bg-greenLight text-white": isSelected && theme === "light",
-        // Light theme - Highlighted
-        "bg-gray-100 text-black":
+        "bg-gray-400 text-black": isSelected && theme === "light",
+        "bg-gray-300 text-black":
           !isSelected && isHighlighted && theme === "light",
-        // Light theme - Default
-        "text-black hover:bg-gray-50":
+        "text-black hover:bg-gray-300":
           !isSelected && !isHighlighted && theme === "light",
 
-        // Dark theme - Selected
         "bg-greenMid text-white": isSelected && theme === "dark",
-        // Dark theme - Highlighted
         "bg-greenDark text-white":
           !isSelected && isHighlighted && theme === "dark",
-        // Dark theme - Default
         "text-white hover:bg-greenDark":
           !isSelected && !isHighlighted && theme === "dark",
       }

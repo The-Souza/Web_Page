@@ -47,6 +47,7 @@ export interface SelectButtonProps {
   isOpen: boolean;
   disabled: boolean;
   selectedLabel: string | null;
+  selectedValue?: string | null;
   toggleOpen: () => void;
   filter: string;
   setFilter: React.Dispatch<React.SetStateAction<string>>;

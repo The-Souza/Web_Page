@@ -132,7 +132,7 @@ export default function RegisterAccount() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <Select
             label="Account Type"
-            theme="light"
+            theme="dark"
             placeholder="Select account type"
             options={accountTypeOptions}
             onChange={(val) => setValue("accountType", val)}
@@ -142,14 +142,16 @@ export default function RegisterAccount() {
           <Input
             {...register("consumption", { valueAsNumber: true })}
             label="Consumption"
+            theme="light"
             placeholder="Consumption in m³ or kWh"
             type="number"
             error={errors.consumption?.message}
-          />
+            />
 
           <Input
             {...register("days", { valueAsNumber: true })}
             label="Days"
+            theme="light"
             placeholder="Number of days"
             type="number"
             error={errors.days?.message}
@@ -200,6 +202,7 @@ export default function RegisterAccount() {
 
           <Input
             {...register("address")}
+            theme="light"
             label="Address"
             placeholder="Ex: Rua XYZ, nº 123"
             error={errors.address?.message}

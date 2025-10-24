@@ -48,7 +48,6 @@ export const Select = forwardRef<SelectHandle, SelectProps>(
         resetSelect();
       },
       clear: () => {
-        // limpa seleção e estado interno
         clearSelection();
       },
     }));
@@ -71,6 +70,10 @@ export const Select = forwardRef<SelectHandle, SelectProps>(
     useEffect(() => {
       setHighlightedIndex(-1);
     }, [filteredOptions]);
+
+    useEffect(() => {
+      setHighlightedIndex(-1);
+    }, [isOpen]);
 
     const handleSelect = (option: SelectOption) => {
       selectOption(option);
@@ -143,6 +146,7 @@ export const Select = forwardRef<SelectHandle, SelectProps>(
           isOpen={isOpen}
           disabled={disabled ?? false}
           selectedLabel={selectedLabel}
+          selectedValue={selectedValue}
           toggleOpen={toggleOpen}
           filter={filter}
           setFilter={setFilter}

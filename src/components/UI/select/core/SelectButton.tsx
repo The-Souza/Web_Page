@@ -6,6 +6,7 @@ export const SelectButton = ({
   isOpen,
   disabled,
   selectedLabel,
+  selectedValue,
   placeholder,
   toggleOpen,
   filter,
@@ -16,35 +17,38 @@ export const SelectButton = ({
   const inputRef = useRef<HTMLInputElement>(null);
 
   const buttonClass = classNames(
-    "w-full flex items-center justify-between border-2 rounded-lg font-lato font-semibold",
+    "w-full flex h-11 px-4 items-center justify-between border-2 rounded-lg font-lato font-semibold",
     {
-      // Light theme
-      "p-2 bg-white": theme === "light",
-      "border-greenLight hover:ring-1 hover:ring-greenLight": !disabled && theme === "light",
-      "opacity-50 cursor-not-allowed bg-gray-100": disabled && theme === "light",
+      "border-greenLight hover:ring-1 hover:ring-greenLight": !disabled,
+      "ring-1 ring-greenLight": isOpen,
+      
+      "bg-white": theme === "light",
+      "opacity-50 cursor-not-allowed border-greenLight": disabled && theme === "light",
 
-      // Dark theme
-      "h-11 px-4 bg-dark": theme === "dark",
-      "border-greenLight": !disabled && theme === "dark",
-      "ring-1 ring-greenLight": isOpen && theme === "dark",
-      "border-greenDark cursor-not-allowed": disabled && theme === "dark",
+      "bg-dark": theme === "dark",
+      "opacity-50 border-greenMid cursor-not-allowed": disabled && theme === "dark",
     }
   );
 
   const inputClass = classNames(
     "bg-transparent outline-none w-full font-lato font-semibold",
     {
-      "text-black placeholder-gray-400": theme === "light",
-      "text-white placeholder-greenDark": theme === "dark",
+      "text-gray-500 placeholder-gray-500": theme === "light" && !selectedValue,
+      "text-greenDark placeholder-greenDark": theme === "dark" && !selectedValue,
+
+      "text-black": theme === "light" && !!selectedValue,
+      "text-white": theme === "dark" && !!selectedValue,
+      
       "cursor-pointer": !disabled,
-      "cursor-not-allowed": disabled,
+      "cursor-not-allowed opacity-50": disabled,
     }
   );
-
+  
   const iconClass = classNames("fas fa-caret-down ml-2", {
     "text-greenLight": theme === "dark",
-    "text-gray-400": theme === "light",
+    "text-dark": theme === "light",
     "transform rotate-180": isOpen,
+    "opacity-50": disabled,
   });
 
   const handleClick = () => {
@@ -58,7 +62,6 @@ export const SelectButton = ({
     if (event.key === " ") {
       event.preventDefault();
       setFilter((prev) => prev + " ");
-      return;
     }
     handleKeyDown(event);
   };
@@ -74,14 +77,15 @@ export const SelectButton = ({
         ref={inputRef}
         type="text"
         readOnly={!isOpen}
-        value={isOpen ? filter : selectedLabel || ""}
-        placeholder={placeholder}
+        value={isOpen ? filter : selectedLabel ?? ""}
+        placeholder={isOpen ? "" : placeholder}
         onChange={(e) => setFilter(e.target.value)}
         onKeyDown={handleInputKeyDown}
         className={inputClass}
         tabIndex={-1}
       />
-      <i className={iconClass} />
+
+      <i className={iconClass}></i>
     </button>
   );
 };

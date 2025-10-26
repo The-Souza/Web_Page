@@ -28,7 +28,9 @@ export function useAuth() {
     setUser(userData);
   }, []);
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     setIsAuthenticated(false);

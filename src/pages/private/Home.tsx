@@ -5,8 +5,9 @@ import { useAccountSummary } from "@/hooks/useAccountSummary";
 import { formatCurrency } from "@/helpers/accountHelpers";
 import type { Account } from "@/types/account.types";
 import { ACCOUNT_TYPE_ICONS } from "@/components/UI/card/Card.variants";
-import { useRef } from "react";
+import { useRef, useEffect } from "react";
 import type { SelectHandle } from "@/components/UI/select/Select.types";
+import { useLoading } from "@/components/providers/hook/useLoading";
 
 const COLORS = {
   paid: "#00ff9f",
@@ -20,6 +21,7 @@ export default function Home() {
   const { accounts, loading, updatePaid } = useAccounts(user?.email);
   const summary = useAccountSummary(accounts);
   const monthSelectRef = useRef<SelectHandle | null>(null);
+  const { setLoading } = useLoading();
 
   const chartData = summary.monthSummaries.map(({ month, summary }) => ({
     month,
@@ -38,12 +40,12 @@ export default function Home() {
     );
   };
 
+  useEffect(() => {
+    setLoading(loading, loading ? "Loading..." : undefined);
+  }, [loading, setLoading]);
+
   return (
     <div className="flex flex-col gap-4 text-greenLight">
-      {loading && (
-        <p className="text-greenLight font-raleway text-center">Loading...</p>
-      )}
-
       {!loading && (
         <>
           <div className="flex flex-col lg:flex-row gap-4 lg:items-center lg:justify-between">

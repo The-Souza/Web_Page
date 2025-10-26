@@ -5,7 +5,7 @@ import { Button, Input, Title } from "@/components";
 import { useNavigate } from "react-router-dom";
 import * as z from "zod";
 import { checkUserExists, resetPassword } from "@/services";
-import { useToast } from "@/components/providers/useToast";
+import { useToast } from "@/components/providers/hook/useToast";
 import {
   AuthForm,
   AuthLinkButton,

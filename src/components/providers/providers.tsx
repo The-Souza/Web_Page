@@ -1,11 +1,15 @@
-import { ToastProvider } from "./ToastProvider";
+import { ToastProvider } from "./toast/ToastProvider";
+import { LoadingProvider } from "./loading/LoadingProvider";
 import type { ProvidersProps } from "./provider.types";
 
-export function Providers({ children }: ProvidersProps) {
+export function Providers({
+  children,
+  debounceSec,
+  safetySec,
+}: ProvidersProps) {
   return (
-    <ToastProvider>
-      {/* Futuramente, adicione outros providers aqui */}
-      {children}
-    </ToastProvider>
+    <LoadingProvider debounceSec={debounceSec} safetySec={safetySec}>
+      <ToastProvider>{children}</ToastProvider>
+    </LoadingProvider>
   );
 }

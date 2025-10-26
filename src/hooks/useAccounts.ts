@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { Account } from "@/types/account.types";
-import { useToast } from "@/components/providers/useToast";
+import { useToast } from "@/components/providers/hook/useToast";
 
 export function useAccounts(email?: string) {
   const { showToast } = useToast();

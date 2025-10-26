@@ -2,9 +2,10 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useAuth } from "@/hooks/UseAuth";
-import { useToast } from "@/components/providers/useToast";
+import { useToast } from "@/components/providers/hook/useToast";
 import { Input, Select, Button, Title } from "@/components";
 import { registerAccount } from "@/services";
+import { useLoading } from "@/components/providers/hook/useLoading";
 
 // -------------------- 🧠 Schema de validação --------------------
 const accountSchema = z.object({
@@ -71,6 +72,7 @@ const monthOptions = [
 export default function RegisterAccount() {
   const { user } = useAuth();
   const { showToast } = useToast();
+  const { setLoading } = useLoading();
 
   const {
     register,
@@ -97,14 +99,15 @@ export default function RegisterAccount() {
       return;
     }
 
-    const payload = {
-      ...data,
-      userId: user.id,
-      userEmail: user.email,
-      month: `${data.month}/${data.year}`,
-    };
-
+    setLoading(true, "Saving Account...");
     try {
+      const payload = {
+        ...data,
+        userId: user.id,
+        userEmail: user.email,
+        month: `${data.month}/${data.year}`,
+      };
+
       const response = await registerAccount(payload);
       if (response.success) {
         showToast({ type: "success", text: "Account registered successfully" });
@@ -117,6 +120,8 @@ export default function RegisterAccount() {
       }
     } catch {
       showToast({ type: "error", text: "Error registering account" });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -132,7 +137,7 @@ export default function RegisterAccount() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <Select
             label="Account Type"
-            theme="dark"
+            theme="light"
             placeholder="Select account type"
             options={accountTypeOptions}
             onChange={(val) => setValue("accountType", val)}

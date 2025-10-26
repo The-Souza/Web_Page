@@ -1,22 +1,64 @@
 import { Header, UserIcon, Button } from "@/components";
 import { useAuth } from "@/hooks/UseAuth";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import classNames from "classnames";
 import { useMediaQuery } from "@/hooks/UseMediaQuery";
+import { useLoading } from "@/components/providers/hook/useLoading";
 
 export function MainLayout() {
   const { logout, user } = useAuth();
   const navigate = useNavigate();
+  const { setLoading, reset } = useLoading();
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const handleLogout = () => {
-    logout();
-    navigate("/");
-    setMenuOpen(false);
+  const handleLogout = async () => {
+    setLoading(true, "Encerrando sessão...");
+    try {
+      await logout();
+      setMenuOpen(false);
+      reset(); // limpa qualquer loading pendente
+      navigate("/");
+    } catch (error) {
+      console.error("Erro ao fazer logout:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Mapeamento de mensagens por rota
+  const loadingMessages: Record<string, string> = {
+    "/home": "Carregando página inicial...",
+    "/register-account": "Carregando formulário de registro...",
+    "/dashboard": "Carregando dashboard...",
+  };
+
+  const handleNavigation = async (path: string) => {
+    const message = loadingMessages[path] || "Carregando...";
+    setLoading(true, message);
+
+    try {
+      setMenuOpen(false);
+      // Aumenta o delay para garantir que o loading apareça
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      navigate(path);
+    } finally {
+      // Adiciona um pequeno delay antes de esconder o loading
+      setTimeout(() => {
+        setLoading(false);
+      }, 200);
+    }
   };
 
   const location = useLocation();
+
+  // Monitora mudanças de rota para resetar loading se necessário
+  useEffect(() => {
+    return () => {
+      // Limpa loading ao desmontar
+      setLoading(false);
+    };
+  }, [location.pathname, setLoading]);
 
   const pageTitles: Record<string, string> = {
     "/home": "Home",
@@ -79,17 +121,17 @@ export function MainLayout() {
             <Button
               variant="bottomless"
               text="Home"
-              onClick={() => navigate("/home")}
+              onClick={() => handleNavigation("/home")}
             />
             <Button
               variant="bottomless"
               text="Register Account"
-              onClick={() => navigate("/register-account")}
+              onClick={() => handleNavigation("/register-account")}
             />
             <Button
               variant="bottomless"
               text="Dashboard"
-              onClick={() => navigate("/dashboard")}
+              onClick={() => handleNavigation("/dashboard")}
             />
           </div>
         </div>

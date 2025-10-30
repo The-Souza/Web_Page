@@ -18,6 +18,7 @@ export interface SelectProps extends UseSelectProps {
   onChange?: (value: string) => void;
   maxHeight?: string;
   theme?: "light" | "dark";
+  value?: string;
 }
 
 export interface UseSelectReturn {
@@ -41,6 +42,7 @@ export interface UseSelectReturn {
 export interface SelectHandle {
   reset: () => void;
   clear: () => void;
+  clearSelection: () => void;
 }
 
 export interface SelectButtonProps {

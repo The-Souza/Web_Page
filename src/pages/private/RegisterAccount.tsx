@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -6,28 +7,27 @@ import { useToast } from "@/components/providers/hook/useToast";
 import { Input, Select, Button, Title } from "@/components";
 import { registerAccount } from "@/services";
 import { useLoading } from "@/components/providers/hook/useLoading";
+import type { SelectHandle } from "@/components/UI/select/Select.types";
 
-// -------------------- 🧠 Schema de validação --------------------
+// -------------------- 🧠 Validation Schema --------------------
 const accountSchema = z.object({
   accountType: z.string().min(1, "Account type is required"),
-  consumption: z
-    .union([z.string(), z.number()])
-    .refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
-      message: "Consumption must be a number greater than 0",
-    }),
-  days: z
-    .union([z.string(), z.number()])
-    .refine(
-      (val) => !isNaN(Number(val)) && Number(val) >= 1 && Number(val) <= 31,
-      {
-        message: "Days must be between 1 and 31",
-      }
-    ),
-  value: z
-    .union([z.string(), z.number()])
-    .refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
-      message: "Value must be greater than 0",
-    }),
+
+  consumption: z.preprocess((val) => {
+    const n = Number(val);
+    return isNaN(n) ? undefined : n;
+  }, z.number().min(0.000001, "Consumption must be a number greater than 0")),
+
+  days: z.preprocess((val) => {
+    const n = Number(val);
+    return isNaN(n) ? undefined : n;
+  }, z.number().min(1, "Days must be between 1 and 31").max(31, "Days must be between 1 and 31")),
+
+  value: z.preprocess((val) => {
+    const n = Number(val);
+    return isNaN(n) ? undefined : n;
+  }, z.number().min(0.000001, "Value must be greater than 0")),
+
   paid: z.boolean(),
   address: z.string().min(1, "Address is required"),
   year: z.string().min(1, "Year is required"),
@@ -36,7 +36,7 @@ const accountSchema = z.object({
 
 type AccountFormData = z.infer<typeof accountSchema>;
 
-// -------------------- 📅 Opções de Select --------------------
+// -------------------- 📅 Select Options --------------------
 const accountTypeOptions = [
   { label: "Water", value: "Water" },
   { label: "Energy", value: "Energy" },
@@ -50,30 +50,29 @@ const yearOptions = Array.from({ length: 6 }, (_, i) => ({
   value: String(currentYear + i),
 }));
 
-const monthOptions = [
-  "01",
-  "02",
-  "03",
-  "04",
-  "05",
-  "06",
-  "07",
-  "08",
-  "09",
-  "10",
-  "11",
-  "12",
-].map((m) => ({
-  label: m,
-  value: m,
-}));
+const monthOptions = Array.from({ length: 12 }, (_, i) => {
+  const month = String(i + 1).padStart(2, "0");
+  return { label: month, value: month };
+});
 
-// -------------------- 🧱 Componente principal --------------------
+// -------------------- 🧱 Main Component --------------------
 export default function RegisterAccount() {
   const { user } = useAuth();
   const { showToast } = useToast();
   const { setLoading } = useLoading();
 
+  const defaultValues = {
+    accountType: "",
+    consumption: undefined,
+    days: undefined,
+    value: undefined,
+    paid: false,
+    address: "",
+    year: "",
+    month: "",
+  };
+
+  // Tipagem do useForm adaptada para o Zod pre-processado
   const {
     register,
     handleSubmit,
@@ -83,13 +82,18 @@ export default function RegisterAccount() {
     reset,
   } = useForm<AccountFormData>({
     resolver: zodResolver(accountSchema),
-    defaultValues: {
-      paid: false,
-    },
+    defaultValues,
+    mode: "onBlur",
   });
 
   const paidValue = watch("paid");
 
+  // ---- refs para os selects ----
+  const yearSelectRef = useRef<SelectHandle>(null);
+  const monthSelectRef = useRef<SelectHandle>(null);
+  const accountTypeSelectRef = useRef<SelectHandle>(null);
+
+  // ---- envio de formulário ----
   const onSubmit = async (data: AccountFormData) => {
     if (!user?.id || !user?.email) {
       showToast({
@@ -109,9 +113,20 @@ export default function RegisterAccount() {
       };
 
       const response = await registerAccount(payload);
+
       if (response.success) {
         showToast({ type: "success", text: "Account registered successfully" });
-        reset();
+
+        // ✅ Reset geral: inputs + radio + selects
+        reset(defaultValues);
+        yearSelectRef.current?.clearSelection();
+        monthSelectRef.current?.clearSelection();
+        accountTypeSelectRef.current?.clearSelection();
+
+        setValue("year", "");
+        setValue("month", "");
+        setValue("accountType", "");
+        setValue("paid", false);
       } else {
         showToast({
           type: "error",
@@ -129,48 +144,79 @@ export default function RegisterAccount() {
     <div className="flex flex-col gap-4 text-greenLight">
       <Title text="Register Account" size="2xl" />
 
-      {/* ---------- Seção: Cadastro Manual ---------- */}
       <form
         onSubmit={handleSubmit(onSubmit)}
-        className="bg-dark p-10 rounded-2xl border-2 border-greenLight shadow-greenLight flex flex-col gap-4"
+        className="bg-dark p-8 sm:p-10 rounded-2xl border-2 border-greenLight shadow-greenLight flex flex-col gap-4"
       >
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <Input
+            {...register("address")}
+            theme="light"
+            label="Address"
+            placeholder="Ex: Rua XYZ, nº 123"
+            error={errors.address?.message}
+          />
+
           <Select
+            ref={yearSelectRef}
+            label="Year"
+            theme="light"
+            placeholder="Select year"
+            options={yearOptions}
+            onChange={(val) => setValue("year", val)}
+            value={watch("year") || ""}
+            error={errors.year?.message}
+          />
+
+          <Select
+            ref={monthSelectRef}
+            label="Month"
+            theme="light"
+            placeholder="Select month"
+            options={monthOptions}
+            onChange={(val) => setValue("month", val)}
+            value={watch("month") || ""}
+            error={errors.month?.message}
+          />
+
+          <Select
+            ref={accountTypeSelectRef}
             label="Account Type"
             theme="light"
             placeholder="Select account type"
             options={accountTypeOptions}
             onChange={(val) => setValue("accountType", val)}
+            value={watch("accountType") || ""}
             error={errors.accountType?.message}
           />
 
           <Input
-            {...register("consumption", { valueAsNumber: true })}
+            {...register("consumption")}
             label="Consumption"
             theme="light"
             placeholder="Consumption in m³ or kWh"
             type="number"
             error={errors.consumption?.message}
-            />
+          />
 
           <Input
-            {...register("days", { valueAsNumber: true })}
+            {...register("days")}
             label="Days"
             theme="light"
-            placeholder="Number of days"
+            placeholder="Ex: 1 to 31"
             type="number"
             error={errors.days?.message}
           />
 
           <Input
-            {...register("value", { valueAsNumber: true })}
+            {...register("value")}
             label="Value"
-            placeholder="R$ 0,00"
+            placeholder="90,45"
             type="number"
             error={errors.value?.message}
           />
 
-          {/* Pago / Não Pago */}
+          {/* ----- Paid Status ----- */}
           <div className="flex flex-col gap-1">
             <label className="font-lato font-semibold text-md">
               Paid Status
@@ -204,47 +250,31 @@ export default function RegisterAccount() {
               </p>
             )}
           </div>
-
-          <Input
-            {...register("address")}
-            theme="light"
-            label="Address"
-            placeholder="Ex: Rua XYZ, nº 123"
-            error={errors.address?.message}
-          />
-
-          <Select
-            label="Year"
-            theme="light"
-            placeholder="Select year"
-            options={yearOptions}
-            onChange={(val) => setValue("year", val)}
-            error={errors.year?.message}
-          />
-
-          <Select
-            label="Month"
-            theme="light"
-            placeholder="Select month"
-            options={monthOptions}
-            onChange={(val) => setValue("month", val)}
-            error={errors.month?.message}
-          />
         </div>
 
-        {/* ---------- Botões ---------- */}
-        <div className="flex flex-col sm:flex-row gap-3 justify-end mt-4">
+        {/* ----- Buttons ----- */}
+        <div className="w-full sm:w-[20rem] flex flex-col sm:flex-row gap-3 self-end">
           <Button
             text="Reset"
             type="button"
-            variant="border"
-            onClick={() => reset()}
+            variant="solid"
+            size="full"
+            onClick={() => {
+              reset(defaultValues);
+              yearSelectRef.current?.clearSelection();
+              monthSelectRef.current?.clearSelection();
+              accountTypeSelectRef.current?.clearSelection();
+
+              setValue("year", "");
+              setValue("month", "");
+              setValue("accountType", "");
+              setValue("paid", false);
+            }}
           />
-          <Button text="Save" type="submit" variant="solid" size="auto" />
+          <Button text="Save" type="submit" variant="solid" size="full" />
         </div>
       </form>
 
-      {/* ---------- Seção futura: Upload Excel ---------- */}
       <section className="mt-8 border-t border-greenMid pt-6">
         <Title text="Upload Excel (coming soon...)" size="lg" />
         <p className="text-greenMid font-lato">

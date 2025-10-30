@@ -1,4 +1,10 @@
-import React, { useRef, useState, useEffect, forwardRef, useImperativeHandle } from "react";
+import React, {
+  useRef,
+  useState,
+  useEffect,
+  forwardRef,
+  useImperativeHandle,
+} from "react";
 import type { SelectProps, SelectOption, SelectHandle } from "./Select.types";
 import { SelectButton } from "./core/SelectButton";
 import { SelectDropdown } from "./core/SelectDropdown";
@@ -44,12 +50,9 @@ export const Select = forwardRef<SelectHandle, SelectProps>(
     });
 
     useImperativeHandle(ref, () => ({
-      reset: () => {
-        resetSelect();
-      },
-      clear: () => {
-        clearSelection();
-      },
+      reset: () => resetSelect(),
+      clear: () => clearSelection(),
+      clearSelection: () => clearSelection(),
     }));
 
     const [highlightedIndex, setHighlightedIndex] = useState<number>(0);
@@ -64,7 +67,8 @@ export const Select = forwardRef<SelectHandle, SelectProps>(
         }
       };
       document.addEventListener("mousedown", handleClickOutside);
-      return () => document.removeEventListener("mousedown", handleClickOutside);
+      return () =>
+        document.removeEventListener("mousedown", handleClickOutside);
     }, [resetSelect]);
 
     useEffect(() => {

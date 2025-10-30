@@ -1,7 +1,7 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import type { SelectOption, UseSelectProps, UseSelectReturn } from "../Select.types";
 
-export const useSelect = (props: UseSelectProps): UseSelectReturn => {
+export const useSelect = (props: UseSelectProps & { value?: string }): UseSelectReturn => {
   const {
     options = [],
     placeholder = "Select an option",
@@ -41,14 +41,12 @@ export const useSelect = (props: UseSelectProps): UseSelectReturn => {
   }, []);
 
   const resetSelect = useCallback(() => {
-    // apenas fecha o dropdown e limpa o filtro/highlight
     setFilter("");
     setIsOpen(false);
     setHighlightedIndex(-1);
   }, []);
 
   const clearSelection = useCallback(() => {
-    // limpa seleção além de fechar/resetar estado do dropdown
     setSelected(null);
     setFilter("");
     setIsOpen(false);
@@ -88,6 +86,18 @@ export const useSelect = (props: UseSelectProps): UseSelectReturn => {
   const selectedLabel =
     selected?.label && !isOpen ? selected.label : filter || placeholder;
 
+  // ✅ Agora sim: sincronização do valor externo DEPOIS que tudo foi declarado
+  useEffect(() => {
+    if (props.value !== undefined) {
+      const matched = options.find((opt) => opt.value === props.value) || null;
+      if (matched) {
+        selectOption(matched);
+      } else {
+        clearSelection();
+      }
+    }
+  }, [props.value, options, selectOption, clearSelection]);
+
   return {
     selectedValue: selected?.value ?? null,
     selectedLabel,
@@ -98,7 +108,7 @@ export const useSelect = (props: UseSelectProps): UseSelectReturn => {
     filter,
     setFilter,
     resetSelect,
-  clearSelection,
+    clearSelection,
     isValid,
     highlightedIndex,
     setHighlightedIndex,

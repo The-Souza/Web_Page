@@ -13,37 +13,34 @@ export function MainLayout() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   const handleLogout = async () => {
-    setLoading(true, "Encerrando sessão...");
+    setLoading(true, "Logging out...");
     try {
       await logout();
       setMenuOpen(false);
-      reset(); // limpa qualquer loading pendente
+      reset();
       navigate("/");
     } catch (error) {
-      console.error("Erro ao fazer logout:", error);
+      console.error("Error logging out:", error);
     } finally {
       setLoading(false);
     }
   };
 
-  // Mapeamento de mensagens por rota
   const loadingMessages: Record<string, string> = {
-    "/home": "Carregando página inicial...",
-    "/register-account": "Carregando formulário de registro...",
-    "/dashboard": "Carregando dashboard...",
+    "/home": "Loading homepage...",
+    "/register-account": "Loading account registration form...",
+    "/dashboard": "Loading dashboard...",
   };
 
   const handleNavigation = async (path: string) => {
-    const message = loadingMessages[path] || "Carregando...";
+    const message = loadingMessages[path] || "Loading...";
     setLoading(true, message);
 
     try {
       setMenuOpen(false);
-      // Aumenta o delay para garantir que o loading apareça
       await new Promise((resolve) => setTimeout(resolve, 2000));
       navigate(path);
     } finally {
-      // Adiciona um pequeno delay antes de esconder o loading
       setTimeout(() => {
         setLoading(false);
       }, 200);
@@ -52,10 +49,8 @@ export function MainLayout() {
 
   const location = useLocation();
 
-  // Monitora mudanças de rota para resetar loading se necessário
   useEffect(() => {
     return () => {
-      // Limpa loading ao desmontar
       setLoading(false);
     };
   }, [location.pathname, setLoading]);
@@ -66,7 +61,7 @@ export function MainLayout() {
     "/register-account": "Register Account",
   };
 
-  const headerText = pageTitles[location.pathname] || "Página";
+  const headerText = pageTitles[location.pathname] || "Page";
 
   const isMobile = useMediaQuery("(max-width: 639px)");
 
@@ -137,9 +132,12 @@ export function MainLayout() {
         </div>
 
         <main
-          className={classNames("flex-1 transition-all duration-300 p-4 sm:p-8", {
-            "ml-56 sm:ml-64": menuOpen && !isMobile,
-          })}
+          className={classNames(
+            "flex-1 transition-all duration-300 p-4 sm:p-8",
+            {
+              "ml-56 sm:ml-64": menuOpen && !isMobile,
+            }
+          )}
         >
           <Outlet />
         </main>

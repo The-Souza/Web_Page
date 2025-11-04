@@ -2,6 +2,7 @@ import pkg from "express";
 import { logData } from "../utils/logger.ts";
 import * as userService from "../services/user.service.ts";
 import type { User, PublicUser } from "../models/user.types.ts";
+import { generateToken } from "../utils/jwt.ts";
 
 const publicUser = userService.mapRecordToUserSafe;
 
@@ -42,38 +43,32 @@ export const register = async (req: pkg.Request, res: pkg.Response) => {
 
 export const login = async (req: pkg.Request, res: pkg.Response) => {
   try {
-    const { email, password } = req.body as {
-      email?: string;
-      password?: string;
-    };
+    const { email, password } = req.body;
 
     if (!email || !password) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Email and password are required" });
+      return res.status(400).json({ success: false, message: "Email and password are required" });
     }
 
     const user = await userService.authenticate(email, password);
-
     if (!user) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Invalid credentials" });
+      return res.status(400).json({ success: false, message: "Invalid credentials" });
     }
 
-    const pub: PublicUser | null = publicUser(user);
-    logData("LOGIN", { user: pub });
+    const pub = userService.mapRecordToUserSafe(user);
+    const token = generateToken({ id: user.id!, email: user.email, name: user.name });
 
     return res.json({
       success: true,
       message: "Login successful",
       user: pub,
+      token,
     });
   } catch (err) {
     console.error("❌ Error in login:", err);
     res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
+
 
 export const resetPassword = async (req: pkg.Request, res: pkg.Response) => {
   try {

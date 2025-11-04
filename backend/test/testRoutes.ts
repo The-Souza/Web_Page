@@ -1,7 +1,10 @@
 import chalk from "chalk";
 import { prettyPrint } from "../utils/logger.ts";
+import dotenv from "dotenv";
 
-const PORT = 5000;
+dotenv.config();
+
+const PORT = process.env.PORT;
 
 function prettyLog(label: string, data: object) {
   console.log(chalk.blue(`\n[${label}]`));

@@ -98,3 +98,29 @@ export async function updateAccountPaid(
     .input("paid", sql.Bit, paid)
     .query(`UPDATE Accounts SET Paid = @paid WHERE Id = @id`);
 }
+
+export async function addAccount(account: Account): Promise<number> {
+  const conn = await getConnection();
+
+  const result = await conn
+    .request()
+    .input("userId", sql.Int, account.userId)
+    .input("userEmail", sql.NVarChar, account.userEmail)
+    .input("address", sql.NVarChar, account.address)
+    .input("accountType", sql.NVarChar, account.accountType)
+    .input("year", sql.Int, account.year)
+    .input("month", sql.Int, parseInt(account.month.split("/")[0], 10))
+    .input("consumption", sql.Float, account.consumption)
+    .input("days", sql.Int, account.days)
+    .input("value", sql.Float, account.value)
+    .input("paid", sql.Bit, account.paid ?? false)
+    .query(
+      `INSERT INTO Accounts
+        (UserId, UserEmail, Address, Account, Year, Month, Consumption, Days, Value, Paid)
+        VALUES
+        (@userId, @userEmail, @address, @accountType, @year, @month, @consumption, @days, @value, @paid);
+        SELECT SCOPE_IDENTITY() AS Id;`
+    );
+
+  return result.recordset[0].Id;
+}

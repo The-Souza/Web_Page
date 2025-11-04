@@ -33,7 +33,7 @@ export default async function testAccounts() {
   if (userAccounts.length > 0) {
     const first = userAccounts[0];
     console.log(chalk.cyan(`\n🔹 Marking account ID=${first.id} as paid...`));
-    await updateAccountPaid(first.id, true);
+    await updateAccountPaid(first.id!, true);
 
     // Buscar novamente para ver se atualizou
     const updated = await getAccountsByUserId(1);

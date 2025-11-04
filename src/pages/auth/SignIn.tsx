@@ -28,7 +28,7 @@ export default function SignIn() {
   const { showToast } = useToast();
   const navigate = useNavigate();
   const { login } = useAuth();
-  const { setLoading, reset } = useLoading();
+  const { setLoading } = useLoading();
 
   const {
     register,
@@ -52,8 +52,8 @@ export default function SignIn() {
         "Invalid email or password"
       );
 
-      if (response.success) {
-        reset();
+      if (response.success && response.token) {
+        localStorage.setItem("token", response.token);
         login(response.user?.id?.toString() || "true", response.user!);
         navigate("/home");
       }

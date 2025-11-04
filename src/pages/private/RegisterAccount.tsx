@@ -8,6 +8,7 @@ import { Input, Select, Button, Title } from "@/components";
 import { registerAccount } from "@/services";
 import { useLoading } from "@/components/providers/hook/useLoading";
 import type { SelectHandle } from "@/components/UI/select/Select.types";
+import type { RegisterAccountPayload } from "@/types/account.types";
 
 // -------------------- 🧠 Validation Schema --------------------
 const accountSchema = z.object({
@@ -63,9 +64,9 @@ export default function RegisterAccount() {
 
   const defaultValues = {
     accountType: "",
-    consumption: undefined,
-    days: undefined,
-    value: undefined,
+    consumption: "",
+    days: "",
+    value: "",
     paid: false,
     address: "",
     year: "",
@@ -80,7 +81,7 @@ export default function RegisterAccount() {
     watch,
     formState: { errors },
     reset,
-  } = useForm<AccountFormData>({
+  } = useForm<z.input<typeof accountSchema>, unknown, AccountFormData>({
     resolver: zodResolver(accountSchema),
     defaultValues,
     mode: "onBlur",
@@ -105,19 +106,29 @@ export default function RegisterAccount() {
 
     setLoading(true, "Saving Account...");
     try {
-      const payload = {
-        ...data,
+      // Incluindo userId e userEmail no payload
+      const payload: RegisterAccountPayload = {
         userId: user.id,
         userEmail: user.email,
-        month: `${data.month}/${data.year}`,
+        address: data.address,
+        accountType: data.accountType,
+        year: data.year,
+        month: data.month,
+        consumption: data.consumption,
+        days: data.days,
+        value: data.value,
+        paid: data.paid,
       };
 
       const response = await registerAccount(payload);
 
       if (response.success) {
-        showToast({ type: "success", text: "Account registered successfully" });
+        showToast({
+          type: "success",
+          text: "Account registered successfully",
+        });
 
-        // ✅ Reset geral: inputs + radio + selects
+        // Reset geral: inputs + radio + selects
         reset(defaultValues);
         yearSelectRef.current?.clearSelection();
         monthSelectRef.current?.clearSelection();
@@ -127,13 +138,17 @@ export default function RegisterAccount() {
         setValue("month", "");
         setValue("accountType", "");
         setValue("paid", false);
+
+        // Aqui você poderia atualizar localmente a lista de contas do usuário, se houver
+        // ex: setAccounts(prev => [...prev, response.account]);
       } else {
         showToast({
           type: "error",
           text: response.message || "Error registering account",
         });
       }
-    } catch {
+    } catch (err) {
+      console.error("❌ Error registering account:", err);
       showToast({ type: "error", text: "Error registering account" });
     } finally {
       setLoading(false);
@@ -161,6 +176,7 @@ export default function RegisterAccount() {
             ref={yearSelectRef}
             label="Year"
             theme="light"
+            required={true}
             placeholder="Select year"
             options={yearOptions}
             onChange={(val) => setValue("year", val)}
@@ -172,6 +188,7 @@ export default function RegisterAccount() {
             ref={monthSelectRef}
             label="Month"
             theme="light"
+            required={true}
             placeholder="Select month"
             options={monthOptions}
             onChange={(val) => setValue("month", val)}
@@ -183,6 +200,7 @@ export default function RegisterAccount() {
             ref={accountTypeSelectRef}
             label="Account Type"
             theme="light"
+            required={true}
             placeholder="Select account type"
             options={accountTypeOptions}
             onChange={(val) => setValue("accountType", val)}

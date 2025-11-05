@@ -6,7 +6,7 @@ function mapAccount(record: AccountRecord): Account {
   return {
     id: record.Id,
     userId: record.UserId,
-    userEmail: record.UserEmail,
+    userEmail: record.Email,
     address: record.Address,
     accountType: record.Account,
     year: record.Year,
@@ -22,7 +22,7 @@ export async function getAllAccounts(): Promise<Account[]> {
   const conn = await getConnection();
   const result = await conn.query(`
     SELECT 
-      a.Id, a.UserId, u.Email as UserEmail, a.Address, a.Account,
+      a.Id, a.UserId, u.Email, a.Address, a.Account,
       a.Year, a.Month, a.Consumption, a.Days, a.Value, a.Paid
     FROM Accounts a
     INNER JOIN Users u ON u.Id = a.UserId
@@ -39,7 +39,7 @@ export async function getAccountsByUserId(
 
   let query = `
     SELECT 
-      a.Id, a.UserId, u.Email as UserEmail, a.Address, a.Account,
+      a.Id, a.UserId, u.Email, a.Address, a.Account,
       a.Year, a.Month, a.Consumption, a.Days, a.Value, a.Paid
     FROM Accounts a
     INNER JOIN Users u ON u.Id = a.UserId
@@ -49,11 +49,11 @@ export async function getAccountsByUserId(
   const request = conn.request().input("userId", sql.Int, userId);
 
   if (typeof paid === "boolean") {
-    query += ` AND a.Paid = @paid`;
+    query += " AND a.Paid = @paid";
     request.input("paid", sql.Bit, paid);
   }
 
-  query += ` ORDER BY a.Year DESC, a.Month DESC`;
+  query += " ORDER BY a.Year DESC, a.Month DESC";
 
   const result = await request.query(query);
   return result.recordset.map(mapAccount);
@@ -67,7 +67,7 @@ export async function getAccountsByUserEmail(
 
   let query = `
     SELECT 
-      a.Id, a.UserId, u.Email as UserEmail, a.Address, a.Account,
+      a.Id, a.UserId, u.Email, a.Address, a.Account,
       a.Year, a.Month, a.Consumption, a.Days, a.Value, a.Paid
     FROM Accounts a
     INNER JOIN Users u ON u.Id = a.UserId
@@ -77,26 +77,23 @@ export async function getAccountsByUserEmail(
   const request = conn.request().input("email", sql.NVarChar, email);
 
   if (typeof paid === "boolean") {
-    query += ` AND a.Paid = @paid`;
+    query += " AND a.Paid = @paid";
     request.input("paid", sql.Bit, paid);
   }
 
-  query += ` ORDER BY a.Year DESC, a.Month DESC`;
+  query += " ORDER BY a.Year DESC, a.Month DESC";
 
   const result = await request.query(query);
   return result.recordset.map(mapAccount);
 }
 
-export async function updateAccountPaid(
-  id: number,
-  paid: boolean
-): Promise<void> {
+export async function updateAccountPaid(id: number, paid: boolean): Promise<void> {
   const conn = await getConnection();
   await conn
     .request()
     .input("id", sql.Int, id)
     .input("paid", sql.Bit, paid)
-    .query(`UPDATE Accounts SET Paid = @paid WHERE Id = @id`);
+    .query("UPDATE Accounts SET Paid = @paid WHERE Id = @id");
 }
 
 export async function addAccount(account: Account): Promise<number> {
@@ -105,7 +102,6 @@ export async function addAccount(account: Account): Promise<number> {
   const result = await conn
     .request()
     .input("userId", sql.Int, account.userId)
-    .input("userEmail", sql.NVarChar, account.userEmail)
     .input("address", sql.NVarChar, account.address)
     .input("accountType", sql.NVarChar, account.accountType)
     .input("year", sql.Int, account.year)
@@ -114,13 +110,13 @@ export async function addAccount(account: Account): Promise<number> {
     .input("days", sql.Int, account.days)
     .input("value", sql.Float, account.value)
     .input("paid", sql.Bit, account.paid ?? false)
-    .query(
-      `INSERT INTO Accounts
-        (UserId, UserEmail, Address, Account, Year, Month, Consumption, Days, Value, Paid)
-        VALUES
-        (@userId, @userEmail, @address, @accountType, @year, @month, @consumption, @days, @value, @paid);
-        SELECT SCOPE_IDENTITY() AS Id;`
-    );
+    .query(`
+      INSERT INTO Accounts
+      (UserId, Address, Account, Year, Month, Consumption, Days, Value, Paid)
+      VALUES
+      (@userId, @address, @accountType, @year, @month, @consumption, @days, @value, @paid);
+      SELECT SCOPE_IDENTITY() AS Id;
+    `);
 
   return result.recordset[0].Id;
 }

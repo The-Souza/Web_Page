@@ -53,8 +53,7 @@ export default function SignIn() {
       );
 
       if (response.success && response.token) {
-        localStorage.setItem("token", response.token);
-        login(response.user?.id?.toString() || "true", response.user!);
+        login(response.token, response.user!);
         navigate("/home");
       }
     } finally {

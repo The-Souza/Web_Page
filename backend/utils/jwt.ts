@@ -4,15 +4,15 @@ import type { JwtPayload } from "../models/jwt.types.ts";
 
 dotenv.config();
 
-const SECRET_KEY: jwt.Secret = process.env.JWT_SECRET || "your_secret_key_here";
-const EXPIRES_IN = process.env.JWT_EXPIRES_IN || "7d";
+const SECRET_KEY = process.env.JWT_SECRET as jwt.Secret;
+const EXPIRES_IN = process.env.JWT_EXPIRES_IN as string;
 
 export function generateToken(payload: JwtPayload): string {
-  return jwt.sign(
-    payload as object,
-    SECRET_KEY as jwt.Secret,
-    { expiresIn: EXPIRES_IN } as jwt.SignOptions
-  );
+  const token = jwt.sign(payload, SECRET_KEY, {
+    expiresIn: EXPIRES_IN,
+  } as jwt.SignOptions);
+  console.log("🔐 Generated Token:", token);
+  return token;
 }
 
 export function verifyToken(token: string): JwtPayload | null {

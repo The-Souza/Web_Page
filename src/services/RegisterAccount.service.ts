@@ -1,33 +1,29 @@
-import { api } from "@/lib/api";
+import { apiFetch } from "@/helpers/apiFetch";
 import type { RegisterAccountPayload } from "@/types/account.types";
 import type { ApiResponse } from "@/types/apiResponse";
+
+const BASE_URL = import.meta.env.VITE_API_URL;
 
 export async function registerAccount(
   payload: RegisterAccountPayload
 ): Promise<ApiResponse<RegisterAccountPayload>> {
   try {
-    const response = await api.post<ApiResponse<RegisterAccountPayload>>(
-      "/accounts/register",
-      payload
-    );
+    const response = await apiFetch(`${BASE_URL}/accounts/register`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+
+    const data = await response.json();
 
     return {
-      success: response.status === 200 || response.status === 201,
-      message: response.data?.message || "Account registered successfully",
-      data: response.data?.data ?? payload,
+      success: response.ok,
+      message: data?.message || (response.ok
+        ? "Account registered successfully"
+        : "Failed to register account"),
+      data: data?.data ?? payload,
     };
-  } catch (error: unknown) {
-    // 🚨 Faz o cast de erro para AxiosError (se estiver usando axios)
-    if (typeof error === "object" && error !== null && "response" in error) {
-      const err = error as { response?: { data?: { message?: string } } };
-      return {
-        success: false,
-        message:
-          err.response?.data?.message ||
-          "Failed to register account. Please try again.",
-      };
-    }
-
+  } catch (error) {
+    console.error("❌ Error in registerAccount:", error);
     return {
       success: false,
       message: "Unexpected error while registering account.",

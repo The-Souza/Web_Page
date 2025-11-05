@@ -1,7 +1,7 @@
 export type Account = {
   id?: number;
   userId: number;
-  userEmail: string;
+  userEmail?: string;
   address: string;
   accountType: string;
   year: number;
@@ -15,7 +15,6 @@ export type Account = {
 export type AccountRecord = {
   Id: number;
   UserId: number;
-  UserEmail: string;
   Address: string;
   Account: string;
   Year: number;
@@ -24,4 +23,5 @@ export type AccountRecord = {
   Days: number;
   Value: number;
   Paid: boolean;
+  Email?: string;
 };

@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import type { Account } from "@/types/account.types";
 import { useToast } from "@/components/providers/hook/useToast";
 
+const BASE_URL = import.meta.env.VITE_API_URL;
+
 export function useAccounts(email?: string) {
   const { showToast } = useToast();
   const [accounts, setAccounts] = useState<Account[]>([]);
@@ -11,7 +13,7 @@ export function useAccounts(email?: string) {
     if (!email) return;
     setLoading(true);
 
-    fetch(`http://localhost:5000/accounts/email/${email}`)
+    fetch(`${BASE_URL}/accounts/email/${email}`)
       .then((res) => res.json())
       .then((data: Account[]) => setAccounts(data))
       .catch(() =>
@@ -26,7 +28,7 @@ export function useAccounts(email?: string) {
 
   const updatePaid = async (accountId: number, paid: boolean) => {
     try {
-      await fetch(`http://localhost:5000/accounts/${accountId}/paid`, {
+      await fetch(`${BASE_URL}/accounts/${accountId}/paid`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ paid }),

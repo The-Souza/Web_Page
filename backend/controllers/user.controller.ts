@@ -57,6 +57,8 @@ export const login = async (req: pkg.Request, res: pkg.Response) => {
     const pub = userService.mapRecordToUserSafe(user);
     const token = generateToken({ id: user.id!, email: user.email, name: user.name });
 
+    logData("USER LOGGED IN", { user: pub });
+
     return res.json({
       success: true,
       message: "Login successful",

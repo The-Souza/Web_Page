@@ -26,3 +26,16 @@ export type AccountTypeSummary = {
   paidValue: number;
   unpaidValue: number;
 };
+
+export interface RegisterAccountPayload {
+  userId: number;
+  userEmail: string;
+  address: string;
+  accountType: string;
+  year: string;
+  month: string;
+  consumption: number | string;
+  days: number | string;
+  value: number | string;
+  paid: boolean;
+}

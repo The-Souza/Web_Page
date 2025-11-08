@@ -1,10 +1,10 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Button, FormField, Title } from "@/components";
+import { Button, Input, Title } from "@/components";
 import { useNavigate } from "react-router-dom";
 import * as z from "zod";
 import { loginUser } from "@/services";
-import { useToast } from "@/components/providers/useToast";
+import { useToast } from "@/components/providers/hook/useToast";
 import {
   AuthForm,
   AuthLinkButton,
@@ -12,6 +12,7 @@ import {
 } from "@/components/auth";
 import { handleToastResponse } from "@/helpers/handleToastResponse";
 import { useAuth } from "@/hooks/UseAuth";
+import { useLoading } from "@/components/providers/hook/useLoading";
 
 const schema = z.object({
   email: z
@@ -27,6 +28,7 @@ export default function SignIn() {
   const { showToast } = useToast();
   const navigate = useNavigate();
   const { login } = useAuth();
+  const { setLoading } = useLoading();
 
   const {
     register,
@@ -35,20 +37,27 @@ export default function SignIn() {
   } = useForm<FormData>({ resolver: zodResolver(schema) });
 
   const onSubmit = async (data: FormData) => {
-    const response = await loginUser(data.email, data.password);
+    setLoading(true, "logging in...");
+    try {
+      await new Promise((r) => setTimeout(r, 2000));
 
-    handleToastResponse(
-      response,
-      showToast,
-      "Login Successful",
-      "Login Failed",
-      `Welcome back, ${response.user?.name || "user"}!`,
-      "Invalid email or password"
-    );
+      const response = await loginUser(data.email, data.password);
 
-    if (response.success) {
-      login(response.user?.id?.toString() || "true", response.user!);
-      navigate("/home");
+      handleToastResponse(
+        response,
+        showToast,
+        "Login Successful",
+        "Login Failed",
+        `Welcome back, ${response.user?.name || "user"}!`,
+        "Invalid email or password"
+      );
+
+      if (response.success && response.token) {
+        login(response.token, response.user!);
+        navigate("/home");
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -57,13 +66,13 @@ export default function SignIn() {
       <Title text="Login" size="2xl" />
 
       <div className="flex flex-col w-full gap-2">
-        <FormField
+        <Input
           {...register("email")}
           label="Email:"
           error={errors.email?.message}
         />
 
-        <FormField
+        <Input
           {...register("password")}
           label="Password:"
           type="password"

@@ -1,22 +1,59 @@
 import { Header, UserIcon, Button } from "@/components";
 import { useAuth } from "@/hooks/UseAuth";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import classNames from "classnames";
 import { useMediaQuery } from "@/hooks/UseMediaQuery";
+import { useLoading } from "@/components/providers/hook/useLoading";
 
 export function MainLayout() {
   const { logout, user } = useAuth();
   const navigate = useNavigate();
+  const { setLoading, reset } = useLoading();
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const handleLogout = () => {
-    logout();
-    navigate("/");
-    setMenuOpen(false);
+  const handleLogout = async () => {
+    setLoading(true, "Logging out...");
+    try {
+      await logout();
+      setMenuOpen(false);
+      reset();
+      navigate("/");
+    } catch (error) {
+      console.error("Error logging out:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadingMessages: Record<string, string> = {
+    "/home": "Loading homepage...",
+    "/register-account": "Loading account registration form...",
+    "/dashboard": "Loading dashboard...",
+  };
+
+  const handleNavigation = async (path: string) => {
+    const message = loadingMessages[path] || "Loading...";
+    setLoading(true, message);
+
+    try {
+      setMenuOpen(false);
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      navigate(path);
+    } finally {
+      setTimeout(() => {
+        setLoading(false);
+      }, 200);
+    }
   };
 
   const location = useLocation();
+
+  useEffect(() => {
+    return () => {
+      setLoading(false);
+    };
+  }, [location.pathname, setLoading]);
 
   const pageTitles: Record<string, string> = {
     "/home": "Home",
@@ -24,7 +61,7 @@ export function MainLayout() {
     "/register-account": "Register Account",
   };
 
-  const headerText = pageTitles[location.pathname] || "Página";
+  const headerText = pageTitles[location.pathname] || "Page";
 
   const isMobile = useMediaQuery("(max-width: 639px)");
 
@@ -79,25 +116,28 @@ export function MainLayout() {
             <Button
               variant="bottomless"
               text="Home"
-              onClick={() => navigate("/home")}
+              onClick={() => handleNavigation("/home")}
             />
             <Button
               variant="bottomless"
               text="Register Account"
-              onClick={() => navigate("/register-account")}
+              onClick={() => handleNavigation("/register-account")}
             />
             <Button
               variant="bottomless"
               text="Dashboard"
-              onClick={() => navigate("/dashboard")}
+              onClick={() => handleNavigation("/dashboard")}
             />
           </div>
         </div>
 
         <main
-          className={classNames("flex-1 transition-all duration-300 p-4 sm:p-8", {
-            "ml-56 sm:ml-64": menuOpen && !isMobile,
-          })}
+          className={classNames(
+            "flex-1 transition-all duration-300 p-4 sm:p-8",
+            {
+              "ml-56 sm:ml-64": menuOpen && !isMobile,
+            }
+          )}
         >
           <Outlet />
         </main>

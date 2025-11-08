@@ -17,6 +17,8 @@ export interface SelectProps extends UseSelectProps {
   error?: string;
   onChange?: (value: string) => void;
   maxHeight?: string;
+  theme?: "light" | "dark";
+  value?: string;
 }
 
 export interface UseSelectReturn {
@@ -29,6 +31,7 @@ export interface UseSelectReturn {
   filter: string;
   setFilter: React.Dispatch<React.SetStateAction<string>>;
   resetSelect: () => void;
+  clearSelection: () => void;
   isValid: boolean;
   highlightedIndex: number;
   setHighlightedIndex: (index: number) => void;
@@ -36,15 +39,23 @@ export interface UseSelectReturn {
   placeholder: string;
 }
 
+export interface SelectHandle {
+  reset: () => void;
+  clear: () => void;
+  clearSelection: () => void;
+}
+
 export interface SelectButtonProps {
   isOpen: boolean;
   disabled: boolean;
   selectedLabel: string | null;
+  selectedValue?: string | null;
   toggleOpen: () => void;
   filter: string;
   setFilter: React.Dispatch<React.SetStateAction<string>>;
   handleKeyDown: (event: React.KeyboardEvent<HTMLInputElement>) => void;
   placeholder: string;
+  theme?: "light" | "dark";
 }
 
 export interface SelectDropdownProps {
@@ -58,6 +69,7 @@ export interface SelectDropdownProps {
   setHighlightedIndex: (index: number) => void;
   handleKeyDown: (event: React.KeyboardEvent<HTMLInputElement>) => void;
   placeholder: string;
+  theme?: "light" | "dark";
 }
 
 export interface SelectOptionsProps {

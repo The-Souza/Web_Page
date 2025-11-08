@@ -1,5 +1,6 @@
 import pkg from "express";
 import * as accountService from "../services/account.service.ts";
+import type { AuthenticatedRequest } from "../models/authRequest.ts";
 
 function parsePaidParam(paidParam: string | undefined): boolean | undefined {
   if (paidParam === undefined) return undefined;
@@ -73,5 +74,63 @@ export async function updateAccountPaid(req: pkg.Request, res: pkg.Response) {
   } catch (err) {
     console.error("❌ Error updating account paid:", err);
     res.status(500).json({ error: "Internal server error" });
+  }
+}
+
+export async function registerAccount(
+  req: AuthenticatedRequest,
+  res: pkg.Response
+) {
+  try {
+    const user = req.user;
+    if (!user) {
+      return res.status(401).json({ success: false, message: "Unauthorized" });
+    }
+
+    const {
+      address,
+      accountType,
+      year,
+      month,
+      consumption,
+      days,
+      value,
+      paid,
+    } = req.body;
+
+    if (
+      !address ||
+      !accountType ||
+      !year ||
+      !month ||
+      !consumption ||
+      !days ||
+      !value
+    ) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Missing required fields" });
+    }
+
+    await accountService.addAccount({
+      userId: user.id,
+      userEmail: user.email,
+      address,
+      accountType,
+      year,
+      month,
+      consumption,
+      days,
+      value,
+      paid,
+    });
+
+    return res.json({
+      success: true,
+      message: "Account registered successfully",
+    });
+  } catch (err) {
+    console.error("❌ Error registering account:", err);
+    res.status(500).json({ success: false, message: "Internal server error" });
   }
 }

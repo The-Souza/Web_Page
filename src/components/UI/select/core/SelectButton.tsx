@@ -6,30 +6,52 @@ export const SelectButton = ({
   isOpen,
   disabled,
   selectedLabel,
+  selectedValue,
   placeholder,
   toggleOpen,
   filter,
   setFilter,
   handleKeyDown,
+  theme = "dark",
 }: SelectButtonProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const buttonClass = classNames(
-    "w-full h-11 px-4 border-2 rounded-lg flex justify-between items-center font-lato font-semibold bg-dark",
+    "w-full flex h-11 px-4 items-center justify-between border-2 rounded-lg font-lato font-semibold",
     {
-      "border-greenLight": !disabled,
+      "border-greenLight hover:ring-1 hover:ring-greenLight": !disabled,
       "ring-1 ring-greenLight": isOpen,
-      "bg-dark cursor-not-allowed border-greenDark": disabled,
+
+      "bg-white": theme === "light",
+      "opacity-50 cursor-not-allowed border-greenLight": disabled && theme === "light",
+
+      "bg-dark": theme === "dark",
+      "opacity-50 border-greenMid cursor-not-allowed": disabled && theme === "dark",
     }
   );
 
+  // 🧠 Regras de cor com base no estado atual
   const inputClass = classNames(
-    "bg-transparent outline-none w-full placeholder-greenDark text-white font-lato font-semibold",
-    { "cursor-pointer": !disabled, "cursor-not-allowed opacity-50": disabled }
+    "bg-transparent outline-none w-full font-lato font-semibold transition-colors",
+    {
+      "text-gray-500": theme === "light" && !selectedValue,
+      "text-greenDark": theme === "dark" && !selectedValue,
+
+      // 🔸 Texto quando dropdown está aberto (digitando)
+      "text-black": theme === "light" && (isOpen || selectedValue),
+      "text-white": theme === "dark" && (isOpen || selectedValue),
+
+      // 🔸 Acessibilidade e desativação
+      "cursor-pointer": !disabled,
+      "cursor-not-allowed opacity-50": disabled,
+    }
   );
 
-  const iconClass = classNames("fas fa-caret-down text-greenLight ml-2", {
-    "transform rotate-180": isOpen,
+  const iconClass = classNames("fas fa-caret-down ml-2 transition-transform", {
+    "text-greenLight": theme === "dark",
+    "text-dark": theme === "light",
+    "rotate-180": isOpen,
+    "opacity-50": disabled,
   });
 
   const handleClick = () => {
@@ -43,7 +65,6 @@ export const SelectButton = ({
     if (event.key === " ") {
       event.preventDefault();
       setFilter((prev) => prev + " ");
-      return;
     }
     handleKeyDown(event);
   };
@@ -59,8 +80,8 @@ export const SelectButton = ({
         ref={inputRef}
         type="text"
         readOnly={!isOpen}
-        value={isOpen ? filter : selectedLabel || ""}
-        placeholder={placeholder}
+        value={isOpen ? filter : selectedLabel ?? ""}
+        placeholder={isOpen ? "" : placeholder}
         onChange={(e) => setFilter(e.target.value)}
         onKeyDown={handleInputKeyDown}
         className={inputClass}

@@ -27,5 +27,5 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },
-  "include": ["src", "src/components/core", "backend/types/user.types.ts", "src/components/auth", "backend/helpers/omitFields.ts", "backend/helpers/handleToastResponse.ts"]
+  "include": ["src", "src/components/core", "backend/types/user.types.ts", "src/components/auth", "backend/helpers/omitFields.ts", "backend/helpers/handleToastResponse.ts", "backend/models/jwt.types.ts", "backend/utils/jwt.ts", "backend/middleware"]
 }

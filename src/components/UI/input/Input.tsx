@@ -1,8 +1,8 @@
-import { forwardRef, useState, useEffect } from "react";
+import { forwardRef, useState } from "react";
 import classNames from "classnames";
-import type { FormFieldProps } from "./Input.types";
+import type { InputProps } from "./Input.types";
 
-export const FormField = forwardRef<HTMLInputElement, FormFieldProps>(
+export const Input = forwardRef<HTMLInputElement, InputProps>(
   (
     {
       label,
@@ -12,37 +12,40 @@ export const FormField = forwardRef<HTMLInputElement, FormFieldProps>(
       disabled = false,
       name,
       value,
+      defaultValue,
       onChange,
       onBlur,
       autoComplete,
+      theme = "light",
       ...props
     },
     ref
   ) => {
-    const isControlled = value !== undefined;
-    const [inputValue, setInputValue] = useState(String(value || ""));
     const [showPassword, setShowPassword] = useState(false);
 
-    useEffect(() => {
-      if (value !== undefined) setInputValue(String(value));
-    }, [value]);
-
-    const togglePassword = () => setShowPassword((prev) => !prev);
+    const isControlled = value !== undefined;
 
     const inputClass = classNames(
       "w-full p-2 rounded-lg border-2 font-lato font-semibold",
       {
-        "border-greenLight focus:outline-none focus:ring-1 focus:ring-greenLight":
+        "border-greenLight hover:ring-1 hover:ring-greenLight focus:outline-none focus:ring-1 focus:ring-greenLight":
           !disabled && !error,
-        "opacity-50 cursor-not-allowed bg-gray-100": disabled,
         "border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500":
           error && !disabled,
+
+        "bg-white text-black placeholder-gray-500": theme === "light",
+        "opacity-50 cursor-not-allowed border-greenLight":
+          disabled && theme === "light",
+
+        "bg-dark text-greenLight placeholder-greenDark": theme === "dark",
+        "opacity-50 cursor-not-allowed border-greenMid":
+          disabled && theme === "dark",
       }
     );
 
     const labelClass = classNames("font-semibold text-md font-lato", {
       "text-greenLight": !disabled,
-      "text-greenMid": disabled,
+      "opacity-50 cursor-not-allowed text-greenMid": disabled,
     });
 
     const errorClass = "text-sm font-lato text-red-500";
@@ -57,6 +60,8 @@ export const FormField = forwardRef<HTMLInputElement, FormFieldProps>(
         : type === "text"
         ? "name"
         : "off");
+
+    const togglePassword = () => setShowPassword((prev) => !prev);
 
     return (
       <div className="w-full flex flex-col gap-1 relative">
@@ -77,11 +82,10 @@ export const FormField = forwardRef<HTMLInputElement, FormFieldProps>(
             placeholder={placeholder}
             className={inputClass}
             disabled={disabled}
-            value={isControlled ? value : inputValue}
-            onChange={(e) => {
-              if (!isControlled) setInputValue(e.target.value);
-              onChange?.(e);
-            }}
+            // 🔹 Suporte total a controlado e não-controlado
+            {...(isControlled
+              ? { value, onChange }
+              : { defaultValue, onChange })}
             onBlur={onBlur}
             autoComplete={defaultAutoComplete}
             aria-label={label || placeholder}
@@ -105,4 +109,4 @@ export const FormField = forwardRef<HTMLInputElement, FormFieldProps>(
   }
 );
 
-FormField.displayName = "FormField";
+Input.displayName = "Input";

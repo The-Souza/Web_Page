@@ -1,11 +1,7 @@
-import type {
-  User,
-  LoginResponse,
-  CheckUserResponse,
-} from "./Auth.types";
+import type { User, LoginResponse, CheckUserResponse } from "./Auth.types";
 import { logFrontend } from "@/utils/Logger";
 
-const BASE_URL = "http://localhost:5000";
+const BASE_URL = import.meta.env.VITE_API_URL;
 
 export const registerUser = async (user: User): Promise<LoginResponse> => {
   try {
@@ -51,6 +47,7 @@ export const loginUser = async (
       success: true,
       message: json.message,
       user: json.user,
+      token: json.token,
     };
   } catch (err) {
     console.error(err);

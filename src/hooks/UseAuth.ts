@@ -22,13 +22,21 @@ export function useAuth() {
   }, []);
 
   const login = useCallback((token: string, userData: User) => {
+    if (!token || !userData) {
+      console.error("Invalid login data: missing token or user");
+      return;
+    }
+
     localStorage.setItem("token", token);
     localStorage.setItem("user", JSON.stringify(userData));
+
     setIsAuthenticated(true);
     setUser(userData);
   }, []);
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     setIsAuthenticated(false);

@@ -12,6 +12,7 @@ export interface LoginResponse {
   success: boolean;
   message?: string;
   user?: PublicUser;
+  token?: string;
 }
 
 export interface CheckUserResponse {

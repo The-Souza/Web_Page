@@ -1,4 +1,4 @@
-import { forwardRef, useState, useEffect } from "react";
+import { forwardRef, useState } from "react";
 import classNames from "classnames";
 import type { InputProps } from "./Input.types";
 
@@ -12,6 +12,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
       disabled = false,
       name,
       value,
+      defaultValue,
       onChange,
       onBlur,
       autoComplete,
@@ -20,15 +21,9 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     },
     ref
   ) => {
-    const isControlled = value !== undefined;
-    const [inputValue, setInputValue] = useState(String(value || ""));
     const [showPassword, setShowPassword] = useState(false);
 
-    useEffect(() => {
-      if (value !== undefined) setInputValue(String(value));
-    }, [value]);
-
-    const togglePassword = () => setShowPassword((prev) => !prev);
+    const isControlled = value !== undefined;
 
     const inputClass = classNames(
       "w-full p-2 rounded-lg border-2 font-lato font-semibold",
@@ -66,6 +61,8 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
         ? "name"
         : "off");
 
+    const togglePassword = () => setShowPassword((prev) => !prev);
+
     return (
       <div className="w-full flex flex-col gap-1 relative">
         {label && (
@@ -85,16 +82,16 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             placeholder={placeholder}
             className={inputClass}
             disabled={disabled}
-            value={isControlled ? value : inputValue}
-            onChange={(e) => {
-              if (!isControlled) setInputValue(e.target.value);
-              onChange?.(e);
-            }}
+            // 🔹 Suporte total a controlado e não-controlado
+            {...(isControlled
+              ? { value, onChange }
+              : { defaultValue, onChange })}
             onBlur={onBlur}
             autoComplete={defaultAutoComplete}
             aria-label={label || placeholder}
             {...props}
           />
+
           {type === "password" && (
             <i
               className={classNames(

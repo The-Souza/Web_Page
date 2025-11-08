@@ -21,7 +21,7 @@ export const SelectButton = ({
     {
       "border-greenLight hover:ring-1 hover:ring-greenLight": !disabled,
       "ring-1 ring-greenLight": isOpen,
-      
+
       "bg-white": theme === "light",
       "opacity-50 cursor-not-allowed border-greenLight": disabled && theme === "light",
 
@@ -30,24 +30,27 @@ export const SelectButton = ({
     }
   );
 
+  // 🧠 Regras de cor com base no estado atual
   const inputClass = classNames(
-    "bg-transparent outline-none w-full font-lato font-semibold",
+    "bg-transparent outline-none w-full font-lato font-semibold transition-colors",
     {
-      "text-gray-500 placeholder-gray-500": theme === "light" && !selectedValue,
-      "text-greenDark placeholder-greenDark": theme === "dark" && !selectedValue,
+      "text-gray-500": theme === "light" && !selectedValue,
+      "text-greenDark": theme === "dark" && !selectedValue,
 
-      "text-black": theme === "light" && !!selectedValue,
-      "text-white": theme === "dark" && !!selectedValue,
-      
+      // 🔸 Texto quando dropdown está aberto (digitando)
+      "text-black": theme === "light" && (isOpen || selectedValue),
+      "text-white": theme === "dark" && (isOpen || selectedValue),
+
+      // 🔸 Acessibilidade e desativação
       "cursor-pointer": !disabled,
       "cursor-not-allowed opacity-50": disabled,
     }
   );
-  
-  const iconClass = classNames("fas fa-caret-down ml-2", {
+
+  const iconClass = classNames("fas fa-caret-down ml-2 transition-transform", {
     "text-greenLight": theme === "dark",
     "text-dark": theme === "light",
-    "transform rotate-180": isOpen,
+    "rotate-180": isOpen,
     "opacity-50": disabled,
   });
 

@@ -16,6 +16,8 @@ const COLORS = {
   negative: "text-red-400",
 };
 
+const ACCOUNT_TYPES = ["Water", "Energy", "Gas", "Internet"];
+
 export default function Home() {
   const { user } = useAuth();
   const { accounts, loading, updatePaid } = useAccounts(user?.email);
@@ -23,15 +25,32 @@ export default function Home() {
   const monthSelectRef = useRef<SelectHandle | null>(null);
   const { setLoading } = useLoading();
 
-  const chartData = summary.monthSummaries.map(({ month, summary }) => ({
-    month,
-    Paid: Number(summary.paidValue.toFixed(2)),
-    Unpaid: Number(summary.unpaidValue.toFixed(2)),
-  }));
+  const chartData = summary.monthSummaries
+    .map(({ month, summary }) => ({
+      month,
+      Paid: Number(summary.paidValue.toFixed(2)),
+      Unpaid: Number(summary.unpaidValue.toFixed(2)),
+    }))
+    // ✅ Filtra meses sem nenhum valor relevante
+    .filter((m) => m.Paid > 0 || m.Unpaid > 0);
 
   const renderDiff = (diff: number) => {
-    const color = diff <= 0 ? COLORS.positive : COLORS.negative;
-    const sign = diff >= 0 ? "+" : "-";
+    let color = COLORS.positive;
+    let sign = "";
+
+    if (diff > 0) {
+      // Pagou mais → vermelho
+      color = COLORS.negative;
+      sign = "+";
+    } else if (diff < 0) {
+      // Pagou menos → verde
+      color = COLORS.positive;
+      sign = "-";
+    } else {
+      // Sem diferença → neutro
+      color = "text-white";
+    }
+
     return (
       <span className={`font-lato font-bold text-lg tracking-tight ${color}`}>
         {sign}
@@ -54,7 +73,10 @@ export default function Home() {
             <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
               <Select
                 label="Year"
-                options={summary.availableYears.map((y) => ({ label: y, value: y }))}
+                options={summary.availableYears.map((y) => ({
+                  label: y,
+                  value: y,
+                }))}
                 placeholder="Select a year"
                 onChange={(val) => {
                   summary.setSelectedYear(val);
@@ -66,13 +88,15 @@ export default function Home() {
               <Select
                 ref={monthSelectRef}
                 label="Month"
-                options={summary.availableMonths.map((m) => ({ label: m, value: m }))}
+                options={summary.availableMonths.map((m) => ({
+                  label: m,
+                  value: m,
+                }))}
                 placeholder="Select a month"
                 onChange={(val) => summary.setSelectedMonth(val)}
               />
             </div>
           </div>
-
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <Card
               title="Total for the month"
@@ -92,8 +116,16 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 flex-1">
-            {summary.accountTypeSummary.map(
-              ({ type, totalValue, paidValue, unpaidValue }) => (
+            {ACCOUNT_TYPES.map((type) => {
+              const data = summary.accountTypeSummary.find(
+                (item) => item.type === type
+              );
+
+              const totalValue = data?.totalValue ?? 0;
+              const paidValue = data?.paidValue ?? 0;
+              const unpaidValue = data?.unpaidValue ?? 0;
+
+              return (
                 <Card
                   key={type}
                   title={type}
@@ -110,12 +142,11 @@ export default function Home() {
                     </>
                   }
                 />
-              )
-            )}
+              );
+            })}
           </div>
 
           <CustomBarChart data={chartData} title="Comparison by month" />
-
           <Table<Account>
             data={summary.accountsForSelectedMonth}
             rowKey={(acc) => acc.id}

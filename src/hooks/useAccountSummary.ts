@@ -41,11 +41,36 @@ export function useAccountSummary(accounts: Account[]) {
 
   const previousSummary = useMemo(() => {
     if (!isSelectionComplete || !previousMonth) return emptySummary;
-    return computeMonthSummary(accounts, previousMonth);
+
+    // 🔹 padroniza formato dos meses (ex: 1/2024 -> 01/2024)
+    const normalizedAccounts = accounts.map((acc) => ({
+      ...acc,
+      month: acc.month.padStart(7, "0"), // garante sempre MM/YYYY
+    }));
+    const normalizedPrevMonth = previousMonth.padStart(7, "0");
+
+    // 🔹 verifica se existe o mês anterior
+    const hasPreviousMonthData = normalizedAccounts.some(
+      (acc) => acc.month === normalizedPrevMonth
+    );
+
+    if (!hasPreviousMonthData) return emptySummary;
+
+    // 🔹 calcula o resumo usando apenas o mês anterior padronizado
+    return computeMonthSummary(
+      normalizedAccounts.filter((acc) => acc.month === normalizedPrevMonth),
+      normalizedPrevMonth
+    );
   }, [accounts, previousMonth, isSelectionComplete]);
 
   const diffFromLastMonth = useMemo(() => {
     if (!isSelectionComplete) return 0;
+
+    // Se o mês anterior não tiver nenhum valor, consideramos que não há diferença
+    const hasPreviousData = previousSummary.totalValue > 0;
+
+    if (!hasPreviousData) return 0;
+
     return getDiffFromLastMonth(currentSummary, previousSummary);
   }, [currentSummary, previousSummary, isSelectionComplete]);
 

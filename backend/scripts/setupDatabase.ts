@@ -1,62 +1,54 @@
-import sql from "mssql";
+import { sql } from "../utils/db.ts";
 import { faker } from "@faker-js/faker";
 import chalk from "chalk";
 
-export async function createTables(conn: sql.ConnectionPool) {
+export async function createTables() {
   console.log(chalk.cyan("\n🚀 Creating tables..."));
 
-  await conn.query(`
-    IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='Users' and xtype='U')
-    CREATE TABLE Users (
-      Id INT IDENTITY(1,1) PRIMARY KEY,
-      Name NVARCHAR(100),
-      Email NVARCHAR(100) UNIQUE,
-      Address NVARCHAR(200),
-      Password NVARCHAR(100)
+  await sql`
+    CREATE TABLE IF NOT EXISTS Users (
+      id SERIAL PRIMARY KEY,
+      name TEXT,
+      email TEXT UNIQUE NOT NULL,
+      address TEXT,
+      password TEXT NOT NULL
     );
+  `;
 
-    IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='Accounts' and xtype='U')
-    CREATE TABLE Accounts (
-      Id INT IDENTITY(1,1) PRIMARY KEY,
-      UserId INT FOREIGN KEY REFERENCES Users(Id),
-      Address NVARCHAR(200),
-      Account NVARCHAR(50),
-      Year INT,
-      Month INT,
-      Consumption FLOAT,
-      Days INT,
-      Value FLOAT,
-      Paid BIT NOT NULL DEFAULT 0
+  await sql`
+    CREATE TABLE IF NOT EXISTS Accounts (
+      id SERIAL PRIMARY KEY,
+      userId INTEGER NOT NULL REFERENCES Users(id) ON DELETE CASCADE,
+      address TEXT,
+      account TEXT NOT NULL,
+      year INTEGER NOT NULL,
+      month INTEGER NOT NULL,
+      consumption FLOAT,
+      days INTEGER,
+      value FLOAT,
+      paid BOOLEAN DEFAULT false
     );
-  `);
+  `;
 
   console.log(chalk.green("✅ Tables created!"));
 }
 
-export async function generateUsers(conn: sql.ConnectionPool) {
+export async function generateUsers() {
   console.log(chalk.cyan("👤 Generating users..."));
 
-  const users = [];
-  for (let i = 1; i <= 10; i++) {
-    users.push({
-      name: `User ${i}`,
-      email: `user${i}@example.com`,
-      address: faker.location.streetAddress(),
-      password: "123456",
-    });
-  }
+  const users = Array.from({ length: 10 }, (_, i) => ({
+    name: `User ${i + 1}`,
+    email: `user${i + 1}@example.com`,
+    address: faker.location.streetAddress(),
+    password: "123456",
+  }));
 
   for (const user of users) {
-    await conn
-      .request()
-      .input("name", user.name)
-      .input("email", user.email)
-      .input("address", user.address)
-      .input("password", user.password)
-      .query(`
-        INSERT INTO Users (Name, Email, Address, Password)
-        VALUES (@name, @email, @address, @password)
-      `);
+    await sql`
+      INSERT INTO Users (name, email, address, password)
+      VALUES (${user.name}, ${user.email}, ${user.address}, ${user.password})
+      ON CONFLICT (email) DO NOTHING;
+    `;
   }
 
   console.log(chalk.green("✅ Users inserted!"));
@@ -92,45 +84,76 @@ const generateValue = (type: string, consumption: number) => {
   }
 };
 
-export async function generateAccounts(conn: sql.ConnectionPool) {
+export async function generateAccounts() {
   console.log(chalk.cyan("💳 Generating monthly accounts..."));
 
   const accountsList = ["Water", "Electricity", "Gas", "Internet"];
-  const usersResult = await conn.query(`SELECT Id, Address FROM Users`);
-  const users = usersResult.recordset;
+  const users = await sql`SELECT id, address FROM Users`;
 
   const startYear = 2024;
   const endYear = 2025;
 
   for (const user of users) {
+    const inserts = [];
+
     for (const accountType of accountsList) {
       for (let year = startYear; year <= endYear; year++) {
         for (let month = 1; month <= 12; month++) {
-          if (year === 2025 && month > 12) break;
-
           const consumption = generateConsumption(accountType);
           const value = generateValue(accountType, consumption);
           const days = Math.floor(Math.random() * 4) + 28;
 
-          await conn
-            .request()
-            .input("userId", user.Id)
-            .input("address", user.Address)
-            .input("account", accountType)
-            .input("year", year)
-            .input("month", month)
-            .input("consumption", consumption)
-            .input("days", days)
-            .input("value", value)
-            .input("paid", false)
-            .query(`
-              INSERT INTO Accounts (UserId, Address, Account, Year, Month, Consumption, Days, Value, Paid)
-              VALUES (@userId, @address, @account, @year, @month, @consumption, @days, @value, @paid)
-            `);
+          inserts.push({
+            userId: user.id,
+            address: user.address,
+            account: accountType,
+            year,
+            month,
+            consumption,
+            days,
+            value,
+            paid: false,
+          });
         }
       }
     }
+
+    // Insert batch per user
+    await sql`
+      INSERT INTO Accounts (
+        userId, address, account, year, month,
+        consumption, days, value, paid
+      ) VALUES 
+        ${sql(
+          inserts.map((acc) => [
+            acc.userId,
+            acc.address,
+            acc.account,
+            acc.year,
+            acc.month,
+            acc.consumption,
+            acc.days,
+            acc.value,
+            acc.paid,
+          ])
+        )}
+    `;
   }
 
   console.log(chalk.green("✅ Monthly accounts inserted!"));
 }
+
+async function main() {
+  try {
+    await createTables();
+    await generateUsers();
+    await generateAccounts();
+    console.log("🎉 Database setup completed!\n");
+    process.exit(0);
+  } catch (err) {
+    console.error("❌ Failed to setup database:", err);
+    process.exit(1);
+  }
+}
+
+main();

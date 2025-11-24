@@ -12,7 +12,7 @@ export function Table<T>({
   );
 
   const wrapperClass = classNames(
-    "overflow-x-auto w-full rounded-2xl border-2 border-greenLight shadow shadow-greenLight"
+    "overflow-x-auto w-full rounded-2xl border-2 border-greenLight"
   );
 
   return (

@@ -56,9 +56,9 @@ export class Button extends Component<ButtonProps> {
         "text-greenLight text-md hover:underline": variant === "bottomless"
       },
       {
-        "transition-transform active:scale-95 hover:bg-greenMid":
+        "transition-transform active:scale-95 hover:bg-greenMid focus:outline-none focus:ring-2 focus:ring-greenLight":
           !disabled && variant === "solid",
-        "transition-transform active:scale-95 hover:bg-greenLight hover:text-dark":
+        "transition-transform active:scale-95 hover:bg-greenLight hover:text-dark focus:outline-none focus:ring-2 focus:ring-greenLight":
           !disabled && variant === "border",
         "opacity-50 cursor-not-allowed": disabled,
       }

@@ -1,4 +1,4 @@
-import pkg from "express";
+import express from "express";
 import * as accountService from "../services/account.service.ts";
 import type { AuthenticatedRequest } from "../models/authRequest.ts";
 
@@ -9,7 +9,7 @@ function parsePaidParam(paidParam: string | undefined): boolean | undefined {
   return undefined;
 }
 
-export async function getAllAccounts(req: pkg.Request, res: pkg.Response) {
+export async function getAllAccounts(req: express.Request, res: express.Response) {
   try {
     const accounts = await accountService.getAllAccounts();
     res.json(accounts);
@@ -19,7 +19,7 @@ export async function getAllAccounts(req: pkg.Request, res: pkg.Response) {
   }
 }
 
-export async function getAccountsByUserId(req: pkg.Request, res: pkg.Response) {
+export async function getAccountsByUserId(req: express.Request, res: express.Response) {
   try {
     const userId = parseInt(req.params.userId, 10);
     if (isNaN(userId)) {
@@ -39,10 +39,7 @@ export async function getAccountsByUserId(req: pkg.Request, res: pkg.Response) {
   }
 }
 
-export async function getAccountsByUserEmail(
-  req: pkg.Request,
-  res: pkg.Response
-) {
+export async function getAccountsByUserEmail(req: express.Request, res: express.Response) {
   try {
     const { email } = req.params;
     if (!email) {
@@ -62,13 +59,15 @@ export async function getAccountsByUserEmail(
   }
 }
 
-export async function updateAccountPaid(req: pkg.Request, res: pkg.Response) {
+export async function updateAccountPaid(req: express.Request, res: express.Response) {
   try {
     const { id } = req.params;
     const { paid } = req.body;
+
     if (typeof paid !== "boolean") {
       return res.status(400).json({ error: "paid must be boolean" });
     }
+
     await accountService.updateAccountPaid(Number(id), paid);
     res.json({ success: true });
   } catch (err) {
@@ -79,7 +78,7 @@ export async function updateAccountPaid(req: pkg.Request, res: pkg.Response) {
 
 export async function registerAccount(
   req: AuthenticatedRequest,
-  res: pkg.Response
+  res: express.Response
 ) {
   try {
     const user = req.user;
@@ -101,11 +100,11 @@ export async function registerAccount(
     if (
       !address ||
       !accountType ||
-      !year ||
-      !month ||
-      !consumption ||
-      !days ||
-      !value
+      year == null ||
+      month == null ||
+      consumption == null ||
+      days == null ||
+      value == null
     ) {
       return res
         .status(400)

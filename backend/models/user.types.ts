@@ -1,22 +1,18 @@
 export type User = {
-  id?: number;
-  name?: string;
+  id: number;
+  name?: string | null;
   email: string;
-  address?: string;
+  address?: string | null;
   password?: string;
 };
 
-export type PublicUser = Omit<User, "password" | "address">;
+export type PublicUser = Omit<User, "address">;
 
-export interface UserRecord {
-  Id?: number;
-  id?: number;
-  Name?: string;
-  name?: string;
-  Email: string;
+// Como o Supabase realmente retorna
+export type UserRecord = {
+  id: number;
+  name: string | null;
   email: string;
-  Address?: string;
-  address?: string;
-  Password?: string;
-  password?: string;
-}
+  address: string | null;
+  password?: string; // se você realmente armazena isso (geralmente não com Supabase Auth)
+};

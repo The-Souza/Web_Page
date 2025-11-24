@@ -50,7 +50,7 @@ export const CustomBarChart = ({
 
   return (
     <div
-      className="bg-dark shadow-greenLight rounded-2xl border-2 border-greenLight p-6 flex flex-col gap-4"
+      className="bg-dark rounded-2xl border-2 border-greenLight p-6 flex flex-col gap-4"
       style={{ backgroundColor: colors.background }}
     >
       {title && <Title text={title} size="xl" />}

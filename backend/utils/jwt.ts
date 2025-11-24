@@ -4,8 +4,8 @@ import type { JwtPayload } from "../models/jwt.types.ts";
 
 dotenv.config();
 
-const SECRET_KEY = process.env.JWT_SECRET as jwt.Secret;
-const EXPIRES_IN = process.env.JWT_EXPIRES_IN as string;
+const SECRET_KEY = process.env.JWT_SECRET!;
+const EXPIRES_IN = process.env.JWT_EXPIRES_IN!;
 
 export function generateToken(payload: JwtPayload): string {
   const token = jwt.sign(payload, SECRET_KEY, {

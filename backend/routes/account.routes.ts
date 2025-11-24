@@ -4,9 +4,9 @@ import {
   getAccountsByUserId,
   getAccountsByUserEmail,
   updateAccountPaid,
+  registerAccount,
 } from "../controllers/account.controller.ts";
 import { authenticateJWT } from "../middleware/auth.middleware.ts";
-import { registerAccount } from "../controllers/account.controller.ts";
 
 const router = Router();
 

@@ -67,7 +67,7 @@ export function MainLayout() {
 
   return (
     <div
-      className="main-layout w-full min-h-screen flex flex-col bg-[url('@/assets/img/bg_private2.jpg')]
+      className="main-layout w-full min-h-screen flex flex-col bg-forest
       bg-cover bg-right sm:bg-center bg-no-repeat"
     >
       <Header
@@ -88,7 +88,7 @@ export function MainLayout() {
 
         <div
           className={classNames(
-            "bg-dark text-greenLight flex flex-col items-start gap-4 p-4 shadow-2xl shadow-greenLight border-2",
+            "bg-dark text-greenLight flex flex-col items-start gap-4 p-4 border-r-2 border-t-2",
             "border-greenLight transition-transform duration-300 z-50 w-56 sm:w-64",
             {
               "fixed top-[80px] sm:top-[86px] left-0 h-full": true,

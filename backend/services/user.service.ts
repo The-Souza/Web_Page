@@ -1,5 +1,4 @@
-import sql from "mssql";
-import { getConnection } from "../utils/db.ts";
+import { supabase } from "../utils/supabaseClient.ts";
 import type { User, UserRecord } from "../models/user.types.ts";
 import { omitFields } from "../helpers/omitFields.ts";
 
@@ -7,84 +6,90 @@ export function mapRecordToUserRaw(record: UserRecord): User | null {
   if (!record) return null;
 
   return {
-    id: record.Id ?? record.id,
-    name: record.Name ?? record.name,
-    email: record.Email ?? record.email,
-    address: record.Address ?? record.address,
-    password: record.Password ?? record.password,
+    id: record.id,
+    name: record.name,
+    email: record.email,
+    address: record.address,
+    password: record.password,
   };
 }
 
 export function mapRecordToUserSafe(
   record: UserRecord | User | null
-): Omit<User, "password" | "address"> | null {
-  const rawUser = mapRecordToUserRaw(record as UserRecord);
-  if (!rawUser) return null;
-  return omitFields(rawUser, ["password", "address"]);
+) {
+  const raw = mapRecordToUserRaw(record as UserRecord);
+  if (!raw) return null;
+  return omitFields(raw, ["password", "address"]);
 }
 
 export const exists = async (email: string): Promise<boolean> => {
-  const conn = await getConnection();
-  const result = await conn
-    .request()
-    .input("email", sql.NVarChar, email)
-    .query("SELECT 1 FROM Users WHERE Email = @email");
+  const { data, error } = await supabase
+    .from("users")
+    .select("id")
+    .eq("email", email);
 
-  return result.recordset.length > 0;
+  if (error) throw error;
+
+  return data.length > 0;
 };
 
 export const add = async (user: User): Promise<void> => {
-  const conn = await getConnection();
-  await conn
-    .request()
-    .input("name", sql.NVarChar, user.name ?? null)
-    .input("email", sql.NVarChar, user.email)
-    .input("address", sql.NVarChar, user.address ?? null)
-    .input("password", sql.NVarChar, user.password ?? null).query(`
-      INSERT INTO Users (Name, Email, Address, Password)
-      VALUES (@name, @email, @address, @password)
-    `);
+  const { error } = await supabase.from("users").insert([
+    {
+      name: user.name,
+      email: user.email,
+      address: user.address ?? null,
+      password: user.password ?? null,
+    },
+  ]);
+
+  if (error) throw error;
 };
 
 export const authenticate = async (
   email: string,
   password: string
 ): Promise<User | null> => {
-  const conn = await getConnection();
-  const result = await conn
-    .request()
-    .input("email", sql.NVarChar, email)
-    .input("password", sql.NVarChar, password)
-    .query("SELECT * FROM Users WHERE Email = @email AND Password = @password");
+  const { data, error } = await supabase
+    .from("users")
+    .select("*")
+    .eq("email", email)
+    .eq("password", password)
+    .single();
 
-  return mapRecordToUserRaw(result.recordset[0]) ?? null;
+  if (error) return null;
+
+  return mapRecordToUserRaw(data);
 };
 
 export const updatePassword = async (
   email: string,
   password: string
 ): Promise<User | null> => {
-  const conn = await getConnection();
-  await conn
-    .request()
-    .input("email", sql.NVarChar, email)
-    .input("password", sql.NVarChar, password)
-    .query("UPDATE Users SET Password = @password WHERE Email = @email");
+  const { error } = await supabase
+    .from("users")
+    .update({ password })
+    .eq("email", email);
 
-  const updated = await conn
-    .request()
-    .input("email", sql.NVarChar, email)
-    .query("SELECT * FROM Users WHERE Email = @email");
+  if (error) throw error;
 
-  return mapRecordToUserRaw(updated.recordset[0]) ?? null;
+  const { data } = await supabase
+    .from("users")
+    .select("*")
+    .eq("email", email)
+    .single();
+
+  return mapRecordToUserRaw(data);
 };
 
 export const getUserEmail = async (email: string): Promise<User | null> => {
-  const conn = await getConnection();
-  const result = await conn
-    .request()
-    .input("email", sql.NVarChar, email)
-    .query("SELECT * FROM Users WHERE Email = @email");
+  const { data, error } = await supabase
+    .from("users")
+    .select("*")
+    .eq("email", email)
+    .single();
 
-  return mapRecordToUserRaw(result.recordset[0]) ?? null;
+  if (error) return null;
+
+  return mapRecordToUserRaw(data);
 };

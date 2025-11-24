@@ -22,7 +22,7 @@ export function Card({
   }
 
   const baseClasses =
-    "bg-dark flex flex-col gap-2 p-6 rounded-2xl shadow shadow-greenLight border-2 border-greenLight";
+    "bg-dark flex flex-col gap-2 p-6 rounded-2xl border-2 border-greenLight";
   
   const textClass = classNames("font-lato font-bold text-lg text-white tracking-tight", {
     "opacity-60": isEmpty,

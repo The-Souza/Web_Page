@@ -1,6 +1,26 @@
-import sql from "mssql";
-import { getConnection } from "../utils/db.ts";
-import type { Account, AccountRecord } from "../models/account.types.ts";
+import { supabase } from "../utils/supabaseClient.ts";
+import type {
+  Account,
+  AccountRecord,
+  SupabaseAccountRow,
+  NewAccount,
+} from "../models/account.types.ts";
+
+function adaptSupabaseToRecord(rec: SupabaseAccountRow): AccountRecord {
+  return {
+    Id: rec.id,
+    UserId: rec.userid,
+    Address: rec.address,
+    Account: rec.account,
+    Year: rec.year,
+    Month: rec.month,
+    Consumption: rec.consumption,
+    Days: rec.days,
+    Value: rec.value,
+    Paid: rec.paid,
+    Email: rec.users?.email ?? undefined,
+  };
+}
 
 function mapAccount(record: AccountRecord): Account {
   return {
@@ -19,104 +39,138 @@ function mapAccount(record: AccountRecord): Account {
 }
 
 export async function getAllAccounts(): Promise<Account[]> {
-  const conn = await getConnection();
-  const result = await conn.query(`
-    SELECT 
-      a.Id, a.UserId, u.Email, a.Address, a.Account,
-      a.Year, a.Month, a.Consumption, a.Days, a.Value, a.Paid
-    FROM Accounts a
-    INNER JOIN Users u ON u.Id = a.UserId
-    ORDER BY a.Year DESC, a.Month DESC
-  `);
-  return result.recordset.map(mapAccount);
+  const { data, error } = await supabase
+    .from("accounts")
+    .select(
+      `
+      id,
+      userid,
+      address,
+      account,
+      year,
+      month,
+      consumption,
+      days,
+      value,
+      paid,
+      users!left(email)
+    `
+    )
+    .order("year", { ascending: false })
+    .order("month", { ascending: false });
+
+  if (error) throw error;
+  if (!data) return [];
+
+  const rows = data as unknown as SupabaseAccountRow[];
+
+  return rows.map((rec) => mapAccount(adaptSupabaseToRecord(rec)));
 }
 
 export async function getAccountsByUserId(
   userId: number,
   paid?: boolean
 ): Promise<Account[]> {
-  const conn = await getConnection();
-
-  let query = `
-    SELECT 
-      a.Id, a.UserId, u.Email, a.Address, a.Account,
-      a.Year, a.Month, a.Consumption, a.Days, a.Value, a.Paid
-    FROM Accounts a
-    INNER JOIN Users u ON u.Id = a.UserId
-    WHERE a.UserId = @userId
-  `;
-
-  const request = conn.request().input("userId", sql.Int, userId);
+  let query = supabase
+    .from("accounts")
+    .select(
+      `
+      id,
+      userid,
+      address,
+      account,
+      year,
+      month,
+      consumption,
+      days,
+      value,
+      paid,
+      users!left(email)
+    `
+    )
+    .eq("userid", userId);
 
   if (typeof paid === "boolean") {
-    query += " AND a.Paid = @paid";
-    request.input("paid", sql.Bit, paid);
+    query = query.eq("paid", paid);
   }
 
-  query += " ORDER BY a.Year DESC, a.Month DESC";
+  const { data, error } = await query;
+  if (error) throw error;
+  if (!data) return [];
 
-  const result = await request.query(query);
-  return result.recordset.map(mapAccount);
+  const rows = data as unknown as SupabaseAccountRow[];
+
+  return rows.map((rec) => mapAccount(adaptSupabaseToRecord(rec)));
 }
 
 export async function getAccountsByUserEmail(
   email: string,
   paid?: boolean
 ): Promise<Account[]> {
-  const conn = await getConnection();
-
-  let query = `
-    SELECT 
-      a.Id, a.UserId, u.Email, a.Address, a.Account,
-      a.Year, a.Month, a.Consumption, a.Days, a.Value, a.Paid
-    FROM Accounts a
-    INNER JOIN Users u ON u.Id = a.UserId
-    WHERE u.Email = @email
-  `;
-
-  const request = conn.request().input("email", sql.NVarChar, email);
+  let query = supabase
+    .from("accounts")
+    .select(
+      `
+      id,
+      userid,
+      address,
+      account,
+      year,
+      month,
+      consumption,
+      days,
+      value,
+      paid,
+      users!inner(email)
+    `
+    )
+    .eq("users.email", email);
 
   if (typeof paid === "boolean") {
-    query += " AND a.Paid = @paid";
-    request.input("paid", sql.Bit, paid);
+    query = query.eq("paid", paid);
   }
 
-  query += " ORDER BY a.Year DESC, a.Month DESC";
+  const { data, error } = await query;
+  if (error) throw error;
+  if (!data) return [];
 
-  const result = await request.query(query);
-  return result.recordset.map(mapAccount);
+  const rows = data as unknown as SupabaseAccountRow[];
+
+  return rows.map((rec) => mapAccount(adaptSupabaseToRecord(rec)));
 }
 
-export async function updateAccountPaid(id: number, paid: boolean): Promise<void> {
-  const conn = await getConnection();
-  await conn
-    .request()
-    .input("id", sql.Int, id)
-    .input("paid", sql.Bit, paid)
-    .query("UPDATE Accounts SET Paid = @paid WHERE Id = @id");
+export async function updateAccountPaid(
+  id: number,
+  paid: boolean
+): Promise<void> {
+  const { error } = await supabase
+    .from("accounts")
+    .update({ paid })
+    .eq("id", id);
+
+  if (error) throw error;
 }
 
-export async function addAccount(account: Account): Promise<number> {
-  const conn = await getConnection();
+export async function addAccount(account: NewAccount): Promise<number> {
+  const { data, error } = await supabase
+    .from("accounts")
+    .insert([
+      {
+        userid: account.userId,
+        address: account.address,
+        account: account.accountType,
+        year: account.year,
+        month: parseInt(account.month.split("/")[0]),
+        consumption: account.consumption,
+        days: account.days,
+        value: account.value,
+        paid: account.paid ?? false,
+      },
+    ])
+    .select("id")
+    .single();
 
-  const result = await conn
-    .request()
-    .input("userId", sql.Int, account.userId)
-    .input("address", sql.NVarChar, account.address)
-    .input("accountType", sql.NVarChar, account.accountType)
-    .input("year", sql.Int, account.year)
-    .input("month", sql.Int, parseInt(account.month.split("/")[0], 10))
-    .input("consumption", sql.Float, account.consumption)
-    .input("days", sql.Int, account.days)
-    .input("value", sql.Float, account.value)
-    .input("paid", sql.Bit, account.paid ?? false)
-    .query(`
-      INSERT INTO Accounts
-      (UserId, Address, Account, Year, Month, Consumption, Days, Value, Paid)
-      VALUES
-      (@userId, @address, @accountType, @year, @month, @consumption, @days, @value, @paid);
-      SELECT SCOPE_IDENTITY() AS Id;
-    `);
+  if (error) throw error;
 
-  return result.recordset[0].Id;
+  return data.id;
 }

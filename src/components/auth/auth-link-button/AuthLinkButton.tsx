@@ -5,7 +5,7 @@ import classNames from "classnames";
 
 export const AuthLinkButton = ({ text, to }: AuthLinkButtonProps): JSX.Element => {
   const navigate = useNavigate();
-  const linkClass = classNames("text-greenLight text-sm hover:underline");
+  const linkClass = classNames("text-greenLight text-sm hover:underline focus:underline focus:outline-none");
 
   return (
     <button

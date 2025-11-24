@@ -5,7 +5,7 @@ import {
   resetPassword,
   checkUserExists,
 } from "../controllers/user.controller.ts";
-import { getConnection } from "../utils/db.ts";
+import { sql } from "../utils/db.ts";
 
 const router = Router();
 
@@ -13,17 +13,23 @@ router.post("/register", register);
 router.post("/login", login);
 router.post("/reset-password", resetPassword);
 router.post("/check-user-exists", checkUserExists);
-
 router.get("/", async (req, res) => {
   try {
-    const conn = await getConnection();
-    const result = await conn.query(
-      "SELECT Id, Name, Email, Address FROM Users"
-    );
-    res.json({ success: true, users: result.recordset });
+    const users = await sql`
+      SELECT id, name, email, address
+      FROM users
+    `;
+
+    res.json({
+      success: true,
+      users,
+    });
   } catch (err) {
     console.error("❌ Error fetching users:", err);
-    res.status(500).json({ success: false, message: "Internal server error" });
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
   }
 });
 

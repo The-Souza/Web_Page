@@ -43,5 +43,11 @@ export function useAuth() {
     setUser(null);
   }, []);
 
-  return { isAuthenticated, user, login, logout };
+  return {
+    isAuthenticated,
+    user,
+    token: localStorage.getItem("token"),
+    login,
+    logout,
+  };
 }

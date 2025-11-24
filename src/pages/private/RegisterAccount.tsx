@@ -58,7 +58,7 @@ const monthOptions = Array.from({ length: 12 }, (_, i) => {
 
 // -------------------- 🧱 Main Component --------------------
 export default function RegisterAccount() {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const { showToast } = useToast();
   const { setLoading } = useLoading();
 
@@ -120,7 +120,12 @@ export default function RegisterAccount() {
         paid: data.paid,
       };
 
-      const response = await registerAccount(payload);
+      if (!token) {
+        console.error("User not authenticated.");
+        return;
+      }
+
+      const response = await registerAccount(payload, token);
 
       if (response.success) {
         showToast({
@@ -161,7 +166,7 @@ export default function RegisterAccount() {
 
       <form
         onSubmit={handleSubmit(onSubmit)}
-        className="bg-dark p-8 sm:p-10 rounded-2xl border-2 border-greenLight shadow-greenLight flex flex-col gap-4"
+        className="bg-dark p-8 sm:p-10 rounded-2xl border-2 border-greenLight flex flex-col gap-4"
       >
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <Input

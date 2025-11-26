@@ -18,7 +18,7 @@ export function Table<T>({
   return (
     <div className={wrapperClass}>
       <table className={tableClass}>
-        <thead className="uppercase text-sm font-raleway text-greenLight font-semibold bg-forest">
+        <thead className="uppercase text-sm font-raleway text-greenLight font-semibold bg-greenDark">
           <tr>
             {columns.map((col) => (
               <th key={String(col.key)} className="px-4 py-3">

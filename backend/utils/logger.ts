@@ -56,3 +56,14 @@ export function logData(label: string, data: object) {
   console.log(chalk.cyan(`\n[${label}] - ${timestamp}`));
   console.log(prettyPrint(data));
 }
+
+export async function runStep(title: string, fn: () => Promise<void>) {
+  console.log(`\n========================================\n${title}\n========================================`);
+  try {
+    await fn();
+    console.log(chalk.green(`\n✅ ${title} completed successfully!\n`));
+  } catch (err) {
+    console.error(chalk.red(`\n❌ Error in ${title}:`), err);
+    throw err;
+  }
+}

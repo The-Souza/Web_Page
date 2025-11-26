@@ -6,10 +6,10 @@
   "scripts": {
     "dev": "vite",
     "backend": "cd backend && ts-node server.ts",
-    "setup": "cd backend && ts-node ./scripts/setupDatabase.ts",
-    "seed": "cd backend && ts-node ./test/runSupabaseTasks.ts --seed",
-    "test": "cd backend && ts-node ./test/runSupabaseTasks.ts --test",
-    "reset-db": "cd backend && ts-node ./scripts/dropTables.ts",
+    "setup": "cd backend && ts-node ./scripts/runSupabaseTasks.ts --setup",
+    "seed": "cd backend && ts-node ./scripts/runSupabaseTasks.ts --seed",
+    "test": "cd backend && ts-node ./scripts/runSupabaseTasks.ts --test",
+    "drop-db": "cd backend && ts-node ./scripts/runSupabaseTasks.ts --drop-db",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview"

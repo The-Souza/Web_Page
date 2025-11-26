@@ -2,6 +2,11 @@ import express from "express";
 import * as accountService from "../services/account.service.ts";
 import type { AuthenticatedRequest } from "../models/authRequest.ts";
 
+/**
+ * Helper para interpretar o query param "paid".
+ * Converte "true" → true, "false" → false, qualquer outra coisa → undefined.
+ * Usado para garantir validação consistente do filtro.
+ */
 function parsePaidParam(paidParam: string | undefined): boolean | undefined {
   if (paidParam === undefined) return undefined;
   if (paidParam === "true") return true;
@@ -9,6 +14,11 @@ function parsePaidParam(paidParam: string | undefined): boolean | undefined {
   return undefined;
 }
 
+/**
+ * GET /api/accounts
+ * Retorna todas as contas do sistema (não filtradas).
+ * Usado normalmente para fins administrativos.
+ */
 export async function getAllAccounts(req: express.Request, res: express.Response) {
   try {
     const accounts = await accountService.getAllAccounts();
@@ -19,13 +29,21 @@ export async function getAllAccounts(req: express.Request, res: express.Response
   }
 }
 
+/**
+ * GET /api/accounts/user/:userId?paid=true/false
+ * Retorna contas associadas a um userId opcionalmente filtradas por "paid".
+ * Exemplo: /api/accounts/user/3?paid=true
+ */
 export async function getAccountsByUserId(req: express.Request, res: express.Response) {
   try {
     const userId = parseInt(req.params.userId, 10);
+
+    // Validação: userId precisa ser um número
     if (isNaN(userId)) {
       return res.status(400).json({ error: "Invalid userId" });
     }
 
+    // Validação do parâmetro "paid"
     const paid = parsePaidParam(req.query.paid as string | undefined);
     if (req.query.paid !== undefined && paid === undefined) {
       return res.status(400).json({ error: "paid must be true or false" });
@@ -39,9 +57,15 @@ export async function getAccountsByUserId(req: express.Request, res: express.Res
   }
 }
 
+/**
+ * GET /api/accounts/email/:email?paid=true/false
+ * Função similar à anterior, mas busca usuários pelo email.
+ */
 export async function getAccountsByUserEmail(req: express.Request, res: express.Response) {
   try {
     const { email } = req.params;
+
+    // Validação: email é obrigatório
     if (!email) {
       return res.status(400).json({ error: "Email is required" });
     }
@@ -59,16 +83,23 @@ export async function getAccountsByUserEmail(req: express.Request, res: express.
   }
 }
 
+/**
+ * PATCH /api/accounts/:id/paid
+ * Atualiza o status "paid" de uma conta (true/false).
+ * Utilizado principalmente para marcar contas como pagas.
+ */
 export async function updateAccountPaid(req: express.Request, res: express.Response) {
   try {
     const { id } = req.params;
     const { paid } = req.body;
 
+    // Validação: paid deve ser boolean
     if (typeof paid !== "boolean") {
       return res.status(400).json({ error: "paid must be boolean" });
     }
 
     await accountService.updateAccountPaid(Number(id), paid);
+
     res.json({ success: true });
   } catch (err) {
     console.error("❌ Error updating account paid:", err);
@@ -76,16 +107,24 @@ export async function updateAccountPaid(req: express.Request, res: express.Respo
   }
 }
 
+/**
+ * POST /api/accounts/register
+ * Registra uma nova conta associada ao usuário autenticado.
+ * Depende de "req.user" que vem do middleware de autenticação.
+ */
 export async function registerAccount(
   req: AuthenticatedRequest,
   res: express.Response
 ) {
   try {
     const user = req.user;
+
+    // Validação: usuário precisa estar autenticado
     if (!user) {
       return res.status(401).json({ success: false, message: "Unauthorized" });
     }
 
+    // Campos esperados no corpo da requisição
     const {
       address,
       accountType,
@@ -97,6 +136,7 @@ export async function registerAccount(
       paid,
     } = req.body;
 
+    // Validação básica dos campos obrigatórios
     if (
       !address ||
       !accountType ||
@@ -111,6 +151,7 @@ export async function registerAccount(
         .json({ success: false, message: "Missing required fields" });
     }
 
+    // Criação da conta
     await accountService.addAccount({
       userId: user.id,
       userEmail: user.email,

@@ -6,13 +6,13 @@ export const CARD_ICONS: Record<CardIconKey, () => ReactNode> = {
   water: () => <i className="fa-solid fa-droplet fa-lg text-current" />,
   gas: () => <i className="fa-solid fa-fire-flame-simple fa-lg text-current" />,
   internet: () => <i className="fa-solid fa-wifi fa-lg text-current" />,
-  electricity: () => <i className="fa-solid fa-bolt fa-lg text-current" />,
+  energy: () => <i className="fa-solid fa-bolt fa-lg text-current" />,
 };
 
 export const ACCOUNT_TYPE_ICONS: Record<string, CardIconKey> = {
   Water: "water",
   Gas: "gas",
   Internet: "internet",
-  Electricity: "electricity",
+  Energy: "energy",
   Money: "money",
 };

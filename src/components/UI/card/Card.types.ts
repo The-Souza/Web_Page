@@ -8,4 +8,4 @@ export interface CardProps {
   className?: string;
 }
 
-export type CardIconKey = "money" | "water" | "gas" | "internet" | "electricity";
+export type CardIconKey = "money" | "water" | "gas" | "internet" | "energy";

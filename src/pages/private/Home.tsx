@@ -16,7 +16,7 @@ const COLORS = {
   negative: "text-red-400",
 };
 
-const ACCOUNT_TYPES = ["Water", "Electricity", "Gas", "Internet"];
+const ACCOUNT_TYPES = ["Water", "Energy", "Gas", "Internet"];
 
 export default function Home() {
   const { user } = useAuth();

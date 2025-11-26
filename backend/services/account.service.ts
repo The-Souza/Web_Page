@@ -6,6 +6,13 @@ import type {
   NewAccount,
 } from "../models/account.types.ts";
 
+/**
+ * Converte o formato original retornado pelo Supabase
+ * para um formato interno mais consistente (AccountRecord).
+ * 
+ * Isso cria uma camada de adaptação para manter o código
+ * desacoplado da estrutura bruta do banco.
+ */
 function adaptSupabaseToRecord(rec: SupabaseAccountRow): AccountRecord {
   return {
     Id: rec.id,
@@ -18,10 +25,17 @@ function adaptSupabaseToRecord(rec: SupabaseAccountRow): AccountRecord {
     Days: rec.days,
     Value: rec.value,
     Paid: rec.paid,
+    // Email pode vir nulo dependendo do relacionamento LEFT JOIN
     Email: rec.users?.email ?? undefined,
   };
 }
 
+/**
+ * Mapeia o formato AccountRecord para o formato final Account,
+ * usado pela aplicação (frontend).
+ *
+ * Aqui também formatamos o mês no padrão MM/yyyy.
+ */
 function mapAccount(record: AccountRecord): Account {
   return {
     id: record.Id,
@@ -38,6 +52,12 @@ function mapAccount(record: AccountRecord): Account {
   };
 }
 
+/**
+ * Busca todas as contas do banco.
+ * 
+ * - Faz LEFT JOIN com a tabela de usuários para obter o e-mail.
+ * - Ordena da mais recente para a mais antiga.
+ */
 export async function getAllAccounts(): Promise<Account[]> {
   const { data, error } = await supabase
     .from("accounts")
@@ -67,6 +87,10 @@ export async function getAllAccounts(): Promise<Account[]> {
   return rows.map((rec) => mapAccount(adaptSupabaseToRecord(rec)));
 }
 
+/**
+ * Busca contas filtrando por userId.
+ * Pode opcionalmente filtrar também pelo status "paid".
+ */
 export async function getAccountsByUserId(
   userId: number,
   paid?: boolean
@@ -90,6 +114,7 @@ export async function getAccountsByUserId(
     )
     .eq("userid", userId);
 
+  // Se o filtro pago/não pago for enviado, aplica ao query builder
   if (typeof paid === "boolean") {
     query = query.eq("paid", paid);
   }
@@ -103,6 +128,12 @@ export async function getAccountsByUserId(
   return rows.map((rec) => mapAccount(adaptSupabaseToRecord(rec)));
 }
 
+/**
+ * Busca contas filtrando pelo e-mail do usuário.
+ * 
+ * Aqui usamos INNER JOIN porque só queremos contas que realmente
+ * possuem um usuário associado ao e-mail informado.
+ */
 export async function getAccountsByUserEmail(
   email: string,
   paid?: boolean
@@ -139,6 +170,9 @@ export async function getAccountsByUserEmail(
   return rows.map((rec) => mapAccount(adaptSupabaseToRecord(rec)));
 }
 
+/**
+ * Atualiza o campo "paid" (pago) de uma conta específica.
+ */
 export async function updateAccountPaid(
   id: number,
   paid: boolean
@@ -151,6 +185,13 @@ export async function updateAccountPaid(
   if (error) throw error;
 }
 
+/**
+ * Insere uma nova conta e retorna o ID gerado.
+ * 
+ * Observação:
+ * - O mês chega no formato "MM/yyyy", então fazemos um split
+ *   para extrair apenas o número do mês.
+ */
 export async function addAccount(account: NewAccount): Promise<number> {
   const { data, error } = await supabase
     .from("accounts")

@@ -4,15 +4,15 @@ import { Button, Input, Title } from "@/components";
 import { useNavigate } from "react-router-dom";
 import * as z from "zod";
 import { loginUser } from "@/services";
-import { useToast } from "@/components/providers/hook/useToast";
+import { useToast } from "@/providers/hook/useToast";
 import {
   AuthForm,
   AuthLinkButton,
   AuthLinksContainer,
 } from "@/components/auth";
 import { handleToastResponse } from "@/helpers/handleToastResponse";
-import { useAuth } from "@/hooks/UseAuth";
-import { useLoading } from "@/components/providers/hook/useLoading";
+import { useAuth } from "@/providers/hook/useAuth";
+import { useLoading } from "@/providers/hook/useLoading";
 
 const schema = z.object({
   email: z
@@ -48,12 +48,12 @@ export default function SignIn() {
         showToast,
         "Login Successful",
         "Login Failed",
-        `Welcome back, ${response.user?.name || "user"}!`,
+        `Welcome back, ${response.data?.user?.name || "user"}!`,
         "Invalid email or password"
       );
 
-      if (response.success && response.token) {
-        login(response.token, response.user!);
+      if (response.success && response.data?.token) {
+        login(response.data.token, response.data.user!);
         navigate("/home");
       }
     } finally {

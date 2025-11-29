@@ -1,18 +1,24 @@
 import type { Account, MonthSummary } from "@/types/account.types";
 
 /* -------------------------------------------------------------------------- */
-/* 🧮 Generic Utilities */
+/* 🧮 Funções utilitárias genéricas */
 /* -------------------------------------------------------------------------- */
 
 /**
  * Arredonda um número para 2 casas decimais de forma segura.
+ * Adiciona Number.EPSILON para evitar erros de ponto flutuante.
  */
 function roundTwo(value: number): number {
   return Math.round((value + Number.EPSILON) * 100) / 100;
 }
 
 /**
- * Soma os valores de uma lista de contas, com ou sem condição.
+ * Soma os valores de uma lista de contas.
+ * Permite aplicar uma condição opcional para filtrar quais contas somar.
+ * 
+ * @param accounts → lista de contas
+ * @param predicate → função opcional para filtrar contas
+ * @returns soma arredondada com 2 casas decimais
  */
 function sumValues(accounts: Account[], predicate?: (acc: Account) => boolean): number {
   const filtered = predicate ? accounts.filter(predicate) : accounts;
@@ -21,29 +27,33 @@ function sumValues(accounts: Account[], predicate?: (acc: Account) => boolean): 
 }
 
 /**
- * Retorna um conjunto único de valores de um campo.
+ * Retorna um array de valores únicos a partir de um array qualquer.
  */
 function unique<T>(values: T[]): T[] {
   return Array.from(new Set(values));
 }
 
 /* -------------------------------------------------------------------------- */
-/* 📅 Date Helpers */
+/* 📅 Helpers de datas */
 /* -------------------------------------------------------------------------- */
 
 /**
- * Retorna a string do mês anterior no formato MM/YYYY
+ * Retorna a string do mês anterior no formato MM/YYYY.
+ * Útil para calcular diferenças entre meses.
+ * 
+ * Ex: "03/2025" → "02/2025"
  */
 export function getPreviousMonth(month: string): string {
   const [m, y] = month.split("/").map(Number);
-  const date = new Date(y, m - 2); // mês anterior
+  const date = new Date(y, m - 2); // subtrai 1 mês (0-based)
   const newMonth = (date.getMonth() + 1).toString().padStart(2, "0");
   const newYear = date.getFullYear();
   return `${newMonth}/${newYear}`;
 }
 
 /**
- * Retorna todos os anos disponíveis nos dados
+ * Retorna todos os anos disponíveis nos dados.
+ * Útil para filtros de anos ou geração de relatórios.
  */
 export function getAvailableYears(accounts: Account[]): string[] {
   const years = accounts.map((a) => a.year.toString());
@@ -51,14 +61,15 @@ export function getAvailableYears(accounts: Account[]): string[] {
 }
 
 /**
- * Retorna os meses disponíveis para um ano específico no formato MM/YYYY
+ * Retorna todos os meses disponíveis para um ano específico no formato MM/YYYY.
+ * Ordena do mês mais antigo para o mais recente.
  */
 export function getMonthsByYear(accounts: Account[], year: string): string[] {
   const months = accounts
     .filter((a) => a.year.toString() === year)
     .map((a) => a.month);
 
-  // Ordena os meses de 01 a 12
+  // Ordena primeiro pelo ano, depois pelo mês
   return unique(months).sort((a, b) => {
     const [ma, ya] = a.split("/").map(Number);
     const [mb, yb] = b.split("/").map(Number);
@@ -67,11 +78,12 @@ export function getMonthsByYear(accounts: Account[], year: string): string[] {
 }
 
 /* -------------------------------------------------------------------------- */
-/* 💰 Calculations */
+/* 💰 Cálculos financeiros */
 /* -------------------------------------------------------------------------- */
 
 /**
- * Objeto vazio para quando não houver dados selecionados
+ * Objeto padrão para quando não há dados de resumo do mês.
+ * Evita undefined e permite cálculos seguros mesmo sem contas.
  */
 export const emptySummary: MonthSummary = {
   totalValue: 0,
@@ -83,6 +95,17 @@ export const emptySummary: MonthSummary = {
 
 /**
  * Calcula o resumo financeiro de um mês específico.
+ *
+ * ⚡ Relacionamento:
+ * - totalValue → soma de todos os valores do mês
+ * - paidValue → soma dos valores marcados como pagos
+ * - unpaidValue → diferença entre total e pagos
+ * - paidPercentage → percentual de contas pagas
+ * - diffFromLastMonth → pode ser calculado usando getDiffFromLastMonth
+ * 
+ * @param accounts → lista de contas
+ * @param month → mês desejado
+ * @returns MonthSummary com totais, pagos, não pagos e percentual
  */
 export function computeMonthSummary(accounts: Account[], month: string): MonthSummary {
   const monthAccounts = accounts.filter((acc) => acc.month === month);
@@ -99,19 +122,29 @@ export function computeMonthSummary(accounts: Account[], month: string): MonthSu
     paidValue: roundTwo(paidValue),
     unpaidValue,
     paidPercentage,
-    diffFromLastMonth: 0,
+    diffFromLastMonth: 0, // será preenchido com getDiffFromLastMonth
   };
 }
 
 /**
- * Calcula a diferença de total entre o mês atual e o anterior.
+ * Calcula a diferença do total entre o mês atual e o anterior.
+ * ⚡ Relacionamento:
+ * - Recebe dois MonthSummary
+ * - Atualiza diffFromLastMonth para exibir evolução financeira
  */
 export function getDiffFromLastMonth(current: MonthSummary, previous: MonthSummary): number {
   return roundTwo(current.totalValue - previous.totalValue);
 }
 
 /**
- * Calcula o resumo agrupado por tipo de conta.
+ * Calcula resumo agrupado por tipo de conta (ex: "Receita", "Despesa").
+ * ⚡ Relacionamento:
+ * - Permite detalhar cada tipo de conta dentro de um mês
+ * - Pode ser usado em gráficos ou relatórios detalhados
+ *
+ * @param accounts → lista de contas
+ * @param month → mês desejado
+ * @returns array de objetos: tipo, totalValue, paidValue, unpaidValue
  */
 export function computeAccountTypeSummary(accounts: Account[], month: string) {
   const monthAccounts = accounts.filter((acc) => acc.month === month);
@@ -128,11 +161,13 @@ export function computeAccountTypeSummary(accounts: Account[], month: string) {
 }
 
 /* -------------------------------------------------------------------------- */
-/* 💵 Formatting */
+/* 💵 Formatação de valores */
 /* -------------------------------------------------------------------------- */
 
 /**
- * Formata número em moeda BRL
+ * Formata um número como moeda brasileira (BRL).
+ * ⚡ Relacionamento:
+ * - Útil para exibir totais, pagos e não pagos de MonthSummary ou AccountTypeSummary
  */
 export function formatCurrency(value: number): string {
   return value.toLocaleString("pt-BR", {

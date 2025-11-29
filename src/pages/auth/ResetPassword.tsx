@@ -5,7 +5,7 @@ import { Button, Input, Title } from "@/components";
 import { useNavigate } from "react-router-dom";
 import * as z from "zod";
 import { checkUserExists, resetPassword } from "@/services";
-import { useToast } from "@/components/providers/hook/useToast";
+import { useToast } from "@/providers/hook/useToast";
 import {
   AuthForm,
   AuthLinkButton,
@@ -50,8 +50,7 @@ export default function ResetPassword() {
     const checkEmail = async () => {
       if (emailValue) {
         const result = await checkUserExists(emailValue);
-        setUserExists(result.exists);
-
+        setUserExists(result.data?.exists ?? false);
         handleToastResponse(
           result,
           showToast,

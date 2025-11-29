@@ -4,7 +4,7 @@ import { Button, Input, Title } from "@/components";
 import { useNavigate } from "react-router-dom";
 import * as z from "zod";
 import { registerUser } from "@/services";
-import { useToast } from "@/components/providers/hook/useToast";
+import { useToast } from "@/providers/hook/useToast";
 import {
   AuthForm,
   AuthLinkButton,

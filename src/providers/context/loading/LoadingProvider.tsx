@@ -1,7 +1,7 @@
 import { useCallback, useRef, useState, useEffect, useMemo } from "react";
 import { LoadingContext } from "./LoadingContext";
 import LoadingOverlay from "@/components/UI/loading/LoadingOverlay";
-import type { ProvidersProps } from "../provider.types";
+import type { ProvidersProps } from "../../provider.types";
 
 export function LoadingProvider({
   children,

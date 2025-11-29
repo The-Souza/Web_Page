@@ -62,6 +62,6 @@ app.use(
 // ===== Inicia o servidor =====
 
 app.listen(PORT, () => {
-  console.log(`✅ Backend running at http://localhost:${PORT}`);
+  console.log(`\n✅ Backend running at http://localhost:${PORT}`);
 });
 // Executa o servidor e mostra no console em qual porta está rodando.

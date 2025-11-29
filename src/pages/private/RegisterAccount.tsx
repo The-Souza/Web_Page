@@ -2,11 +2,11 @@ import { useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useAuth } from "@/hooks/UseAuth";
-import { useToast } from "@/components/providers/hook/useToast";
+import { useAuth } from "@/providers/hook/useAuth";
+import { useToast } from "@/providers/hook/useToast";
 import { Input, Select, Button, Title } from "@/components";
 import { registerAccount } from "@/services";
-import { useLoading } from "@/components/providers/hook/useLoading";
+import { useLoading } from "@/providers/hook/useLoading";
 import type { SelectHandle } from "@/components/UI/select/Select.types";
 import type { RegisterAccountPayload } from "@/types/account.types";
 

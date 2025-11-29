@@ -2,10 +2,10 @@ import { forwardRef, useImperativeHandle, useState, useRef } from "react";
 import { TYPE_VARIANTS } from "./Type.variants";
 import { DOCK_VARIANTS_DESKTOP, DOCK_VARIANTS_MOBILE } from "./Dock.variants";
 import classNames from "classnames";
-import type { ToastContextType } from "@/components/providers/provider.types";
+import type { ToastContextType } from "@/providers/provider.types";
 import type { ToastProps, ToastState } from "./Toast.types";
 import { defaultToast } from "./Toast.dafaults";
-import { useMediaQuery } from "@/hooks/UseMediaQuery";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 export const Toast = forwardRef<ToastContextType, object>((_, ref) => {
   const [toastData, setToastData] = useState<ToastState>({

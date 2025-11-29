@@ -1,4 +1,4 @@
-import { useAuth } from "@/hooks/UseAuth";
+import { useAuth } from "@/providers/hook/useAuth";
 import { useAccounts } from "@/hooks/useAccounts";
 import { Card, Title, Table, Select, CustomBarChart } from "@/components";
 import { useAccountSummary } from "@/hooks/useAccountSummary";
@@ -7,7 +7,7 @@ import type { Account } from "@/types/account.types";
 import { ACCOUNT_TYPE_ICONS } from "@/components/UI/card/Card.variants";
 import { useRef, useEffect } from "react";
 import type { SelectHandle } from "@/components/UI/select/Select.types";
-import { useLoading } from "@/components/providers/hook/useLoading";
+import { useLoading } from "@/providers/hook/useLoading";
 
 const COLORS = {
   paid: "#00ff9f",
@@ -165,7 +165,14 @@ export default function Home() {
                   <input
                     type="checkbox"
                     checked={!!val}
-                    onChange={(e) => updatePaid(acc.id, e.target.checked)}
+                    onChange={(e) =>
+                      updatePaid(
+                        acc.id,
+                        e.target.checked,
+                        acc.accountType,
+                        acc.address // ou qualquer label que queira exibir
+                      )
+                    }
                     className="accent-greenLight"
                   />
                 ),

@@ -10,98 +10,117 @@ import {
 } from "@/helpers/accountHelpers";
 import type { Account } from "@/types/account.types";
 
+/**
+ * useAccountSummary
+ * ------------------------------------------------------------
+ * Hook customizado para gerenciar o resumo financeiro de contas.
+ *
+ * Ele:
+ * - Mantém o estado do ano e mês selecionados
+ * - Calcula resumos mensais e por tipo de conta
+ * - Calcula diferenças em relação ao mês anterior
+ * - Fornece listas de anos e meses disponíveis para seleção
+ *
+ * @param accounts → lista completa de contas
+ */
 export function useAccountSummary(accounts: Account[]) {
+  // Estados para ano e mês selecionados pelo usuário
   const [selectedYear, setSelectedYear] = useState<string>("");
   const [selectedMonth, setSelectedMonth] = useState<string>("");
 
+  // Lista de anos disponíveis nos dados
   const availableYears = useMemo(() => getAvailableYears(accounts), [accounts]);
 
+  // Lista de meses disponíveis para o ano selecionado
   const availableMonths = useMemo(() => {
     if (!selectedYear) return [];
     return getMonthsByYear(accounts, selectedYear);
   }, [accounts, selectedYear]);
 
+  // Indica se o usuário selecionou ano e mês
   const isSelectionComplete = !!selectedYear && !!selectedMonth;
 
+  // Filtra contas correspondentes ao mês selecionado
   const accountsForSelectedMonth = useMemo(() => {
     if (!isSelectionComplete) return [];
     return accounts.filter((acc) => acc.month === selectedMonth);
   }, [accounts, selectedMonth, isSelectionComplete]);
 
+  // Calcula mês anterior ao selecionado
   const previousMonth = useMemo(() => {
     if (!isSelectionComplete) return "";
     return getPreviousMonth(selectedMonth);
   }, [selectedMonth, isSelectionComplete]);
 
+  // Resumo do mês selecionado
   const currentSummary = useMemo(() => {
     if (!isSelectionComplete || accountsForSelectedMonth.length === 0)
       return emptySummary;
+
     return computeMonthSummary(accountsForSelectedMonth, selectedMonth);
   }, [accountsForSelectedMonth, selectedMonth, isSelectionComplete]);
 
+  // Resumo do mês anterior
   const previousSummary = useMemo(() => {
     if (!isSelectionComplete || !previousMonth) return emptySummary;
 
-    // 🔹 padroniza formato dos meses (ex: 1/2024 -> 01/2024)
+    // 🔹 Padroniza formato dos meses (MM/YYYY)
     const normalizedAccounts = accounts.map((acc) => ({
       ...acc,
-      month: acc.month.padStart(7, "0"), // garante sempre MM/YYYY
+      month: acc.month.padStart(7, "0"),
     }));
     const normalizedPrevMonth = previousMonth.padStart(7, "0");
 
-    // 🔹 verifica se existe o mês anterior
+    // 🔹 Verifica se existem dados do mês anterior
     const hasPreviousMonthData = normalizedAccounts.some(
       (acc) => acc.month === normalizedPrevMonth
     );
 
     if (!hasPreviousMonthData) return emptySummary;
 
-    // 🔹 calcula o resumo usando apenas o mês anterior padronizado
+    // 🔹 Calcula resumo do mês anterior
     return computeMonthSummary(
       normalizedAccounts.filter((acc) => acc.month === normalizedPrevMonth),
       normalizedPrevMonth
     );
   }, [accounts, previousMonth, isSelectionComplete]);
 
+  // Diferença total entre o mês atual e o anterior
   const diffFromLastMonth = useMemo(() => {
     if (!isSelectionComplete) return 0;
 
-    // Se o mês anterior não tiver nenhum valor, consideramos que não há diferença
     const hasPreviousData = previousSummary.totalValue > 0;
-
     if (!hasPreviousData) return 0;
 
     return getDiffFromLastMonth(currentSummary, previousSummary);
   }, [currentSummary, previousSummary, isSelectionComplete]);
 
+  // Resumo agrupado por tipo de conta
   const accountTypeSummary = useMemo(() => {
     const allTypes = Array.from(new Set(accounts.map((a) => a.accountType)));
 
-    if (!isSelectionComplete)
+    // Caso a seleção não esteja completa, retorna zeros
+    if (!isSelectionComplete || accountsForSelectedMonth.length === 0) {
       return allTypes.map((type) => ({
         type,
         totalValue: 0,
         paidValue: 0,
         unpaidValue: 0,
       }));
-
-    if (accountsForSelectedMonth.length === 0)
-      return allTypes.map((type) => ({
-        type,
-        totalValue: 0,
-        paidValue: 0,
-        unpaidValue: 0,
-      }));
+    }
 
     return computeAccountTypeSummary(accountsForSelectedMonth, selectedMonth);
   }, [accountsForSelectedMonth, selectedMonth, isSelectionComplete, accounts]);
 
+  // Resumo de todos os meses de um ano selecionado
   const monthSummaries = useMemo(() => {
-    if (!isSelectionComplete)
+    if (!isSelectionComplete) {
+      // Se não houver seleção, retorna 12 meses do ano atual com resumo vazio
       return Array.from({ length: 12 }, (_, i) => ({
         month: `${String(i + 1).padStart(2, "0")}/${new Date().getFullYear()}`,
         summary: emptySummary,
       }));
+    }
 
     const months = getMonthsByYear(accounts, selectedYear);
     return months.map((m) => ({

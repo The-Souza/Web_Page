@@ -1,39 +1,33 @@
-import { apiFetch } from "@/helpers/apiFetch";
-import type { RegisterAccountPayload } from "@/types/account.types";
-import type { ApiResponse } from "@/types/apiResponse";
+import { apiClient } from "./ApiClient.service";
+import type { Account, RegisterAccountPayload } from "@/types/account.types";
 
-const BASE_URL = import.meta.env.VITE_API_URL;
-
-export async function registerAccount(
+/**
+ * Registra uma nova conta do usuário.
+ *
+ * - Usa o apiClient para padronizar o retorno (ApiResponse<Account>)
+ * - Envia o token via Bearer Authorization
+ * - Transforma o payload em JSON
+ * - Retorna a resposta já validada pelo apiClient
+ */
+export const registerAccount = (
   payload: RegisterAccountPayload,
   token: string
-): Promise<ApiResponse<RegisterAccountPayload>> {
-  try {
-    const response = await apiFetch(`${BASE_URL}/accounts/register`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(payload),
-    });
+) => {
+  return apiClient<Account>("/accounts", {
+    method: "POST",
+    headers: {
+      // Token JWT enviado como Bearer
+      Authorization: `Bearer ${token}`,
+    },
+    // Corpo da requisição convertido para JSON
+    body: JSON.stringify(payload),
+  });
+};
 
-    const data = await response.json();
-
-    return {
-      success: response.ok,
-      message:
-        data?.message ||
-        (response.ok
-          ? "Account registered successfully"
-          : "Failed to register account"),
-      data: data?.data ?? payload,
-    };
-  } catch (error) {
-    console.error("❌ Error in registerAccount:", error);
-    return {
-      success: false,
-      message: "Unexpected error while registering account.",
-    };
-  }
-}
+/**
+ * Obtém todas as contas do usuário autenticado.
+ *
+ * - Chamado sem opções adicionais (GET padrão)
+ * - Espera uma lista de contas tipada como Account[]
+ */
+export const getAccounts = () => apiClient<Account[]>("/accounts");

@@ -1,18 +1,17 @@
 import React from "react";
 
-export const LoadingOverlay: React.FC<{ message?: string; count?: number }> = ({
-  message,
-  count = 0,
-}) => {
+export const LoadingOverlay: React.FC<{ message?: string }> = ({ message }) => {
   return (
     <div
       role="status"
       aria-busy="true"
       className="fixed inset-0 z-50 flex items-center justify-center"
     >
+      {/* Fundo semi-transparente */}
       <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
 
       <div className="relative z-10 flex flex-col items-center gap-4">
+        {/* Ícone animado */}
         <i
           className="fa-solid fa-gear text-green-400"
           style={{
@@ -23,6 +22,7 @@ export const LoadingOverlay: React.FC<{ message?: string; count?: number }> = ({
           aria-hidden="true"
         />
 
+        {/* Pontinhos animados */}
         <div className="flex items-center gap-2">
           {[0, 1, 2].map((i) => (
             <span
@@ -37,14 +37,9 @@ export const LoadingOverlay: React.FC<{ message?: string; count?: number }> = ({
           ))}
         </div>
 
+        {/* Mensagem personalizada */}
         {message && (
           <div className="text-greenLight font-semibold">{message}</div>
-        )}
-
-        {count > 0 && (
-          <div className="text-sm text-green-300">
-            {count === 1 ? "1 task in progress" : `${count} tasks in progress`}
-          </div>
         )}
 
         <style>{`

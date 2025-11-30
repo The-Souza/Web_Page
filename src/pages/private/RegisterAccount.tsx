@@ -104,7 +104,7 @@ export default function RegisterAccount() {
       return;
     }
 
-    setLoading(true, "Saving Account...");
+    setLoading(true);
     try {
       // Incluindo userId e userEmail no payload
       const payload: RegisterAccountPayload = {

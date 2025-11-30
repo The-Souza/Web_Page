@@ -11,6 +11,7 @@ import {
   AuthLinksContainer,
 } from "@/components/auth";
 import { handleToastResponse } from "@/helpers/handleToastResponse";
+import { useLoading } from "@/providers/hook/useLoading";
 
 const schema = z
   .object({
@@ -29,6 +30,7 @@ type FormData = z.infer<typeof schema>;
 export default function SignUp() {
   const { showToast } = useToast();
   const navigate = useNavigate();
+  const { setLoading } = useLoading();
 
   const {
     register,
@@ -37,22 +39,28 @@ export default function SignUp() {
   } = useForm<FormData>({ resolver: zodResolver(schema) });
 
   const onSubmit = async (data: FormData) => {
-    const response = await registerUser({
-      name: data.name,
-      email: data.email,
-      password: data.password,
-    });
+    setLoading(true);
 
-    handleToastResponse(
-      response,
-      showToast,
-      "User registered successfully!",
-      "Registration Failed",
-      "You can now log in with your credentials.",
-      "Email already in use"
-    );
+    try {
+      const response = await registerUser({
+        name: data.name,
+        email: data.email,
+        password: data.password,
+      });
 
-    if (response.success) navigate("/");
+      handleToastResponse(
+        response,
+        showToast,
+        "User registered successfully!",
+        "Registration Failed",
+        "You can now log in with your credentials.",
+        "Email already in use"
+      );
+
+      if (response.success) navigate("/");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

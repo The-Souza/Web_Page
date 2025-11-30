@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import classNames from "classnames";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { useLoading } from "@/providers/hook/useLoading";
+import { ROUTE_MESSAGES } from "@/types/routeMessages.variants";
 
 /**
  * MainLayout
@@ -47,13 +48,6 @@ export function MainLayout() {
     }
   };
 
-  // Mensagens de loading para cada rota
-  const loadingMessages: Record<string, string> = {
-    "/home": "Loading home page...",
-    "/register-account": "Loading account registration form...",
-    "/dashboard": "Loading dashboard...",
-  };
-
   /**
    * handleNavigation
    * ------------------------------------------------------------
@@ -63,19 +57,20 @@ export function MainLayout() {
    * - Redireciona para a rota
    */
   const handleNavigation = async (path: string) => {
-    const message = loadingMessages[path] || "Loading...";
-    setLoading(true, message);
+  const message = ROUTE_MESSAGES[path] || "Loading...";
+  setLoading(true, message); // passa a mensagem correta
 
-    try {
-      setMenuOpen(false);
-      await new Promise((resolve) => setTimeout(resolve, 2000)); // delay visual
-      navigate(path);
-    } finally {
-      setTimeout(() => {
-        setLoading(false);
-      }, 200); // leve atraso para suavizar transição
-    }
-  };
+  try {
+    setMenuOpen(false);
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+    navigate(path);
+  } finally {
+    setTimeout(() => {
+      setLoading(false);
+    }, 200);
+  }
+};
+
 
   // Obtenção da rota atual para atualizar título e efeitos
   const location = useLocation();

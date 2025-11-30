@@ -11,20 +11,17 @@ import type { User } from "@/types/auth.types";
  */
 export interface ToastContextType {
   showToast: (options?: ToastProps) => void;
+  hideToast: () => void;
 }
 
 /**
  * ============================
  *  LOADING CONTEXT TYPE
  * ============================
- * Define o formato do contexto global de carregamento.
- * Permite que qualquer parte da aplicação:
- *   - ative um loading
- *   - desative o loading
- *   - defina uma mensagem opcional
- *   - resete o estado
- *
- * isLoading e message são expostos para componentes que precisem reagir ao estado.
+ * Contexto global de carregamento simplificado.
+ * Agora apenas controla:
+ * - exibir/ocultar overlay
+ * - mensagem opcional
  */
 export interface LoadingContextType {
   // Ativa o loader com uma mensagem opcional
@@ -39,10 +36,10 @@ export interface LoadingContextType {
   // Reseta o estado interno do loading
   reset: () => void;
 
-  // Indica se há um carregamento ativo
+  // Indica se o overlay de loading está ativo
   isLoading: boolean;
 
-  // Mensagem a ser exibida durante o loading
+  // Mensagem opcional exibida no overlay
   message?: string | null;
 }
 

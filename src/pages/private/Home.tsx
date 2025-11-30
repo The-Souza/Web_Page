@@ -8,15 +8,7 @@ import { ACCOUNT_TYPE_ICONS } from "@/components/UI/card/Card.variants";
 import { useRef, useEffect } from "react";
 import type { SelectHandle } from "@/components/UI/select/Select.types";
 import { useLoading } from "@/providers/hook/useLoading";
-
-const COLORS = {
-  paid: "#00ff9f",
-  unpaid: "#ff4444",
-  positive: "text-green-400",
-  negative: "text-red-400",
-};
-
-const ACCOUNT_TYPES = ["Water", "Energy", "Gas", "Internet"];
+import { ACCOUNT_TYPES, COLORS } from "@/types/homeCards.variants";
 
 export default function Home() {
   const { user } = useAuth();
@@ -170,7 +162,7 @@ export default function Home() {
                         acc.id,
                         e.target.checked,
                         acc.accountType,
-                        acc.address // ou qualquer label que queira exibir
+                        acc.address
                       )
                     }
                     className="accent-greenLight"

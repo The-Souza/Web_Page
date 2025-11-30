@@ -12,6 +12,7 @@ import {
   AuthLinksContainer,
 } from "@/components/auth";
 import { handleToastResponse } from "@/helpers/handleToastResponse";
+import { useLoading } from "@/providers/hook/useLoading";
 
 const schema = z
   .object({
@@ -36,6 +37,7 @@ export default function ResetPassword() {
   const { showToast } = useToast();
   const navigate = useNavigate();
   const [userExists, setUserExists] = useState(false);
+  const { setLoading } = useLoading();
 
   const {
     register,
@@ -48,9 +50,15 @@ export default function ResetPassword() {
 
   useEffect(() => {
     const checkEmail = async () => {
-      if (emailValue) {
+      if (!emailValue) return; // não faz nada se o email estiver vazio
+
+      setLoading(true, "Checking user..."); // mostra loading
+
+      try {
         const result = await checkUserExists(emailValue);
+
         setUserExists(result.data?.exists ?? false);
+
         handleToastResponse(
           result,
           showToast,
@@ -59,24 +67,35 @@ export default function ResetPassword() {
           "This email is registered",
           "This email is not registered"
         );
+      } catch (err) {
+        console.error("Error checking user:", err);
+      } finally {
+        setLoading(false); // garante que o loader vai sumir
       }
     };
+
     checkEmail();
-  }, [emailValue, showToast]);
+  }, [emailValue, showToast, setLoading]);
 
   const onSubmit = async (data: FormData) => {
-    const response = await resetPassword(data.email, data.newPassword);
+    setLoading(true);
 
-    handleToastResponse(
-      response,
-      showToast,
-      "Password changed successfully",
-      "Error changing password",
-      "You can now log in with your new password.",
-      "The new password cannot be the same as your current password."
-    );
+    try {
+      const response = await resetPassword(data.email, data.newPassword);
 
-    if (response.success) navigate("/");
+      handleToastResponse(
+        response,
+        showToast,
+        "Password changed successfully",
+        "Error changing password",
+        "You can now log in with your new password.",
+        "The new password cannot be the same as your current password."
+      );
+
+      if (response.success) navigate("/");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

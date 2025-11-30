@@ -54,14 +54,30 @@ export function ToastProvider({ children }: ProvidersProps) {
 
   /**
    * --------------------------------------------------
+   * hideToast()
+   * --------------------------------------------------
+   * Função acessível globalmente via contexto.
+   *
+   * Ela apenas encaminha a chamada para o método
+   * `hideToast()` do componente <Toast />, acessado
+   * através do ref.
+   *
+   * `useCallback` evita recriação da função desnecessária.
+   */
+  const hideToast = useCallback(() => {
+    toastRef.current?.hideToast?.();
+  }, []);
+
+  /**
+   * --------------------------------------------------
    * JSX renderizado
    * --------------------------------------------------
-   * - Fornece `showToast` para toda a aplicação.
+   * - Fornece `showToast`e `hideToast` para toda a aplicação.
    * - Renderiza o `<Toast />` no final do DOM, garantindo
    *   que toasts possam ser disparados de qualquer lugar.
    */
   return (
-    <ToastContext.Provider value={{ showToast }}>
+    <ToastContext.Provider value={{ showToast, hideToast }}>
       {children}
       {/* Render único do Toast, controlado via ref */}
       <Toast ref={toastRef} />

@@ -1,7 +1,7 @@
 import { forwardRef, useImperativeHandle, useState, useRef } from "react";
+import classNames from "classnames";
 import { TYPE_VARIANTS } from "./Type.variants";
 import { DOCK_VARIANTS_DESKTOP, DOCK_VARIANTS_MOBILE } from "./Dock.variants";
-import classNames from "classnames";
 import type { ToastContextType } from "@/providers/provider.types";
 import type { ToastProps, ToastState } from "./Toast.types";
 import { defaultToast } from "./Toast.dafaults";
@@ -12,7 +12,6 @@ export const Toast = forwardRef<ToastContextType, object>((_, ref) => {
     ...defaultToast,
     visible: false,
   });
-
   const [opacity, setOpacity] = useState(0);
   const hideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isDesktop = useMediaQuery("(min-width: 768px)");
@@ -20,27 +19,32 @@ export const Toast = forwardRef<ToastContextType, object>((_, ref) => {
   const showToast = (options: ToastProps = {}) => {
     if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current);
 
-    const newToast: ToastState = {
+    setToastData({
       type: options.type ?? defaultToast.type,
       title: options.title ?? defaultToast.title,
       text: options.text ?? defaultToast.text,
       duration: options.duration ?? defaultToast.duration,
       dock: options.dock ?? defaultToast.dock,
       visible: true,
-    };
-
-    setToastData(newToast);
+    });
     setOpacity(1);
 
-    hideTimeoutRef.current = setTimeout(() => hideToast(), newToast.duration * 1000);
+    hideTimeoutRef.current = setTimeout(
+      () => hideToast(),
+      options.duration ? options.duration * 1000 : defaultToast.duration * 1000
+    );
   };
 
   const hideToast = () => {
+    if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current);
     setOpacity(0);
-    setTimeout(() => setToastData((prev) => ({ ...prev, visible: false })), 300);
+    setTimeout(
+      () => setToastData((prev) => ({ ...prev, visible: false })),
+      300
+    );
   };
 
-  useImperativeHandle(ref, () => ({ showToast }));
+  useImperativeHandle(ref, () => ({ showToast, hideToast }));
 
   if (!toastData.visible) return null;
 
@@ -79,13 +83,12 @@ export const Toast = forwardRef<ToastContextType, object>((_, ref) => {
             ></i>
           </button>
         </div>
-        <p className="text-[#2D3748] font-lato font-bold text-sm leading-6 tracking-normal">
+        <div className="text-[#2D3748] font-lato font-bold text-sm leading-6 tracking-normal whitespace-pre-line">
           {toastData.text}
-        </p>
+        </div>
       </div>
     </div>
   );
 });
-
 
 Toast.displayName = "Toast";

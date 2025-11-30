@@ -37,10 +37,8 @@ export default function SignIn() {
   } = useForm<FormData>({ resolver: zodResolver(schema) });
 
   const onSubmit = async (data: FormData) => {
-    setLoading(true, "logging in...");
+    setLoading(true);
     try {
-      await new Promise((r) => setTimeout(r, 2000));
-
       const response = await loginUser(data.email, data.password);
 
       handleToastResponse(

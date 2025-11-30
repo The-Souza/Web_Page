@@ -10,19 +10,16 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
   // StrictMode ativa verificações extras durante o desenvolvimento,
   // ajudando a detectar problemas potenciais.
   <React.StrictMode>
-    {/* Providers envolve toda a aplicação,
+    {/* BrowserRouter habilita o roteamento baseado em URL */}
+    <BrowserRouter>
+      {/* Providers envolve toda a aplicação,
         disponibilizando contextos globais (Auth, Toast, Loading, etc.).
         Os parâmetros debounceSec e safetySec controlam comportamentos internos
         definidos na camada de providers. */}
-    <Providers debounceSec={0.3} safetySec={2}>
-      
-      {/* BrowserRouter habilita o roteamento baseado em URL */}
-      <BrowserRouter>
-        
+      <Providers debounceSec={0.3} safetySec={2}>
         {/* Componente raiz da aplicação */}
         <App />
-
-      </BrowserRouter>
-    </Providers>
+      </Providers>
+    </BrowserRouter>
   </React.StrictMode>
 );

@@ -2,29 +2,39 @@ import { forwardRef, useState } from "react";
 import classNames from "classnames";
 import type { InputProps } from "./Input.types";
 
+/**
+ * Input
+ * ------------------------------------------------------------
+ * Componente de input reutilizável com suporte a:
+ * - Temas claro e escuro
+ * - Estados de erro e disabled
+ * - Tipos de input variados (text, password, email etc.)
+ * - Toggle de visibilidade para senhas
+ * - Controlado ou não-controlado (value/defaultValue)
+ */
 export const Input = forwardRef<HTMLInputElement, InputProps>(
   (
     {
-      label,
-      error,
-      type = "text",
-      placeholder,
-      disabled = false,
-      name,
-      value,
-      defaultValue,
-      onChange,
-      onBlur,
-      autoComplete,
-      theme = "light",
-      ...props
+      label,          // Label do input
+      error,          // Mensagem de erro
+      type = "text",  // Tipo do input
+      placeholder,    // Placeholder do input
+      disabled = false, // Estado desabilitado
+      name,           // Nome do input
+      value,          // Valor controlado
+      defaultValue,   // Valor inicial não-controlado
+      onChange,       // Callback de mudança
+      onBlur,         // Callback de blur
+      autoComplete,   // Sugestão de preenchimento
+      theme = "light", // Tema (light ou dark)
+      ...props        // Props adicionais
     },
     ref
   ) => {
-    const [showPassword, setShowPassword] = useState(false);
+    const [showPassword, setShowPassword] = useState(false); // Toggle para visibilidade de senha
+    const isControlled = value !== undefined; // Detecta se input é controlado
 
-    const isControlled = value !== undefined;
-
+    // Classes dinâmicas do input
     const inputClass = classNames(
       "w-full p-2 rounded-lg border-2 font-lato font-semibold",
       {
@@ -43,14 +53,16 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
       }
     );
 
+    // Classes do label
     const labelClass = classNames("font-semibold text-md font-lato", {
       "text-greenLight": !disabled,
       "opacity-50 cursor-not-allowed text-greenMid": disabled,
     });
 
-    const errorClass = "text-sm font-lato text-red-500";
-    const inputId = props.id || name;
+    const errorClass = "text-sm font-lato text-red-500"; // Classe do erro
+    const inputId = props.id || name; // ID para associar label e input
 
+    // AutoComplete padrão inteligente baseado no tipo de input
     const defaultAutoComplete =
       autoComplete ??
       (type === "password"
@@ -61,10 +73,12 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
         ? "name"
         : "off");
 
+    // Função para alternar visibilidade da senha
     const togglePassword = () => setShowPassword((prev) => !prev);
 
     return (
       <div className="w-full flex flex-col gap-1 relative">
+        {/* Label */}
         {label && (
           <label htmlFor={inputId} className={labelClass}>
             {label}
@@ -76,22 +90,19 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             id={inputId}
             ref={ref}
             name={name}
-            type={
-              type === "password" ? (showPassword ? "text" : "password") : type
-            }
+            type={type === "password" ? (showPassword ? "text" : "password") : type}
             placeholder={placeholder}
             className={inputClass}
             disabled={disabled}
-            // 🔹 Suporte total a controlado e não-controlado
-            {...(isControlled
-              ? { value, onChange }
-              : { defaultValue, onChange })}
+            // 🔹 Suporte a input controlado ou não-controlado
+            {...(isControlled ? { value, onChange } : { defaultValue, onChange })}
             onBlur={onBlur}
             autoComplete={defaultAutoComplete}
             aria-label={label || placeholder}
             {...props}
           />
 
+          {/* Ícone para toggle de senha */}
           {type === "password" && (
             <i
               className={classNames(
@@ -103,6 +114,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           )}
         </div>
 
+        {/* Mensagem de erro */}
         {error && <p className={errorClass}>{error}</p>}
       </div>
     );

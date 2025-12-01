@@ -6,6 +6,7 @@ import classNames from "classnames";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { useLoading } from "@/providers/hook/useLoading";
 import { ROUTE_MESSAGES } from "@/types/routeMessages.variants";
+import { pageTitles } from "@/types/PageTitles.variants";
 
 /**
  * MainLayout
@@ -84,13 +85,6 @@ export function MainLayout() {
       setLoading(false);
     };
   }, [location.pathname, setLoading]);
-
-  // Títulos das páginas mapeadas
-  const pageTitles: Record<string, string> = {
-    "/home": "Home",
-    "/dashboard": "Dashboard",
-    "/register-account": "Register Account",
-  };
 
   const headerText = pageTitles[location.pathname] || "Page"; // título padrão
 

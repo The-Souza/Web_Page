@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 import { LoadingContext } from "./LoadingContext";
-import LoadingOverlay from "@/components/UI/loading/LoadingOverlay";
+import LoadingOverlay from "@/providers/context/loading/LoadingOverlay";
 import { useLocation } from "react-router-dom";
 import type { ProvidersProps } from "../../provider.types";
 import { ROUTE_MESSAGES } from "@/types/routeMessages.variants";

@@ -1,11 +1,12 @@
 import type { ToastType, TypeProps } from "./Toast.types";
 
+// Define as configurações visuais de cada tipo de toast
 export const TYPE_VARIANTS: Record<ToastType, TypeProps> = {
   info: {
-    icon: "fa-info-circle",
-    iconColor: "text-[#0F7FD1]",
-    bgColor: "bg-[#D4EDFF]",
-    closeColor: "text-[#113F63]",
+    icon: "fa-info-circle",           // Ícone para toast do tipo "info"
+    iconColor: "text-[#0F7FD1]",      // Cor do ícone
+    bgColor: "bg-[#D4EDFF]",          // Cor de fundo
+    closeColor: "text-[#113F63]",     // Cor do botão de fechar
   },
   alert: {
     icon: "fa-exclamation-circle",

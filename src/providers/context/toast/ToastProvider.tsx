@@ -1,8 +1,8 @@
 import { useRef, useCallback } from "react";
-import { Toast } from "@/components/UI/toast/Toast";
+import { Toast } from "./Toast";
 import { ToastContext } from "./ToastContext";
 import type { ProvidersProps } from "../../provider.types";
-import type { ToastProps } from "@/components/UI/toast/Toast.types";
+import type { ToastProps } from "@/providers/context/toast/models/Toast.types";
 import type { ToastContextType } from "../../provider.types";
 
 /**

@@ -10,37 +10,47 @@ import type { SelectHandle } from "@/components/UI/select/Select.types";
 import { useLoading } from "@/providers/hook/useLoading";
 import { ACCOUNT_TYPES, COLORS } from "@/types/homeCards.variants";
 
+/**
+ * Home
+ * ------------------------------------------------------------
+ * Tela principal do usuário após login, exibindo resumo financeiro e contas.
+ * Funcionalidades principais:
+ * - Exibe cards de resumo de contas e comparativo mensal.
+ * - Permite filtro por ano e mês usando Selects.
+ * - Renderiza gráfico de barras customizado (CustomBarChart) para comparação mensal.
+ * - Tabela de contas detalhadas com possibilidade de marcar como pago.
+ * - Integração com hooks de autenticação, contas, resumo e loading.
+ */
 export default function Home() {
-  const { user } = useAuth();
-  const { accounts, loading, updatePaid } = useAccounts(user?.email);
-  const summary = useAccountSummary(accounts);
-  const monthSelectRef = useRef<SelectHandle | null>(null);
-  const { setLoading } = useLoading();
+  const { user } = useAuth(); // Usuário logado
+  const { accounts, loading, updatePaid } = useAccounts(user?.email); // Lista de contas e função para marcar pagamento
+  const summary = useAccountSummary(accounts); // Resumo das contas (totais, comparativos, filtros)
+  const monthSelectRef = useRef<SelectHandle | null>(null); // Ref para controle do Select de meses
+  const { setLoading } = useLoading(); // Hook de loading global
 
+  // 🔹 Prepara dados para gráfico de barras comparativo mensal
   const chartData = summary.monthSummaries
     .map(({ month, summary }) => ({
       month,
       Paid: Number(summary.paidValue.toFixed(2)),
       Unpaid: Number(summary.unpaidValue.toFixed(2)),
     }))
-    // ✅ Filtra meses sem nenhum valor relevante
+    // 🔹 Remove meses sem valores relevantes
     .filter((m) => m.Paid > 0 || m.Unpaid > 0);
 
+  // 🔹 Renderiza diferença do mês anterior com cores e sinais apropriados
   const renderDiff = (diff: number) => {
     let color = COLORS.positive;
     let sign = "";
 
     if (diff > 0) {
-      // Pagou mais → vermelho
-      color = COLORS.negative;
+      color = COLORS.negative; // Pagou mais → vermelho
       sign = "+";
     } else if (diff < 0) {
-      // Pagou menos → verde
-      color = COLORS.positive;
+      color = COLORS.positive; // Pagou menos → verde
       sign = "-";
     } else {
-      // Sem diferença → neutro
-      color = "text-white";
+      color = "text-white"; // Sem diferença
     }
 
     return (
@@ -51,6 +61,7 @@ export default function Home() {
     );
   };
 
+  // 🔹 Atualiza estado global de loading conforme carregamento de contas
   useEffect(() => {
     setLoading(loading, loading ? "Loading..." : undefined);
   }, [loading, setLoading]);
@@ -59,16 +70,15 @@ export default function Home() {
     <div className="flex flex-col gap-4 text-greenLight">
       {!loading && (
         <>
+          {/* 🔹 Título e filtros */}
           <div className="flex flex-col lg:flex-row gap-4 lg:items-center lg:justify-between">
             <Title text="Account Summary" size="2xl" />
 
             <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+              {/* Select de ano */}
               <Select
                 label="Year"
-                options={summary.availableYears.map((y) => ({
-                  label: y,
-                  value: y,
-                }))}
+                options={summary.availableYears.map((y) => ({ label: y, value: y }))}
                 placeholder="Select a year"
                 onChange={(val) => {
                   summary.setSelectedYear(val);
@@ -77,18 +87,18 @@ export default function Home() {
                 }}
               />
 
+              {/* Select de mês */}
               <Select
                 ref={monthSelectRef}
                 label="Month"
-                options={summary.availableMonths.map((m) => ({
-                  label: m,
-                  value: m,
-                }))}
+                options={summary.availableMonths.map((m) => ({ label: m, value: m }))}
                 placeholder="Select a month"
                 onChange={(val) => summary.setSelectedMonth(val)}
               />
             </div>
           </div>
+
+          {/* 🔹 Cards de resumo */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <Card
               title="Total for the month"
@@ -107,12 +117,10 @@ export default function Home() {
             />
           </div>
 
+          {/* 🔹 Cards por tipo de conta */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 flex-1">
             {ACCOUNT_TYPES.map((type) => {
-              const data = summary.accountTypeSummary.find(
-                (item) => item.type === type
-              );
-
+              const data = summary.accountTypeSummary.find((item) => item.type === type);
               const totalValue = data?.totalValue ?? 0;
               const paidValue = data?.paidValue ?? 0;
               const unpaidValue = data?.unpaidValue ?? 0;
@@ -125,12 +133,8 @@ export default function Home() {
                   value={
                     <>
                       <p>Total: {formatCurrency(totalValue)}</p>
-                      <p className={COLORS.positive}>
-                        Paid: {formatCurrency(paidValue)}
-                      </p>
-                      <p className={COLORS.negative}>
-                        Missing: {formatCurrency(unpaidValue)}
-                      </p>
+                      <p className={COLORS.positive}>Paid: {formatCurrency(paidValue)}</p>
+                      <p className={COLORS.negative}>Missing: {formatCurrency(unpaidValue)}</p>
                     </>
                   }
                 />
@@ -138,18 +142,17 @@ export default function Home() {
             })}
           </div>
 
+          {/* 🔹 Gráfico de barras comparativo */}
           <CustomBarChart data={chartData} title="Comparison by month" />
+
+          {/* 🔹 Tabela de contas detalhadas */}
           <Table<Account>
             data={summary.accountsForSelectedMonth}
             rowKey={(acc) => acc.id}
             columns={[
               { key: "accountType", label: "Account" },
               { key: "address", label: "Address" },
-              {
-                key: "value",
-                label: "Value (R$)",
-                render: (val) => formatCurrency(val as number),
-              },
+              { key: "value", label: "Value (R$)", render: (val) => formatCurrency(val as number) },
               {
                 key: "paid",
                 label: "Paid/Unpaid",
@@ -158,12 +161,7 @@ export default function Home() {
                     type="checkbox"
                     checked={!!val}
                     onChange={(e) =>
-                      updatePaid(
-                        acc.id,
-                        e.target.checked,
-                        acc.accountType,
-                        acc.address
-                      )
+                      updatePaid(acc.id, e.target.checked, acc.accountType, acc.address)
                     }
                     className="accent-greenLight"
                   />

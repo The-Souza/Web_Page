@@ -1,4 +1,4 @@
-import type { ToastProps } from "@/components/UI/toast/Toast.types";
+import type { ToastProps } from "@/providers/context/toast/models/Toast.types";
 import type { User } from "@/types/auth.types";
 
 /**

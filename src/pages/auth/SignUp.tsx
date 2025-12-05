@@ -56,7 +56,7 @@ const schema = z
 
     try {
       // simula delay
-      await new Promise(res => setTimeout(res, 2000));
+      await new Promise(res => setTimeout(res, 1000));
 
       // chamada de API para registro de usuário
       const response = await registerUser({

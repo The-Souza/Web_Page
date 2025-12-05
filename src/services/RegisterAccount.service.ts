@@ -13,7 +13,7 @@ export const registerAccount = (
   payload: RegisterAccountPayload,
   token: string
 ) => {
-  return apiClient<Account>("/register-account", {
+  return apiClient<Account>("/accounts/register-account", {
     method: "POST",
     headers: {
       // Token JWT enviado como Bearer
@@ -30,4 +30,4 @@ export const registerAccount = (
  * - Chamado sem opções adicionais (GET padrão)
  * - Espera uma lista de contas tipada como Account[]
  */
-export const getAccounts = () => apiClient<Account[]>("/register-account");
+export const getAccounts = () => apiClient<Account[]>("/accounts");

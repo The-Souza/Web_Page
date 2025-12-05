@@ -65,12 +65,15 @@ export class Button extends Component<ButtonProps> {
       {
         "min-w-[3rem]": !text && icon, // mínimo para ícone sozinho
         "bg-greenLight text-dark": variant === "solid",
+        "bg-[#ff4444] text-dark": variant === "unpaid",
         "bg-dark border-[0.2rem] border-greenLight text-greenLight": variant === "border",
         "text-greenLight text-md hover:underline": variant === "bottomless"
       },
       {
-        "transition-transform active:scale-95 hover:bg-greenMid focus:outline-none focus:ring-2 focus:ring-greenLight":
+        "transition-transform active:scale-95 hover:bg-greenMid focus:outline-none focus:ring-2 focus:ring-greenMid":
           !disabled && variant === "solid",
+        "transition-transform active:scale-95 hover:bg-red-800 focus:outline-none focus:ring-2 focus:ring-red-800":
+          !disabled && variant === "unpaid",
         "transition-transform active:scale-95 hover:bg-greenLight hover:text-dark focus:outline-none focus:ring-2 focus:ring-greenLight":
           !disabled && variant === "border",
         "opacity-50 cursor-not-allowed": disabled, // desabilitado

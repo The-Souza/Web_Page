@@ -83,7 +83,7 @@ export function useAccounts(email?: string) {
       pendingTimeout.current = setTimeout(() => {
         // 🔹 Monta o texto do toast agrupando contas por tipo
         const lines = Object.entries(pendingPaidUpdates.current)
-          .map(([type, labels]) => `- ${type}: ${labels.join(", ")}`)
+          .map(([type, labels]) => `• ${type}: ${labels.join(", ")}`)
           .join("\n");
 
         // 🔹 Exibe o toast final consolidado

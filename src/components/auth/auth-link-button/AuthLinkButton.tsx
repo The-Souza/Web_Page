@@ -30,7 +30,7 @@ export const AuthLinkButton = ({ text, to }: AuthLinkButtonProps): JSX.Element =
   const loading = async () => {
     setLoading(true, "Loading...");
     try {
-      await new Promise(res => setTimeout(res, 2000));
+      await new Promise(res => setTimeout(res, 1000));
       navigate(to);
     } finally {
       setLoading(false);

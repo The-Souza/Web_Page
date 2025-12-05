@@ -38,7 +38,7 @@ export function MainLayout() {
     setLoading(true, "Logging out...");
 
     try {
-      await new Promise((res) => setTimeout(res, 2000)); // delay visual
+      await new Promise((res) => setTimeout(res, 1000)); // delay visual
       logout(); // logout síncrono do contexto
       setMenuOpen(false); // fecha menu
       navigate("/"); // sai das rotas pivadas

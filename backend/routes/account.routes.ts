@@ -38,11 +38,11 @@ router.get("/email/:email", getAccountsByUserEmail);
 router.patch("/:id/paid", updateAccountPaid);
 
 /**
- * POST /accounts/register
+ * POST /accounts/register-account
  * Cria uma nova conta.
  * Requer autenticação JWT para garantir que somente usuários válidos
  * possam registrar contas.
  */
-router.post("/register", authenticateJWT, registerAccount);
+router.post("/register-account", authenticateJWT, registerAccount);
 
 export default router;

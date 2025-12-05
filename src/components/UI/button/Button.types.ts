@@ -16,7 +16,7 @@ export interface ButtonProps {
   // "auto": largura mínima para o conteúdo
   // string: qualquer classe CSS/Tailwind válida
   // number: largura fixa em rem
-  variant?: "solid" | "border" | "bottomless"; 
+  variant?: "solid" | "border" | "bottomless" | "unpaid"; 
   // "solid": fundo colorido com texto claro
   // "border": transparente com borda colorida
   // "bottomless": estilo link, sem fundo nem borda
@@ -29,4 +29,4 @@ export interface ButtonProps {
  * Tipos de ícones suportados. Cada chave mapeia para uma função
  * em BUTTON_ICONS que retorna JSX do ícone correspondente.
  */
-export type ButtonIconKey = "logout" | "email" | "settings";
+export type ButtonIconKey = "logout" | "email" | "settings" | "money";

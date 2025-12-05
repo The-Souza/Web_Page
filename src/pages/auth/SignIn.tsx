@@ -54,7 +54,7 @@ export default function SignIn() {
     setLoading(true); // mostra loader
     try {
       // simula delay
-      await new Promise(res => setTimeout(res, 2000));
+      await new Promise(res => setTimeout(res, 1000));
       
       // chamada de API para autenticação
       const response = await loginUser(data.email, data.password);

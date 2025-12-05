@@ -1,6 +1,13 @@
 import { useAuth } from "@/providers/hook/useAuth";
 import { useAccounts } from "@/hooks/useAccounts";
-import { Card, Title, Table, Select, CustomBarChart } from "@/components";
+import {
+  Card,
+  Title,
+  Table,
+  Select,
+  CustomBarChart,
+  Button,
+} from "@/components";
 import { useAccountSummary } from "@/hooks/useAccountSummary";
 import { formatCurrency } from "@/helpers/accountHelpers";
 import type { Account } from "@/types/account.types";
@@ -78,7 +85,10 @@ export default function Home() {
               {/* Select de ano */}
               <Select
                 label="Year"
-                options={summary.availableYears.map((y) => ({ label: y, value: y }))}
+                options={summary.availableYears.map((y) => ({
+                  label: y,
+                  value: y,
+                }))}
                 placeholder="Select a year"
                 onChange={(val) => {
                   summary.setSelectedYear(val);
@@ -91,7 +101,10 @@ export default function Home() {
               <Select
                 ref={monthSelectRef}
                 label="Month"
-                options={summary.availableMonths.map((m) => ({ label: m, value: m }))}
+                options={summary.availableMonths.map((m) => ({
+                  label: m,
+                  value: m,
+                }))}
                 placeholder="Select a month"
                 onChange={(val) => summary.setSelectedMonth(val)}
               />
@@ -120,7 +133,9 @@ export default function Home() {
           {/* 🔹 Cards por tipo de conta */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 flex-1">
             {ACCOUNT_TYPES.map((type) => {
-              const data = summary.accountTypeSummary.find((item) => item.type === type);
+              const data = summary.accountTypeSummary.find(
+                (item) => item.type === type
+              );
               const totalValue = data?.totalValue ?? 0;
               const paidValue = data?.paidValue ?? 0;
               const unpaidValue = data?.unpaidValue ?? 0;
@@ -133,8 +148,12 @@ export default function Home() {
                   value={
                     <>
                       <p>Total: {formatCurrency(totalValue)}</p>
-                      <p className={COLORS.positive}>Paid: {formatCurrency(paidValue)}</p>
-                      <p className={COLORS.negative}>Missing: {formatCurrency(unpaidValue)}</p>
+                      <p className={COLORS.positive}>
+                        Paid: {formatCurrency(paidValue)}
+                      </p>
+                      <p className={COLORS.negative}>
+                        Missing: {formatCurrency(unpaidValue)}
+                      </p>
                     </>
                   }
                 />
@@ -152,19 +171,32 @@ export default function Home() {
             columns={[
               { key: "accountType", label: "Account" },
               { key: "address", label: "Address" },
-              { key: "value", label: "Value (R$)", render: (val) => formatCurrency(val as number) },
+              {
+                key: "value",
+                label: "Value (R$)",
+                render: (val) => formatCurrency(val as number),
+              },
               {
                 key: "paid",
                 label: "Paid/Unpaid",
-                render: (val, acc) => (
-                  <input
-                    type="checkbox"
-                    checked={!!val}
-                    onChange={(e) =>
-                      updatePaid(acc.id, e.target.checked, acc.accountType, acc.address)
-                    }
-                    className="accent-greenLight"
-                  />
+                className: "px-4 py-3 flex justify-center items-center",
+                render: (value, acc) => (
+                  <div className="w-[6rem]">
+                    <Button
+                      text={value ? "Unpaid" : "Paid"}
+                      icon="money"
+                      size="full"
+                      variant={value ? "unpaid" : "solid"}
+                      onClick={() =>
+                        updatePaid(
+                          acc.id,
+                          !value, // inverte o estado
+                          acc.accountType,
+                          acc.address
+                        )
+                      }
+                    />
+                  </div>
                 ),
               },
             ]}

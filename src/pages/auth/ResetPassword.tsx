@@ -96,7 +96,7 @@ export default function ResetPassword() {
 
     try {
       // simula delay
-      await new Promise(res => setTimeout(res, 2000));
+      await new Promise(res => setTimeout(res, 1000));
       
       // chama API para resetar senha
       const response = await resetPassword(data.email, data.newPassword);

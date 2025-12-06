@@ -9,7 +9,7 @@ import {
   Button,
 } from "@/components";
 import { useAccountSummary } from "@/hooks/useAccountSummary";
-import { formatCurrency } from "@/helpers/accountHelpers";
+import { formatConsumption, formatCurrency } from "@/helpers/accountHelpers";
 import type { Account } from "@/types/account.types";
 import { ACCOUNT_TYPE_ICONS } from "@/components/UI/card/Card.variants";
 import { useRef, useEffect } from "react";
@@ -169,8 +169,15 @@ export default function Home() {
             data={summary.accountsForSelectedMonth}
             rowKey={(acc) => acc.id}
             columns={[
-              { key: "accountType", label: "Account" },
               { key: "address", label: "Address" },
+              { key: "accountType", label: "Account" },
+              {
+                key: "consumption",
+                label: "Consumption",
+                render: (val, row) =>
+                  formatConsumption(row.accountType, val as number),
+              },
+              { key: "days", label: "Days" },
               {
                 key: "value",
                 label: "Value (R$)",

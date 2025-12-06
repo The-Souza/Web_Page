@@ -63,8 +63,8 @@ export function useAccounts(email?: string) {
       if (!response.success) throw new Error(response.message);
 
       // 🔹 Atualiza estado local para refletir a mudança
-      setAccounts(prev =>
-        prev.map(acc => (acc.id === accountId ? { ...acc, paid } : acc))
+      setAccounts((prev) =>
+        prev.map((acc) => (acc.id === accountId ? { ...acc, paid } : acc))
       );
 
       // 🔹 Apenas consolidamos toasts para contas marcadas como pagas
@@ -108,5 +108,5 @@ export function useAccounts(email?: string) {
   };
 
   // 🔹 Retorna dados e funções para o componente consumir
-  return { accounts, loading, updatePaid };
+  return { accounts, loading, updatePaid, setAccounts };
 }

@@ -15,12 +15,15 @@ function roundTwo(value: number): number {
 /**
  * Soma os valores de uma lista de contas.
  * Permite aplicar uma condição opcional para filtrar quais contas somar.
- * 
+ *
  * @param accounts → lista de contas
  * @param predicate → função opcional para filtrar contas
  * @returns soma arredondada com 2 casas decimais
  */
-function sumValues(accounts: Account[], predicate?: (acc: Account) => boolean): number {
+function sumValues(
+  accounts: Account[],
+  predicate?: (acc: Account) => boolean
+): number {
   const filtered = predicate ? accounts.filter(predicate) : accounts;
   const total = filtered.reduce((acc, a) => acc + a.value, 0);
   return roundTwo(total);
@@ -40,7 +43,7 @@ function unique<T>(values: T[]): T[] {
 /**
  * Retorna a string do mês anterior no formato MM/YYYY.
  * Útil para calcular diferenças entre meses.
- * 
+ *
  * Ex: "03/2025" → "02/2025"
  */
 export function getPreviousMonth(month: string): string {
@@ -102,12 +105,15 @@ export const emptySummary: MonthSummary = {
  * - unpaidValue → diferença entre total e pagos
  * - paidPercentage → percentual de contas pagas
  * - diffFromLastMonth → pode ser calculado usando getDiffFromLastMonth
- * 
+ *
  * @param accounts → lista de contas
  * @param month → mês desejado
  * @returns MonthSummary com totais, pagos, não pagos e percentual
  */
-export function computeMonthSummary(accounts: Account[], month: string): MonthSummary {
+export function computeMonthSummary(
+  accounts: Account[],
+  month: string
+): MonthSummary {
   const monthAccounts = accounts.filter((acc) => acc.month === month);
 
   if (monthAccounts.length === 0) return emptySummary;
@@ -115,7 +121,8 @@ export function computeMonthSummary(accounts: Account[], month: string): MonthSu
   const totalValue = sumValues(monthAccounts);
   const paidValue = sumValues(monthAccounts, (a) => a.paid);
   const unpaidValue = roundTwo(totalValue - paidValue);
-  const paidPercentage = totalValue > 0 ? roundTwo((paidValue / totalValue) * 100) : 0;
+  const paidPercentage =
+    totalValue > 0 ? roundTwo((paidValue / totalValue) * 100) : 0;
 
   return {
     totalValue: roundTwo(totalValue),
@@ -132,7 +139,10 @@ export function computeMonthSummary(accounts: Account[], month: string): MonthSu
  * - Recebe dois MonthSummary
  * - Atualiza diffFromLastMonth para exibir evolução financeira
  */
-export function getDiffFromLastMonth(current: MonthSummary, previous: MonthSummary): number {
+export function getDiffFromLastMonth(
+  current: MonthSummary,
+  previous: MonthSummary
+): number {
   return roundTwo(current.totalValue - previous.totalValue);
 }
 
@@ -156,7 +166,12 @@ export function computeAccountTypeSummary(accounts: Account[], month: string) {
     const paidValue = sumValues(filtered, (a) => a.paid);
     const unpaidValue = roundTwo(totalValue - paidValue);
 
-    return { type, totalValue: roundTwo(totalValue), paidValue: roundTwo(paidValue), unpaidValue };
+    return {
+      type,
+      totalValue: roundTwo(totalValue),
+      paidValue: roundTwo(paidValue),
+      unpaidValue,
+    };
   });
 }
 
@@ -176,4 +191,39 @@ export function formatCurrency(value: number): string {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
+}
+
+/**
+ * Formata o consumo de acordo com o tipo de conta.
+ *
+ * - Cada tipo possui sua unidade de medida específica
+ * - Mantém consistência visual ao exibir consumo em listas e resumos
+ * - Retorna somente o valor formatado, sem símbolos monetários
+ *
+ * @param type Tipo da conta (ex.: "water", "energy", "internet", "gas")
+ * @param consumption Valor numérico do consumo
+ * @returns Uma string com o consumo acompanhado da unidade correta
+ */
+export function formatConsumption(type: string, consumption: number): string {
+  switch (type.toLowerCase()) {
+    case "water":
+      // Consumo de água medido em metros cúbicos
+      return `${consumption} m³`;
+
+    case "energy":
+      // Energia elétrica medida em quilowatt-hora
+      return `${consumption} kWh`;
+
+    case "internet":
+      // Banda larga medida em megabits por segundo
+      return `${consumption} Mbps`;
+
+    case "gas":
+      // Gás encanado medido em metros cúbicos
+      return `${consumption} m³`;
+
+    default:
+      // Caso não exista uma unidade definida para o tipo informado
+      return String(consumption);
+  }
 }

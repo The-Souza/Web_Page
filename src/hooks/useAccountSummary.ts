@@ -1,58 +1,102 @@
 import { useMemo, useState } from "react";
 import {
-  getPreviousMonth,
   computeMonthSummary,
   computeAccountTypeSummary,
-  getDiffFromLastMonth,
-  emptySummary,
   getAvailableYears,
   getMonthsByYear,
+  getPreviousMonth,
+  getDiffFromLastMonth,
+  emptySummary,
 } from "@/helpers/accountHelpers";
 import type { Account } from "@/types/account.types";
 
 /**
  * useAccountSummary
  * ------------------------------------------------------------
- * Hook customizado para gerenciar o resumo financeiro de contas.
+ * Hook responsável por gerar resumos filtrados das contas.
  *
- * Ele:
- * - Mantém o estado do ano e mês selecionados
- * - Calcula resumos mensais e por tipo de conta
- * - Calcula diferenças em relação ao mês anterior
- * - Fornece listas de anos e meses disponíveis para seleção
+ * Ele calcula:
+ * - Filtros (ano, mês, tipo)
+ * - Resumos mensais
+ * - Resumo por tipo de conta
+ * - Diferença com o mês anterior
+ * - Meses e anos disponíveis
  *
- * @param accounts → lista completa de contas
+ * Usado principalmente na Home e parcialmente no RegisterAccount.
  */
 export function useAccountSummary(accounts: Account[]) {
-  // Estados para ano e mês selecionados pelo usuário
+  // ------------------------------
+  // 🔹 ESTADOS DE FILTRO DO USUÁRIO
+  // ------------------------------
   const [selectedYear, setSelectedYear] = useState<string>("");
   const [selectedMonth, setSelectedMonth] = useState<string>("");
+  const [selectedType, setSelectedType] = useState<string>("");
 
-  // Lista de anos disponíveis nos dados
+  // ------------------------------
+  // 🔹 LISTAGEM DE ANOS DISPONÍVEIS
+  // ------------------------------
   const availableYears = useMemo(() => getAvailableYears(accounts), [accounts]);
 
-  // Lista de meses disponíveis para o ano selecionado
+  // ------------------------------
+  // 🔹 LISTAGEM DE MESES DISPONÍVEIS PARA UM ANO
+  // ------------------------------
   const availableMonths = useMemo(() => {
     if (!selectedYear) return [];
     return getMonthsByYear(accounts, selectedYear);
   }, [accounts, selectedYear]);
 
-  // Indica se o usuário selecionou ano e mês
+  // ------------------------------
+  // 🔹 TIPOS DE CONTAS DISPONÍVEIS
+  // ------------------------------
+  const availableTypes = useMemo(() => {
+    // Usa Set para evitar duplicados
+    return Array.from(new Set(accounts.map((a) => a.accountType)));
+  }, [accounts]);
+
+  // ============================================================
+  // 🧹 FILTRAGEM PRINCIPAL USADA NA PAGE RegisterAccount
+  // ============================================================
+  const filteredAccounts = useMemo(() => {
+    let result = accounts;
+
+    // Aplica filtro progressivo
+    if (selectedYear) {
+      result = result.filter((acc) => String(acc.year) === selectedYear);
+    }
+
+    if (selectedMonth) {
+      result = result.filter((acc) => acc.month === selectedMonth);
+    }
+
+    if (selectedType) {
+      result = result.filter((acc) => acc.accountType === selectedType);
+    }
+
+    return result;
+  }, [accounts, selectedYear, selectedMonth, selectedType]);
+
+  // ============================================================
+  // 🏠 CÁLCULOS EXCLUSIVOS DA HOME (não usados na página de registro)
+  // ============================================================
+
+  // Verifica se o usuário selecionou ano e mês
   const isSelectionComplete = !!selectedYear && !!selectedMonth;
 
-  // Filtra contas correspondentes ao mês selecionado
+  // Contas do mês selecionado
   const accountsForSelectedMonth = useMemo(() => {
     if (!isSelectionComplete) return [];
     return accounts.filter((acc) => acc.month === selectedMonth);
   }, [accounts, selectedMonth, isSelectionComplete]);
 
-  // Calcula mês anterior ao selecionado
+  // Obtém o mês anterior no formato MM/YYYY
   const previousMonth = useMemo(() => {
     if (!isSelectionComplete) return "";
     return getPreviousMonth(selectedMonth);
   }, [selectedMonth, isSelectionComplete]);
 
-  // Resumo do mês selecionado
+  // ------------------------------
+  // 🔹 Resumo do mês selecionado
+  // ------------------------------
   const currentSummary = useMemo(() => {
     if (!isSelectionComplete || accountsForSelectedMonth.length === 0)
       return emptySummary;
@@ -60,32 +104,36 @@ export function useAccountSummary(accounts: Account[]) {
     return computeMonthSummary(accountsForSelectedMonth, selectedMonth);
   }, [accountsForSelectedMonth, selectedMonth, isSelectionComplete]);
 
-  // Resumo do mês anterior
+  // ------------------------------
+  // 🔹 Resumo do mês anterior
+  // ------------------------------
   const previousSummary = useMemo(() => {
     if (!isSelectionComplete || !previousMonth) return emptySummary;
 
-    // 🔹 Padroniza formato dos meses (MM/YYYY)
+    // Normaliza formato (MM/YYYY)
     const normalizedAccounts = accounts.map((acc) => ({
       ...acc,
       month: acc.month.padStart(7, "0"),
     }));
     const normalizedPrevMonth = previousMonth.padStart(7, "0");
 
-    // 🔹 Verifica se existem dados do mês anterior
+    // Verifica se existe registro do mês anterior
     const hasPreviousMonthData = normalizedAccounts.some(
       (acc) => acc.month === normalizedPrevMonth
     );
 
     if (!hasPreviousMonthData) return emptySummary;
 
-    // 🔹 Calcula resumo do mês anterior
+    // Retorna resumo
     return computeMonthSummary(
       normalizedAccounts.filter((acc) => acc.month === normalizedPrevMonth),
       normalizedPrevMonth
     );
   }, [accounts, previousMonth, isSelectionComplete]);
 
-  // Diferença total entre o mês atual e o anterior
+  // ------------------------------
+  // 🔹 Diferença entre mês atual e anterior
+  // ------------------------------
   const diffFromLastMonth = useMemo(() => {
     if (!isSelectionComplete) return 0;
 
@@ -95,11 +143,13 @@ export function useAccountSummary(accounts: Account[]) {
     return getDiffFromLastMonth(currentSummary, previousSummary);
   }, [currentSummary, previousSummary, isSelectionComplete]);
 
-  // Resumo agrupado por tipo de conta
+  // ------------------------------
+  // 🔹 Resumo por tipo de conta (água, luz, etc.)
+  // ------------------------------
   const accountTypeSummary = useMemo(() => {
     const allTypes = Array.from(new Set(accounts.map((a) => a.accountType)));
 
-    // Caso a seleção não esteja completa, retorna zeros
+    // Sem seleção → tudo zero
     if (!isSelectionComplete || accountsForSelectedMonth.length === 0) {
       return allTypes.map((type) => ({
         type,
@@ -112,17 +162,21 @@ export function useAccountSummary(accounts: Account[]) {
     return computeAccountTypeSummary(accountsForSelectedMonth, selectedMonth);
   }, [accountsForSelectedMonth, selectedMonth, isSelectionComplete, accounts]);
 
-  // Resumo de todos os meses de um ano selecionado
+  // ------------------------------
+  // 🔹 Resumo dos 12 meses do ano escolhido
+  // ------------------------------
   const monthSummaries = useMemo(() => {
+    // Sem seleção → devolve placeholders vazios
     if (!isSelectionComplete) {
-      // Se não houver seleção, retorna 12 meses do ano atual com resumo vazio
       return Array.from({ length: 12 }, (_, i) => ({
         month: `${String(i + 1).padStart(2, "0")}/${new Date().getFullYear()}`,
         summary: emptySummary,
       }));
     }
 
+    // Busca meses reais daquele ano
     const months = getMonthsByYear(accounts, selectedYear);
+
     return months.map((m) => ({
       month: m,
       summary: computeMonthSummary(
@@ -132,13 +186,25 @@ export function useAccountSummary(accounts: Account[]) {
     }));
   }, [accounts, selectedYear, isSelectionComplete]);
 
+  // ============================================================
+  // 🔙 Retorna tudo para ser usado nos componentes
+  // ============================================================
   return {
     selectedYear,
     selectedMonth,
+    selectedType,
+
     setSelectedYear,
     setSelectedMonth,
+    setSelectedType,
+
     availableYears,
     availableMonths,
+    availableTypes,
+
+    filteredAccounts,
+
+    // Exclusivo da Home
     accountsForSelectedMonth,
     currentSummary,
     diffFromLastMonth,

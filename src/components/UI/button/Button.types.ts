@@ -29,4 +29,4 @@ export interface ButtonProps {
  * Tipos de ícones suportados. Cada chave mapeia para uma função
  * em BUTTON_ICONS que retorna JSX do ícone correspondente.
  */
-export type ButtonIconKey = "logout" | "email" | "settings" | "money";
+export type ButtonIconKey = "logout" | "email" | "settings" | "money" | "trash" | "edit";

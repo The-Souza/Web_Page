@@ -44,10 +44,10 @@ export class Button extends Component<ButtonProps> {
       // Botão com texto
       switch (size) {
         case "auto":
-          sizeClass = "w-auto"; // largura automática
+          sizeClass = "w-auto h-11"; // largura automática
           break;
         case "full":
-          sizeClass = "w-full"; // ocupa 100% da largura
+          sizeClass = "w-full h-11"; // ocupa 100% da largura
           break;
         default:
           sizeClass = size; // string customizada
@@ -55,7 +55,7 @@ export class Button extends Component<ButtonProps> {
       }
     } else if (typeof size === "number") {
       // largura fixa em rem
-      sizeClass = `w-[${size}rem]`;
+      sizeClass = `w-[${size}rem] h-11`;
     }
 
     // Classes dinâmicas combinando variante, estado e tamanho

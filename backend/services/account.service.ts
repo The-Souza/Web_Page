@@ -9,7 +9,7 @@ import type {
 /**
  * Converte o formato original retornado pelo Supabase
  * para um formato interno mais consistente (AccountRecord).
- * 
+ *
  * Isso cria uma camada de adaptação para manter o código
  * desacoplado da estrutura bruta do banco.
  */
@@ -54,7 +54,7 @@ function mapAccount(record: AccountRecord): Account {
 
 /**
  * Busca todas as contas do banco.
- * 
+ *
  * - Faz LEFT JOIN com a tabela de usuários para obter o e-mail.
  * - Ordena da mais recente para a mais antiga.
  */
@@ -130,7 +130,7 @@ export async function getAccountsByUserId(
 
 /**
  * Busca contas filtrando pelo e-mail do usuário.
- * 
+ *
  * Aqui usamos INNER JOIN porque só queremos contas que realmente
  * possuem um usuário associado ao e-mail informado.
  */
@@ -187,7 +187,7 @@ export async function updateAccountPaid(
 
 /**
  * Insere uma nova conta e retorna o ID gerado.
- * 
+ *
  * Observação:
  * - O mês chega no formato "MM/yyyy", então fazemos um split
  *   para extrair apenas o número do mês.
@@ -214,4 +214,21 @@ export async function addAccount(account: NewAccount): Promise<number> {
   if (error) throw error;
 
   return data.id;
+}
+
+/**
+ * deleteAccount
+ *
+ * Deleta uma conta específica no banco de dados Supabase pelo ID.
+ *
+ * @param id - O identificador único da conta a ser removida.
+ * @returns Promise<void> - Não retorna dados, apenas indica sucesso ou erro.
+ *
+ * - Utiliza o método `.delete()` do Supabase query builder.
+ * - Aplica o filtro `.eq("id", id)` para deletar somente a conta correspondente.
+ * - Lança um erro caso a operação falhe, permitindo que o controller trate a resposta HTTP.
+ */
+export async function deleteAccount(id: number): Promise<void> {
+  const { error } = await supabase.from("accounts").delete().eq("id", id);
+  if (error) throw error;
 }

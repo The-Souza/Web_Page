@@ -21,11 +21,12 @@ function roundTwo(value: number): number {
  * @returns soma arredondada com 2 casas decimais
  */
 function sumValues(
-  accounts: Account[],
+  accounts?: Account[],
   predicate?: (acc: Account) => boolean
 ): number {
+  if (!accounts?.length) return 0;
   const filtered = predicate ? accounts.filter(predicate) : accounts;
-  const total = filtered.reduce((acc, a) => acc + a.value, 0);
+  const total = filtered.reduce((acc, a) => acc + (a.value ?? 0), 0);
   return roundTwo(total);
 }
 
@@ -48,7 +49,7 @@ function unique<T>(values: T[]): T[] {
  */
 export function getPreviousMonth(month: string): string {
   const [m, y] = month.split("/").map(Number);
-  const date = new Date(y, m - 2); // subtrai 1 mês (0-based)
+  const date = new Date(y, (m ?? 1) - 2); // fallback para 1 se m for undefined
   const newMonth = (date.getMonth() + 1).toString().padStart(2, "0");
   const newYear = date.getFullYear();
   return `${newMonth}/${newYear}`;
@@ -58,8 +59,11 @@ export function getPreviousMonth(month: string): string {
  * Retorna todos os anos disponíveis nos dados.
  * Útil para filtros de anos ou geração de relatórios.
  */
-export function getAvailableYears(accounts: Account[]): string[] {
-  const years = accounts.map((a) => a.year.toString());
+export function getAvailableYears(accounts?: Account[]): string[] {
+  if (!accounts?.length) return [];
+  const years = accounts
+    .filter((a): a is Account => a?.year != null)
+    .map((a) => a.year!.toString());
   return unique(years);
 }
 
@@ -69,8 +73,9 @@ export function getAvailableYears(accounts: Account[]): string[] {
  */
 export function getMonthsByYear(accounts: Account[], year: string): string[] {
   const months = accounts
-    .filter((a) => a.year.toString() === year)
-    .map((a) => a.month);
+    .filter((a) => a?.year != null && a.year.toString() === year)
+    .map((a) => a.month)
+    .filter((m): m is string => m != null);
 
   // Ordena primeiro pelo ano, depois pelo mês
   return unique(months).sort((a, b) => {
@@ -111,12 +116,13 @@ export const emptySummary: MonthSummary = {
  * @returns MonthSummary com totais, pagos, não pagos e percentual
  */
 export function computeMonthSummary(
-  accounts: Account[],
-  month: string
+  accounts?: Account[],
+  month?: string
 ): MonthSummary {
-  const monthAccounts = accounts.filter((acc) => acc.month === month);
+  if (!accounts?.length || !month) return emptySummary;
 
-  if (monthAccounts.length === 0) return emptySummary;
+  const monthAccounts = accounts.filter((acc) => acc?.month === month);
+  if (!monthAccounts.length) return emptySummary;
 
   const totalValue = sumValues(monthAccounts);
   const paidValue = sumValues(monthAccounts, (a) => a.paid);
@@ -125,11 +131,11 @@ export function computeMonthSummary(
     totalValue > 0 ? roundTwo((paidValue / totalValue) * 100) : 0;
 
   return {
-    totalValue: roundTwo(totalValue),
-    paidValue: roundTwo(paidValue),
+    totalValue,
+    paidValue,
     unpaidValue,
     paidPercentage,
-    diffFromLastMonth: 0, // será preenchido com getDiffFromLastMonth
+    diffFromLastMonth: 0,
   };
 }
 
@@ -140,10 +146,10 @@ export function computeMonthSummary(
  * - Atualiza diffFromLastMonth para exibir evolução financeira
  */
 export function getDiffFromLastMonth(
-  current: MonthSummary,
-  previous: MonthSummary
+  current: MonthSummary = emptySummary,
+  previous: MonthSummary = emptySummary
 ): number {
-  return roundTwo(current.totalValue - previous.totalValue);
+  return roundTwo((current?.totalValue ?? 0) - (previous?.totalValue ?? 0));
 }
 
 /**
@@ -168,8 +174,8 @@ export function computeAccountTypeSummary(accounts: Account[], month: string) {
 
     return {
       type,
-      totalValue: roundTwo(totalValue),
-      paidValue: roundTwo(paidValue),
+      totalValue,
+      paidValue,
       unpaidValue,
     };
   });
@@ -207,23 +213,14 @@ export function formatCurrency(value: number): string {
 export function formatConsumption(type: string, consumption: number): string {
   switch (type.toLowerCase()) {
     case "water":
-      // Consumo de água medido em metros cúbicos
       return `${consumption} m³`;
-
     case "energy":
-      // Energia elétrica medida em quilowatt-hora
       return `${consumption} kWh`;
-
     case "internet":
-      // Banda larga medida em megabits por segundo
       return `${consumption} Mbps`;
-
     case "gas":
-      // Gás encanado medido em metros cúbicos
       return `${consumption} m³`;
-
     default:
-      // Caso não exista uma unidade definida para o tipo informado
       return String(consumption);
   }
 }

@@ -19,7 +19,10 @@ function parsePaidParam(paidParam: string | undefined): boolean | undefined {
  * Retorna todas as contas do sistema (não filtradas).
  * Usado normalmente para fins administrativos.
  */
-export async function getAllAccounts(req: express.Request, res: express.Response) {
+export async function getAllAccounts(
+  req: express.Request,
+  res: express.Response
+) {
   try {
     const accounts = await accountService.getAllAccounts();
     res.json(accounts);
@@ -34,7 +37,10 @@ export async function getAllAccounts(req: express.Request, res: express.Response
  * Retorna contas associadas a um userId opcionalmente filtradas por "paid".
  * Exemplo: /api/accounts/user/3?paid=true
  */
-export async function getAccountsByUserId(req: express.Request, res: express.Response) {
+export async function getAccountsByUserId(
+  req: express.Request,
+  res: express.Response
+) {
   try {
     const userId = parseInt(req.params.userId, 10);
 
@@ -61,7 +67,10 @@ export async function getAccountsByUserId(req: express.Request, res: express.Res
  * GET /api/accounts/email/:email?paid=true/false
  * Função similar à anterior, mas busca usuários pelo email.
  */
-export async function getAccountsByUserEmail(req: express.Request, res: express.Response) {
+export async function getAccountsByUserEmail(
+  req: express.Request,
+  res: express.Response
+) {
   try {
     const { email } = req.params;
 
@@ -88,7 +97,10 @@ export async function getAccountsByUserEmail(req: express.Request, res: express.
  * Atualiza o status "paid" de uma conta (true/false).
  * Utilizado principalmente para marcar contas como pagas.
  */
-export async function updateAccountPaid(req: express.Request, res: express.Response) {
+export async function updateAccountPaid(
+  req: express.Request,
+  res: express.Response
+) {
   try {
     const { id } = req.params;
     const { paid } = req.body;
@@ -171,6 +183,36 @@ export async function registerAccount(
     });
   } catch (err) {
     console.error("❌ Error registering account:", err);
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+}
+
+/**
+ * DELETE /api/accounts/:id
+ * Deleta uma conta específica pelo ID.
+ *
+ * - O ID da conta é passado via URL params (`req.params.id`).
+ * - Requer autenticação JWT (usando `req.user` do middleware `authenticateJWT`).
+ * - Retorna um JSON com `{ success: true, message: "Account deleted successfully" }` em caso de sucesso.
+ * - Valida se o ID é um número válido; caso contrário retorna 400.
+ * - Captura erros inesperados e retorna 500.
+ */
+export async function deleteAccount(
+  req: AuthenticatedRequest,
+  res: express.Response
+) {
+  try {
+    const id = parseInt(req.params.id, 10);
+    if (isNaN(id))
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid account id" });
+
+    await accountService.deleteAccount(id);
+
+    return res.json({ success: true, message: "Account deleted successfully" });
+  } catch (err) {
+    console.error("❌ Error deleting account:", err);
     res.status(500).json({ success: false, message: "Internal server error" });
   }
 }

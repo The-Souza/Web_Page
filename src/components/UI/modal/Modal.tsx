@@ -20,15 +20,14 @@ export default function Modal({
   // Inclui estilo base (cores, bordas, sombras, padding) e limites de tamanho.
   // Também ajusta largura/altura dependendo do variant ("default" ou "confirm").
   const classModal = classNames(
-    "relative bg-dark border-2 border-greenLight rounded-2xl shadow-xl p-6 z-50",
+    "relative bg-dark border-2 border-greenLight rounded-2xl shadow-xl z-50",
     "max-h-[90vh] sm:max-h-[80vh]", // Limita o tamanho total do modal
     {
       // Modal padrão: largura maior e altura automática
-      "w-[90%] sm:w-[70%]": variant === "default",
-      "h-auto": variant === "default",
+      "w-[90%] md:w-[70%] xl:w-[50%] h-auto p-6 md:p-10": variant === "default",
 
       // Modal de confirmação: tamanho ajustável sem limite de altura
-      "w-auto h-auto max-h-none": variant === "confirm",
+      "w-auto h-auto max-h-none p-6": variant === "confirm",
     }
   );
 

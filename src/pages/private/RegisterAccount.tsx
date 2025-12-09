@@ -27,13 +27,26 @@ import Modal from "@/components/UI/modal/Modal";
 // - Garante coerência e mensagens de erro automáticas
 const accountSchema = z.object({
   accountType: z.string().min(1, "Account type is required"),
-  consumption: z.preprocess((v) => Number(v), z.number().positive()),
-  days: z.preprocess((v) => Number(v), z.number().min(1).max(31)),
-  value: z.preprocess((v) => Number(v), z.number().positive()),
+
+  consumption: z.preprocess((val) => {
+    const n = Number(val);
+    return isNaN(n) ? undefined : n;
+  }, z.number().min(0.000001, "Consumption must be a number greater than 0")),
+
+  days: z.preprocess((val) => {
+    const n = Number(val);
+    return isNaN(n) ? undefined : n;
+  }, z.number().min(1, "Days must be between 1 and 31").max(31, "Days must be between 1 and 31")),
+
+  value: z.preprocess((val) => {
+    const n = Number(val);
+    return isNaN(n) ? undefined : n;
+  }, z.number().min(0.000001, "Value must be greater than 0")),
+
   paid: z.boolean(),
-  address: z.string().min(1),
-  year: z.preprocess((v) => Number(v), z.number()),
-  month: z.preprocess((v) => Number(v), z.number()),
+  address: z.string().min(1, "Address is required"),
+  year: z.string().min(1, "Year is required"),
+  month: z.string().min(1, "Month is required"),
 });
 
 // Dados gerados a partir do schema
@@ -101,7 +114,7 @@ export default function RegisterAccount() {
     setValue("days", account.days);
     setValue("value", account.value);
     setValue("paid", account.paid);
-    setValue("year", account.year);
+    setValue("year", String(account.year));
     setValue("month", account.month);
 
     setFormModalOpen(true);
@@ -126,7 +139,11 @@ export default function RegisterAccount() {
 
     if (response.success) {
       setAccounts((prev) => prev.filter((a) => a.id !== accountToDelete.id));
-      showToast({ type: "success", text: "Account deleted!" });
+      showToast({
+        type: "success",
+        title: "Account deleted",
+        text: response.message,
+      });
     } else {
       showToast({ type: "error", text: response.message });
     }
@@ -136,20 +153,26 @@ export default function RegisterAccount() {
     setAccountToDelete(null);
   };
 
-  const clearAllFilters = () => {
-    // Resetando filtros na UI
+  const resetFormFields = () => {
+    reset(defaultValues);
+    setValue("paid", false);
+    yearFormRef.current?.clearSelection();
+    monthFormRef.current?.clearSelection();
+    typeFormRef.current?.clearSelection();
+    paidFormRef.current?.clearSelection();
+  };
+
+  const clearFilters = () => {
     yearFilterRef.current?.clearSelection();
     monthFilterRef.current?.clearSelection();
     typeFilterRef.current?.clearSelection();
     paidFilterRef.current?.clearSelection();
 
-    // Resetando no estado do summary
     summary.setSelectedYear("");
     summary.setSelectedMonth("");
     summary.setSelectedType("");
     summary.setSelectedPaid("");
 
-    // Limpando valores do RHF (opcional, apenas se quiser realmente limpar)
     reset(defaultValues);
   };
 
@@ -230,7 +253,15 @@ export default function RegisterAccount() {
     try {
       if (editingAccount) {
         // UPDATE
-        const response = await updateAccount(editingAccount.id, data, token!);
+        const response = await updateAccount(
+          editingAccount.id,
+          {
+            ...data,
+            year: Number(data.year),
+            month: String(data.month),
+          },
+          token!
+        );
 
         if (response.success && response.data) {
           setAccounts((prev) =>
@@ -247,14 +278,25 @@ export default function RegisterAccount() {
         const payload: RegisterAccountPayload = {
           userId: user.id,
           userEmail: user.email,
-          ...data,
+          address: data.address,
+          accountType: data.accountType,
+          year: data.year,
+          month: data.month,
+          consumption: data.consumption,
+          days: data.days,
+          value: data.value,
+          paid: data.paid,
         };
 
         const response = await registerAccount(payload, token!);
 
         if (response.success && response.data) {
           setAccounts((prev) => [...prev, response.data!]);
-          showToast({ type: "success", text: "Account registered!" });
+          showToast({
+            type: "success",
+            title: "Account added",
+            text: response.message,
+          });
         } else {
           showToast({ type: "error", text: response.message });
         }
@@ -355,7 +397,7 @@ export default function RegisterAccount() {
               text="Clear filters"
               size="full"
               variant="solid"
-              onClick={clearAllFilters}
+              onClick={clearFilters}
             />
 
             {/* Botão de criar */}
@@ -364,7 +406,7 @@ export default function RegisterAccount() {
               size="full"
               variant="solid"
               onClick={() => {
-                reset(defaultValues);
+                resetFormFields(); // apenas form
                 setEditingAccount(null);
                 setFormModalOpen(true);
               }}
@@ -447,124 +489,126 @@ export default function RegisterAccount() {
         }}
       >
         <form onSubmit={handleSubmit(onSubmit)}>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Input
-              {...register("address")}
-              theme="light"
-              label="Address"
-              placeholder="Ex: Rua XYZ, nº 123"
-              error={errors.address?.message}
-            />
+          <div className="flex flex-col gap-5">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <Input
+                {...register("address")}
+                theme="light"
+                label="Address"
+                placeholder="Ex: Rua XYZ, nº 123"
+                error={errors.address?.message}
+              />
 
-            <Select
-              ref={yearFormRef}
-              label="Year"
-              theme="light"
-              required={true}
-              placeholder="Select year"
-              options={yearOptions}
-              onChange={(val) => setValue("year", val)}
-              value={String(watch("year") ?? "")}
-              error={errors.year?.message}
-            />
+              <Select
+                ref={yearFormRef}
+                label="Year"
+                theme="light"
+                required={true}
+                placeholder="Select year"
+                options={yearOptions}
+                onChange={(val) => setValue("year", val)}
+                value={String(watch("year") ?? "")}
+                error={errors.year?.message}
+              />
 
-            <Select
-              ref={monthFormRef}
-              label="Month"
-              theme="light"
-              required={true}
-              placeholder="Select month"
-              options={monthOptions}
-              onChange={(val) => setValue("month", val)}
-              value={String(watch("month") ?? "")}
-              error={errors.month?.message}
-            />
+              <Select
+                ref={monthFormRef}
+                label="Month"
+                theme="light"
+                required={true}
+                placeholder="Select month"
+                options={monthOptions}
+                onChange={(val) => setValue("month", val)}
+                value={String(watch("month") ?? "")}
+                error={errors.month?.message}
+              />
 
-            <Select
-              ref={typeFormRef}
-              label="Account Type"
-              theme="light"
-              required={true}
-              placeholder="Select account type"
-              options={accountTypeOptions}
-              onChange={(val) => setValue("accountType", val)}
-              value={String(watch("accountType") ?? "")}
-              error={errors.accountType?.message}
-            />
+              <Select
+                ref={typeFormRef}
+                label="Account Type"
+                theme="light"
+                required={true}
+                placeholder="Select account type"
+                options={accountTypeOptions}
+                onChange={(val) => setValue("accountType", val)}
+                value={String(watch("accountType") ?? "")}
+                error={errors.accountType?.message}
+              />
 
-            <Input
-              {...register("consumption")}
-              label="Consumption"
-              theme="light"
-              placeholder="Consumption in m³ or kWh"
-              type="number"
-              error={errors.consumption?.message}
-            />
+              <Input
+                {...register("consumption")}
+                label="Consumption"
+                theme="light"
+                placeholder="Consumption in m³ or kWh"
+                type="number"
+                error={errors.consumption?.message}
+              />
 
-            <Input
-              {...register("days")}
-              label="Days"
-              theme="light"
-              placeholder="Ex: 1 to 31"
-              type="number"
-              error={errors.days?.message}
-            />
+              <Input
+                {...register("days")}
+                label="Days"
+                theme="light"
+                placeholder="Ex: 1 to 31"
+                type="number"
+                error={errors.days?.message}
+              />
 
-            <Input
-              {...register("value")}
-              label="Value"
-              placeholder="90,45"
-              type="number"
-              error={errors.value?.message}
-            />
+              <Input
+                {...register("value")}
+                label="Value"
+                placeholder="90,45"
+                type="number"
+                error={errors.value?.message}
+              />
 
-            {/* Campo Paid */}
-            <div className="flex flex-col gap-1">
-              <label className="font-lato font-semibold text-md">
-                Paid Status
-              </label>
-              <div className="flex gap-4">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="radio"
-                    value="true"
-                    checked={paidValue === true}
-                    onChange={() => setValue("paid", true)}
-                    className="accent-greenLight"
-                  />
-                  <span>Paid</span>
+              {/* Campo Paid */}
+              <div className="flex flex-col gap-1">
+                <label className="font-lato font-semibold text-md">
+                  Paid Status
                 </label>
+                <div className="flex gap-4">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      value="true"
+                      checked={paidValue === true}
+                      onChange={() => setValue("paid", true)}
+                      className="accent-greenLight"
+                    />
+                    <span>Paid</span>
+                  </label>
 
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="radio"
-                    value="false"
-                    checked={paidValue === false}
-                    onChange={() => setValue("paid", false)}
-                    className="accent-red-400"
-                  />
-                  <span>Unpaid</span>
-                </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      value="false"
+                      checked={paidValue === false}
+                      onChange={() => setValue("paid", false)}
+                      className="accent-red-400"
+                    />
+                    <span>Unpaid</span>
+                  </label>
+                </div>
+                {errors.paid && (
+                  <p className="text-red-500 text-sm font-lato">
+                    {errors.paid.message}
+                  </p>
+                )}
               </div>
-              {errors.paid && (
-                <p className="text-red-500 text-sm font-lato">
-                  {errors.paid.message}
-                </p>
-              )}
             </div>
-          </div>
 
-          <div className="flex gap-3 mt-4">
-            <Button type="submit" variant="solid" size="full" text="Save" />
-            <Button
-              variant="unpaid"
-              size="full"
-              text="Cancel"
-              onClick={() => {
-                clearAllFilters();
-                setFormModalOpen(false);
-              }}
-            />
+            <div className="flex gap-3 mt-4">
+              <Button type="submit" variant="solid" size="full" text="Save" />
+              <Button
+                variant="unpaid"
+                size="full"
+                text="Cancel"
+                onClick={() => {
+                  resetFormFields(); // reseta apenas form
+                  setFormModalOpen(false);
+                }}
+              />
+            </div>
           </div>
         </form>
       </Modal>

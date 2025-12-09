@@ -166,7 +166,7 @@ export function MainLayout() {
         {/* Conteúdo principal */}
         <main
           className={classNames(
-            "flex-1 transition-all duration-300 p-4 sm:p-8",
+            "flex-1 transition-all duration-300 p-4 sm:p-8 bg-forest w-full",
             {
               "ml-56 sm:ml-64": menuOpen && !isMobile, // desloca conteúdo se menu desktop aberto
             }

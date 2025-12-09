@@ -108,7 +108,7 @@ export async function updateAccountPaid(req: express.Request, res: express.Respo
 }
 
 /**
- * POST /api/accounts/register
+ * POST /api/accounts/register-account
  * Registra uma nova conta associada ao usuário autenticado.
  * Depende de "req.user" que vem do middleware de autenticação.
  */

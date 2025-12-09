@@ -31,6 +31,7 @@ export function useAccountSummary(accounts: Account[]) {
   const [selectedYear, setSelectedYear] = useState<string>("");
   const [selectedMonth, setSelectedMonth] = useState<string>("");
   const [selectedType, setSelectedType] = useState<string>("");
+  const [selectedPaid, setSelectedPaid] = useState<boolean | "">("");
 
   // ------------------------------
   // 🔹 LISTAGEM DE ANOS DISPONÍVEIS
@@ -53,6 +54,14 @@ export function useAccountSummary(accounts: Account[]) {
     return Array.from(new Set(accounts.map((a) => a.accountType)));
   }, [accounts]);
 
+  // ------------------------------
+  // 🔹 LISTAGEM DE CNTAS PAGAS/NÃO PAGAS
+  // ------------------------------
+  const availablePaids = useMemo(() => {
+    // Usa Set para evitar duplicados
+    return Array.from(new Set(accounts.map((a) => a.paid)));
+  }, [accounts]);
+
   // ============================================================
   // 🧹 FILTRAGEM PRINCIPAL USADA NA PAGE RegisterAccount
   // ============================================================
@@ -72,8 +81,12 @@ export function useAccountSummary(accounts: Account[]) {
       result = result.filter((acc) => acc.accountType === selectedType);
     }
 
+    if (selectedPaid !== "") {
+      result = result.filter((acc) => acc.paid === selectedPaid);
+    }
+
     return result;
-  }, [accounts, selectedYear, selectedMonth, selectedType]);
+  }, [accounts, selectedYear, selectedMonth, selectedType, selectedPaid]);
 
   // ============================================================
   // 🏠 CÁLCULOS EXCLUSIVOS DA HOME (não usados na página de registro)
@@ -197,10 +210,12 @@ export function useAccountSummary(accounts: Account[]) {
     setSelectedYear,
     setSelectedMonth,
     setSelectedType,
+    setSelectedPaid,
 
     availableYears,
     availableMonths,
     availableTypes,
+    availablePaids,
 
     filteredAccounts,
 

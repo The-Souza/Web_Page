@@ -8,7 +8,7 @@ import classNames from "classnames";
  * Componente responsável por renderizar o dropdown de opções
  * de um select customizado, incluindo destaque e scroll automático
  * para o item selecionado ou destacado.
- * 
+ *
  * Props:
  * - filteredOptions: lista de opções filtradas a serem exibidas
  * - selectedValue: valor atualmente selecionado
@@ -49,31 +49,28 @@ export const SelectDropdown = ({
 
   // ✅ Gera classes para cada opção dependendo se está selecionada ou destacada
   const optionClass = (isSelected: boolean, isHighlighted: boolean) =>
-    classNames(
-      "p-3 cursor-pointer font-lato font-semibold transition-colors",
-      {
-        // Tema light
-        "bg-gray-400 text-black": isSelected && theme === "light",
-        "bg-gray-300 text-black":
-          !isSelected && isHighlighted && theme === "light",
-        "text-black hover:bg-gray-300":
-          !isSelected && !isHighlighted && theme === "light",
+    classNames("p-3 cursor-pointer font-lato font-semibold transition-colors", {
+      // Tema light
+      "bg-gray-400 text-black": isSelected && theme === "light",
+      "bg-gray-300 text-black":
+        !isSelected && isHighlighted && theme === "light",
+      "text-black hover:bg-gray-300":
+        !isSelected && !isHighlighted && theme === "light",
 
-        // Tema dark
-        "bg-greenMid text-white": isSelected && theme === "dark",
-        "bg-greenDark text-white":
-          !isSelected && isHighlighted && theme === "dark",
-        "text-white hover:bg-greenDark":
-          !isSelected && !isHighlighted && theme === "dark",
-      }
-    );
+      // Tema dark
+      "bg-greenMid text-white": isSelected && theme === "dark",
+      "bg-greenDark text-white":
+        !isSelected && isHighlighted && theme === "dark",
+      "text-white hover:bg-greenDark":
+        !isSelected && !isHighlighted && theme === "dark",
+    });
 
   return (
     <div className={containerClass} style={{ maxHeight }}>
       <ul
-        ref={listRef} // 🔹 Referência para controle de scroll
-        className="w-full"
-        style={{ maxHeight, overflowY: "auto" }}
+        ref={listRef}
+        className="w-full overflow-y-auto my-scroll"
+        style={{ maxHeight }}
       >
         {filteredOptions.length > 0 ? (
           // ✅ Renderiza cada opção
@@ -93,13 +90,10 @@ export const SelectDropdown = ({
         ) : (
           // ⚠️ Mensagem caso não haja opções
           <li
-            className={classNames(
-              "p-3 font-lato font-semibold italic",
-              {
-                "text-gray-400": theme === "light",
-                "text-greenLight": theme === "dark",
-              }
-            )}
+            className={classNames("p-3 font-lato font-semibold italic", {
+              "text-gray-400": theme === "light",
+              "text-greenLight": theme === "dark",
+            })}
           >
             No options found
           </li>

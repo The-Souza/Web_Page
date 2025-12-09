@@ -9,18 +9,26 @@ export default function Modal({
   children,
   variant,
 }: ModalProps): JSX.Element {
-  /**
-   * Define dinamicamente as classes do modal com base no `variant`.
-   *
-   * - Usa a lib classNames para montar estilos condicionais
-   * - `default` → modal grande (70% da tela)
-   * - `confirm` → modal pequeno, usado para diálogos rápidos
-   */
+  // Classes para o wrapper interno que contém o conteúdo do modal.
+  // Aqui habilitamos o scroll vertical quando o conteúdo ultrapassa a altura máxima
+  // e utilizamos uma classe customizada para esconder a scrollbar.
+  const wrapperScroll = classNames(
+    "overflow-y-auto max-h-[70vh] sm:max-h-[70vh] scrollbar-hidden"
+  );
+
+  // Classes do container principal do modal.
+  // Inclui estilo base (cores, bordas, sombras, padding) e limites de tamanho.
+  // Também ajusta largura/altura dependendo do variant ("default" ou "confirm").
   const classModal = classNames(
-    "relative bg-dark border border-greenLight rounded-2xl shadow-xl p-6 z-50",
+    "relative bg-dark border-2 border-greenLight rounded-2xl shadow-xl p-6 z-50",
+    "max-h-[90vh] sm:max-h-[80vh]", // Limita o tamanho total do modal
     {
-      "w-[70%] h-[70%]": variant === "default",
-      "w-auto h-auto": variant === "confirm",
+      // Modal padrão: largura maior e altura automática
+      "w-[90%] sm:w-[70%]": variant === "default",
+      "h-auto": variant === "default",
+
+      // Modal de confirmação: tamanho ajustável sem limite de altura
+      "w-auto h-auto max-h-none": variant === "confirm",
     }
   );
 
@@ -28,40 +36,27 @@ export default function Modal({
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          /**
-           * Container principal do modal
-           *
-           * - Fixa o modal no centro da tela
-           * - Aplica animação de fade-in/out no fundo
-           */
-          className="fixed inset-0 z-50 flex items-center justify-center"
+          // Contêiner que centraliza o modal e ocupa toda a tela
+          className="fixed inset-0 z-50 flex items-center justify-center px-4"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
         >
-          {/* 
-            Overlay (fundo escurecido)
-            - Clique no overlay fecha o modal
-            - Usa blur + transparência
-          */}
+          {/* Overlay escurecido atrás do modal */}
           <div
             className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-            onClick={onClose}
+            onClick={onClose} // fecha ao clicar fora do modal
           />
 
-          {/* 
-            Caixa principal do modal com animação de scale
-            - Aparece com zoom-in suave
-            - Desaparece com zoom-out
-          */}
+          {/* Container animado do modal em si */}
           <motion.div
             className={classModal}
-            initial={{ scale: 0.9, opacity: 0 }}
+            initial={{ scale: 0.9, opacity: 0 }} // animação de entrada
             animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.9, opacity: 0 }}
+            exit={{ scale: 0.9, opacity: 0 }} // animação de saída
           >
-            {/* Conteúdo passado pelo componente pai */}
-            {children}
+            {/* Área que contém o conteúdo do modal, com scroll quando necessário */}
+            <div className={wrapperScroll}>{children}</div>
           </motion.div>
         </motion.div>
       )}

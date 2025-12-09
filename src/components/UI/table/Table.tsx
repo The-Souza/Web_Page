@@ -7,70 +7,74 @@ export function Table<T>({
   emptyMessage = "No data available",
   rowKey,
 }: TableProps<T>) {
-  // Classes do elemento <table>
-  const tableClass = classNames(
-    "w-full text-center overflow-hidden bg-dark"
+  // Wrapper externo — mantém o rounded e a borda
+  const outerWrapperClass = classNames(
+    "w-full rounded-2xl border-2 border-greenLight bg-dark overflow-hidden"
   );
 
-  // Classes do container que envolve a tabela (scroll horizontal)
-  const wrapperClass = classNames(
-    "overflow-x-auto w-full rounded-2xl border-2 border-greenLight"
+  // Wrapper interno — controla apenas o scroll
+  const scrollWrapperClass = classNames(
+    "overflow-x-auto my-scroll"
   );
+
+  const tableClass = classNames("min-w-[800px] w-full text-center bg-dark");
 
   return (
-    <div className={wrapperClass}>
-      <table className={tableClass}>
-        {/* Cabeçalho da tabela */}
-        <thead className="uppercase text-sm font-raleway text-greenLight font-semibold bg-greenDark">
-          <tr>
-            {columns.map((col) => (
-              <th key={String(col.key)} className="px-4 py-3">
-                {col.label} {/* Label da coluna */}
-              </th>
-            ))}
-          </tr>
-        </thead>
-
-        <tbody>
-          {data.length === 0 ? (
-            // Linha exibida quando não há dados
+    <div className={outerWrapperClass}>
+      <div className={scrollWrapperClass}>
+        <table className={tableClass}>
+          {/* Cabeçalho da tabela */}
+          <thead className="uppercase text-sm font-raleway text-greenLight font-semibold bg-greenDark">
             <tr>
-              <td
-                colSpan={columns.length}
-                className="text-center py-6 text-greenLight text-xl font-lato italic"
-              >
-                {emptyMessage}
-              </td>
+              {columns.map((col) => (
+                <th key={String(col.key)} className="px-4 py-3">
+                  {col.label} {/* Label da coluna */}
+                </th>
+              ))}
             </tr>
-          ) : (
-            // Renderização das linhas de dados
-            data.map((row, rowIndex) => {
-              const key = rowKey ? rowKey(row) : String(rowIndex); // chave da linha
-              return (
-                <tr
-                  key={key}
-                  className="transition-colors border-t font-lato text-white border-greenLight/30"
+          </thead>
+
+          <tbody>
+            {data.length === 0 ? (
+              // Linha exibida quando não há dados
+              <tr>
+                <td
+                  colSpan={columns.length}
+                  className="text-center py-6 text-greenLight text-xl font-lato italic"
                 >
-                  {columns.map((col) => {
-                    const cellValue = row[col.key];
-                    return (
-                      <td
-                        key={String(col.key)}
-                        className={col.className ?? "px-4 py-3"} // classes personalizadas ou padrão
-                      >
-                        {/* Renderiza usando função personalizada ou valor padrão */}
-                        {col.render
-                          ? col.render(cellValue, row)
-                          : String(cellValue ?? "")}
-                      </td>
-                    );
-                  })}
-                </tr>
-              );
-            })
-          )}
-        </tbody>
-      </table>
+                  {emptyMessage}
+                </td>
+              </tr>
+            ) : (
+              // Renderização das linhas de dados
+              data.map((row, rowIndex) => {
+                const key = rowKey ? rowKey(row) : String(rowIndex); // chave da linha
+                return (
+                  <tr
+                    key={key}
+                    className="transition-colors border-t font-lato text-white border-greenLight/30 hover:bg-greenDark/30"
+                  >
+                    {columns.map((col) => {
+                      const cellValue = row[col.key];
+                      return (
+                        <td
+                          key={String(col.key)}
+                          className={col.className ?? "px-4 py-3"} // classes personalizadas ou padrão
+                        >
+                          {/* Renderiza usando função personalizada ou valor padrão */}
+                          {col.render
+                            ? col.render(cellValue, row)
+                            : String(cellValue ?? "")}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                );
+              })
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

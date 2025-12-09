@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useAuth } from "@/providers/hook/useAuth";
 import { useToast } from "@/providers/hook/useToast";
-import { Select, Button, Title, Table, Input } from "@/components";
+import { Select, Button, Title, Table, Input, Pagination } from "@/components";
 import {
   registerAccount,
   getAccounts,
@@ -19,8 +19,12 @@ import { useAccounts } from "@/hooks/useAccounts";
 import { formatConsumption, formatCurrency } from "@/helpers/accountHelpers";
 import Modal from "@/components/UI/modal/Modal";
 
-// -------------------- 🧠 Validation Schema --------------------
-// ------------ schema (igual ao seu) ------------
+// ------------------------------------------------------------
+// 🧠 SCHEMA DE VALIDAÇÃO COM ZOD
+// ------------------------------------------------------------
+// - Define os campos do formulário
+// - Normaliza valores numéricos
+// - Garante coerência e mensagens de erro automáticas
 const accountSchema = z.object({
   accountType: z.string().min(1, "Account type is required"),
   consumption: z.preprocess((v) => Number(v), z.number().positive()),
@@ -32,9 +36,12 @@ const accountSchema = z.object({
   month: z.preprocess((v) => Number(v), z.number()),
 });
 
+// Dados gerados a partir do schema
 type AccountFormData = z.infer<typeof accountSchema>;
 
-// -------------------- 📅 Select Options --------------------
+// ------------------------------------------------------------
+// 📅 OPÇÕES FIXAS PARA SELECTS
+// ------------------------------------------------------------
 const accountTypeOptions = [
   { label: "Water", value: "Water" },
   { label: "Energy", value: "Energy" },
@@ -43,34 +50,48 @@ const accountTypeOptions = [
 ];
 
 const currentYear = new Date().getFullYear();
+
+// Gera anos futuros
 const yearOptions = Array.from({ length: 6 }, (_, i) => ({
   label: String(currentYear + i),
   value: String(currentYear + i),
 }));
 
+// Gera meses 01–12
 const monthOptions = Array.from({ length: 12 }, (_, i) => {
   const month = String(i + 1).padStart(2, "0");
   return { label: month, value: month };
 });
 
-// ---------------------------------------------------
-// 🧱 COMPONENTE PRINCIPAL
-// ---------------------------------------------------
+// ------------------------------------------------------------
+// 🧱 COMPONENTE PRINCIPAL: RegisterAccount
+// ------------------------------------------------------------
 export default function RegisterAccount() {
+  // Dados do usuário autenticado
   const { user, token } = useAuth();
+
+  // Providers gerais
   const { setLoading } = useLoading();
   const { showToast } = useToast();
+
+  // Hook global de contas do usuário
   const { accounts, setAccounts } = useAccounts(user?.email);
 
+  // Hook de filtros e resumos
   const summary = useAccountSummary(accounts);
 
-  // 👉 estado que armazena todas as contas do usuário
+  // Controle de edição no formulário
   const [editingAccount, setEditingAccount] = useState<Account | null>(null);
-  // -------------------- MODAL STATES --------------------
+  const [accountsForTable, setAccountsForTable] = useState<Account[]>([]);
+
+  // -------------------- MODAIS --------------------
   const [isFormModalOpen, setFormModalOpen] = useState(false);
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
   const [accountToDelete, setAccountToDelete] = useState<Account | null>(null);
 
+  // ------------------------------------------------------------
+  // ✏️ Preenche o formulário ao editar uma conta
+  // ------------------------------------------------------------
   const handleEdit = (account: Account) => {
     setEditingAccount(account);
 
@@ -86,11 +107,17 @@ export default function RegisterAccount() {
     setFormModalOpen(true);
   };
 
+  // ------------------------------------------------------------
+  // 🗑️ Abertura do modal de exclusão
+  // ------------------------------------------------------------
   const handleDeleteClick = (account: Account) => {
     setAccountToDelete(account);
     setDeleteModalOpen(true);
   };
 
+  // ------------------------------------------------------------
+  // 🗑️ Confirma exclusão
+  // ------------------------------------------------------------
   const confirmDelete = async () => {
     if (!accountToDelete) return;
 
@@ -109,21 +136,46 @@ export default function RegisterAccount() {
     setAccountToDelete(null);
   };
 
-  // 👉 busca inicial das contas
+  const clearAllFilters = () => {
+    // Resetando filtros na UI
+    yearFilterRef.current?.clearSelection();
+    monthFilterRef.current?.clearSelection();
+    typeFilterRef.current?.clearSelection();
+    paidFilterRef.current?.clearSelection();
+
+    // Resetando no estado do summary
+    summary.setSelectedYear("");
+    summary.setSelectedMonth("");
+    summary.setSelectedType("");
+    summary.setSelectedPaid("");
+
+    // Limpando valores do RHF (opcional, apenas se quiser realmente limpar)
+    reset(defaultValues);
+  };
+
+  // ------------------------------------------------------------
+  // 🔄 Busca inicial das contas do usuário
+  // ------------------------------------------------------------
   useEffect(() => {
     if (!user?.email) return;
+
     async function loadAccounts() {
       setLoading(true, "Loading accounts...");
       const response = await getAccounts(user!.email);
+
       if (response.success && response.data) {
         setAccounts(response.data);
       }
+
       setLoading(false);
     }
+
     loadAccounts();
   }, [setLoading, user, setAccounts]);
 
-  // ------------ form setup ------------
+  // ------------------------------------------------------------
+  // 📝 Configuração do formulário (React Hook Form + Zod)
+  // ------------------------------------------------------------
   const defaultValues = {
     accountType: "",
     consumption: "",
@@ -148,15 +200,25 @@ export default function RegisterAccount() {
     mode: "onBlur",
   });
 
+  // Observa o valor "paid" (radio button)
   const paidValue = watch("paid");
 
-  const yearSelectRef = useRef<SelectHandle>(null);
-  const monthSelectRef = useRef<SelectHandle>(null);
-  const accountTypeSelectRef = useRef<SelectHandle>(null);
+  // Refs para limpeza dos selects
+  // Filtros
+  const yearFilterRef = useRef<SelectHandle>(null);
+  const monthFilterRef = useRef<SelectHandle>(null);
+  const typeFilterRef = useRef<SelectHandle>(null);
+  const paidFilterRef = useRef<SelectHandle>(null);
 
-  // ---------------------------------------------------
-  // 📩 ENVIO DO FORMULÁRIO (salva e atualiza tabela)
-  // ---------------------------------------------------
+  // Modal
+  const yearFormRef = useRef<SelectHandle>(null);
+  const monthFormRef = useRef<SelectHandle>(null);
+  const typeFormRef = useRef<SelectHandle>(null);
+  const paidFormRef = useRef<SelectHandle>(null);
+
+  // ------------------------------------------------------------
+  // 📩 SUBMIT — Cria ou atualiza conta
+  // ------------------------------------------------------------
   const onSubmit = async (data: AccountFormData) => {
     if (!user?.id || !user?.email) {
       showToast({ type: "error", text: "User not found. Log in again." });
@@ -167,7 +229,7 @@ export default function RegisterAccount() {
 
     try {
       if (editingAccount) {
-        // --- UPDATE ---
+        // UPDATE
         const response = await updateAccount(editingAccount.id, data, token!);
 
         if (response.success && response.data) {
@@ -181,7 +243,7 @@ export default function RegisterAccount() {
 
         setEditingAccount(null);
       } else {
-        // --- CREATE ---
+        // CREATE
         const payload: RegisterAccountPayload = {
           userId: user.id,
           userEmail: user.email,
@@ -198,14 +260,15 @@ export default function RegisterAccount() {
         }
       }
 
-      // limpar UI sempre que salvar
+      // 🔹 Limpa apenas selects do formulário (não filtros)
+      yearFormRef.current?.clearSelection();
+      monthFormRef.current?.clearSelection();
+      typeFormRef.current?.clearSelection();
+      paidFormRef.current?.clearSelection();
+
       reset(defaultValues);
-      yearSelectRef.current?.clearSelection();
-      monthSelectRef.current?.clearSelection();
-      accountTypeSelectRef.current?.clearSelection();
-      setValue("year", "");
-      setValue("month", "");
-      setValue("accountType", "");
+
+      // Garantir que os radios resetem
       setValue("paid", false);
     } catch {
       showToast({
@@ -219,100 +282,116 @@ export default function RegisterAccount() {
     }
   };
 
+  // ------------------------------------------------------------
+  // 🖥️ RENDERIZAÇÃO
+  // ------------------------------------------------------------
   return (
     <div className="flex flex-col gap-4 text-greenLight">
-      <div className="flex flex-col lg:flex-row gap-4 lg:items-center lg:justify-between">
-        <Title text="Register Account" size="2xl" />
+      {/* HEADER + FILTROS ------------------------------------- */}
+      <div className="flex flex-col gap-4 items-start w-full">
+        <Title text="Accounts" size="2xl" />
 
-        <div className="flex flex-col items-end sm:flex-row gap-2 w-full sm:w-auto">
-          <Select
-            ref={yearSelectRef}
-            label="Year"
-            options={summary.availableYears.map((y) => ({
-              label: y,
-              value: y,
-            }))}
-            placeholder="Select a year"
-            value={String(watch("year") ?? "")}
-            onChange={(val) => summary.setSelectedYear(val)}
-          />
+        <div className="w-full flex flex-col xl:flex-row gap-4 items-end">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 w-full xl:w-auto">
+            <Select
+              ref={yearFilterRef}
+              label="Year"
+              options={summary.availableYears.map((y) => ({
+                label: y,
+                value: y,
+              }))}
+              placeholder="Select a year"
+              value={String(watch("year") ?? "")}
+              onChange={(val) => summary.setSelectedYear(val)}
+            />
 
-          <Select
-            ref={monthSelectRef}
-            label="Month"
-            options={summary.availableMonths.map((m) => ({
-              label: m,
-              value: m,
-            }))}
-            placeholder="Select a month"
-            value={String(watch("month") ?? "")}
-            onChange={(val) => summary.setSelectedMonth(val)}
-          />
+            <Select
+              ref={monthFilterRef}
+              label="Month"
+              options={summary.availableMonths.map((m) => ({
+                label: m,
+                value: m,
+              }))}
+              placeholder="Select a month"
+              value={String(watch("month") ?? "")}
+              onChange={(val) => summary.setSelectedMonth(val)}
+            />
 
-          <Select
-            ref={accountTypeSelectRef}
-            label="Type"
-            options={summary.availableTypes.map((t) => ({
-              label: t,
-              value: t,
-            }))}
-            placeholder="Select a type"
-            value={String(watch("accountType") ?? "")}
-            onChange={(val) => summary.setSelectedType(val)}
-          />
+            <Select
+              ref={typeFilterRef}
+              label="Type"
+              options={summary.availableTypes.map((t) => ({
+                label: t,
+                value: t,
+              }))}
+              placeholder="Select a type"
+              value={String(watch("accountType") ?? "")}
+              onChange={(val) => summary.setSelectedType(val)}
+            />
 
-          <Button
-            text="Clear filters"
-            size="full"
-            variant="solid"
-            onClick={() => {
-              // Limpa selects
-              yearSelectRef.current?.clearSelection();
-              monthSelectRef.current?.clearSelection();
-              accountTypeSelectRef.current?.clearSelection();
+            <Select
+              ref={paidFilterRef}
+              label="Type"
+              options={summary.availablePaids.map((p) => ({
+                label: p ? "Paid" : "Unpaid",
+                value: String(p), // converte boolean → string
+              }))}
+              placeholder="Select an account status"
+              value={String(watch("paid") ?? "")}
+              onChange={(val) => {
+                // Converte string → boolean | ""
+                if (val === "") {
+                  summary.setSelectedPaid("");
+                } else {
+                  summary.setSelectedPaid(val === "true");
+                }
+              }}
+            />
+          </div>
 
-              // Limpa valores do formulário
-              reset(defaultValues);
+          <div className="flex w-full xl:flex-1 gap-4">
+            {/* Limpar filtros */}
+            <Button
+              text="Clear filters"
+              size="full"
+              variant="solid"
+              onClick={clearAllFilters}
+            />
 
-              // LIMPA FILTROS DO HOOK useAccountSummary
-              summary.setSelectedYear("");
-              summary.setSelectedMonth("");
-              summary.setSelectedType("");
-
-              // Garante que o form não mantenha valores residuais
-              setValue("year", "");
-              setValue("month", "");
-              setValue("accountType", "");
-            }}
-          />
-
-          <Button
-            text="Add Account"
-            size="full"
-            variant="solid"
-            onClick={() => {
-              reset(defaultValues);
-              setEditingAccount(null); // garantindo modo criar
-              setFormModalOpen(true); // abre o modal
-            }}
-          />
+            {/* Botão de criar */}
+            <Button
+              text="Add Account"
+              size="full"
+              variant="solid"
+              onClick={() => {
+                reset(defaultValues);
+                setEditingAccount(null);
+                setFormModalOpen(true);
+              }}
+            />
+          </div>
         </div>
       </div>
 
+      {/* --------------------------------------------------------
+          📋 TABELA DE CONTAS FILTRADAS
+      -------------------------------------------------------- */}
       <Table<Account>
-        data={summary.filteredAccounts}
+        id="table-accounts"
+        data={accountsForTable}
         rowKey={(acc) => acc.id}
         columns={[
           { key: "address", label: "Address" },
-          { key: "accountType", label: "Type" },
           { key: "year", label: "Year" },
           { key: "month", label: "Month" },
+          { key: "accountType", label: "Type" },
           {
             key: "consumption",
             label: "Consumption",
             render: (val, row) =>
               formatConsumption(row.accountType, val as number),
           },
+          { key: "days", label: "Days" },
           {
             key: "value",
             label: "Value",
@@ -348,7 +427,17 @@ export default function RegisterAccount() {
         emptyMessage="No accounts found"
       />
 
-      {/* FORM MODAL (ADD & EDIT) */}
+      <Pagination
+        items={summary.filteredAccounts}
+        initialPageSize={5}
+        onPageChange={({ paginatedItems }) => {
+          setAccountsForTable(paginatedItems);
+        }}
+      />
+
+      {/* --------------------------------------------------------
+      📝 MODAL DE FORMULÁRIO (CRIAR/EDITAR)
+      -------------------------------------------------------- */}
       <Modal
         isOpen={isFormModalOpen}
         variant="default"
@@ -357,10 +446,7 @@ export default function RegisterAccount() {
           setEditingAccount(null);
         }}
       >
-        <form
-          onSubmit={handleSubmit(onSubmit)}
-          // className="bg-dark p-8 sm:p-10 rounded-2xl border-2 border-greenLight flex flex-col gap-4"
-        >
+        <form onSubmit={handleSubmit(onSubmit)}>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input
               {...register("address")}
@@ -371,7 +457,7 @@ export default function RegisterAccount() {
             />
 
             <Select
-              ref={yearSelectRef}
+              ref={yearFormRef}
               label="Year"
               theme="light"
               required={true}
@@ -383,7 +469,7 @@ export default function RegisterAccount() {
             />
 
             <Select
-              ref={monthSelectRef}
+              ref={monthFormRef}
               label="Month"
               theme="light"
               required={true}
@@ -395,7 +481,7 @@ export default function RegisterAccount() {
             />
 
             <Select
-              ref={accountTypeSelectRef}
+              ref={typeFormRef}
               label="Account Type"
               theme="light"
               required={true}
@@ -432,7 +518,7 @@ export default function RegisterAccount() {
               error={errors.value?.message}
             />
 
-            {/* ----- Paid Status ----- */}
+            {/* Campo Paid */}
             <div className="flex flex-col gap-1">
               <label className="font-lato font-semibold text-md">
                 Paid Status
@@ -474,13 +560,18 @@ export default function RegisterAccount() {
               variant="unpaid"
               size="full"
               text="Cancel"
-              onClick={() => setFormModalOpen(false)}
+              onClick={() => {
+                clearAllFilters();
+                setFormModalOpen(false);
+              }}
             />
           </div>
         </form>
       </Modal>
 
-      {/* DELETE CONFIRMATION MODAL */}
+      {/* --------------------------------------------------------
+      🗑️ MODAL DE CONFIRMAÇÃO DE EXCLUSÃO
+      -------------------------------------------------------- */}
       <Modal
         isOpen={isDeleteModalOpen}
         variant="confirm"
@@ -489,7 +580,9 @@ export default function RegisterAccount() {
         <div className="flex flex-col items-center gap-2 text-greenLight">
           <Title text="Delete Account" size="2xl" />
 
-          <p className="font-lato text-lg leading-10">Are you sure you want to delete this account?</p>
+          <p className="font-lato text-md leading-10">
+            Are you sure you want to delete this account?
+          </p>
 
           <div className="flex w-full gap-3">
             <Button

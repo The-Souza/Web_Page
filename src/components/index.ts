@@ -8,3 +8,4 @@ export { Card } from "./UI/card/Card"
 export { Table } from "./UI/table/Table"
 export { Select } from "./UI/select/Select"
 export { CustomBarChart } from "./UI/charts/BarChartComparison";
+export { Pagination } from "./UI/pagination/Pagination"

@@ -11,3 +11,30 @@ input[type="number"]::-webkit-outer-spin-button {
 input[type="number"] {
   -moz-appearance: textfield;
 }
+
+/* Scrollbar customizado (Chrome, Edge, etc.) */
+.my-scroll::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.my-scroll::-webkit-scrollbar-track {
+  background: #020202;
+}
+
+.my-scroll::-webkit-scrollbar-thumb {
+  background: #058c42;
+  border-radius: 24px;
+}
+
+@layer components {
+  .scrollbar-hidden {
+    -ms-overflow-style: none; /* IE e Edge antigo */
+    scrollbar-width: none; /* Firefox */
+  }
+
+  .scrollbar-hidden::-webkit-scrollbar {
+    display: none; /* Chrome, Edge, Safari */
+  }
+}
+

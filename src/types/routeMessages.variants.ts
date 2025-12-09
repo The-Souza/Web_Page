@@ -18,7 +18,7 @@
 export const ROUTE_MESSAGES: Record<string, string> = {
   "/home": "Loading home page...",
   "/dashboard": "Loading dashboard...",
-  "/register-account": "Loading account registration...",
+  "/register-account": "Loading accounts...",
   "/": "Logging in...",
   "/signup": "Creating account...",
   "/reset-password": "Changing password...",

@@ -1,7 +1,7 @@
 import classNames from "classnames";
 import type { TableProps } from "./Table.types";
 
-export function Table<T>({
+export function Table<T extends Record<string, unknown>>({
   columns,
   data,
   emptyMessage = "No data available",
@@ -13,9 +13,7 @@ export function Table<T>({
   );
 
   // Wrapper interno — controla apenas o scroll
-  const scrollWrapperClass = classNames(
-    "overflow-x-auto my-scroll"
-  );
+  const scrollWrapperClass = classNames("overflow-x-auto my-scroll");
 
   const tableClass = classNames("min-w-[800px] w-full text-center bg-dark");
 
@@ -27,7 +25,7 @@ export function Table<T>({
           <thead className="uppercase text-sm font-raleway text-greenLight font-semibold bg-greenDark">
             <tr>
               {columns.map((col) => (
-                <th key={String(col.key)} className="px-4 py-3">
+                <th key={String(col.key)} className="px-4 py-3 text-center">
                   {col.label} {/* Label da coluna */}
                 </th>
               ))}
@@ -55,11 +53,14 @@ export function Table<T>({
                     className="transition-colors border-t font-lato text-white border-greenLight/30 hover:bg-greenDark/30"
                   >
                     {columns.map((col) => {
-                      const cellValue = row[col.key];
+                      const cellValue =
+                        typeof col.key === "string" && col.key in row
+                          ? row[col.key]
+                          : undefined;
                       return (
                         <td
                           key={String(col.key)}
-                          className={col.className ?? "px-4 py-3"} // classes personalizadas ou padrão
+                          className={col.className ?? "px-4 py-3 text-center"} // classes personalizadas ou padrão
                         >
                           {/* Renderiza usando função personalizada ou valor padrão */}
                           {col.render

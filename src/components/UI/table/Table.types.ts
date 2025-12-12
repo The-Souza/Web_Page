@@ -9,10 +9,10 @@ import type { ReactNode } from "react";
  * - T: tipo do objeto da linha.
  * - K: chave de T que será usada para a coluna (default: todas as chaves de T).
  */
-export interface TableColumn<T, K extends keyof T = keyof T> {
-  key: K; // chave do objeto da linha que a coluna irá exibir
+export interface TableColumn<T> {
+  key: keyof T | string;  // chave do objeto da linha que a coluna irá exibir
   label: string; // texto do cabeçalho da coluna
-  render?: (value: T[K], row: T) => ReactNode; 
+  render?: (value: unknown, row: T) => ReactNode;
   // função opcional para renderização customizada do valor da célula
   className?: string; // classes CSS opcionais para a célula
 }
@@ -23,6 +23,7 @@ export interface TableColumn<T, K extends keyof T = keyof T> {
  * Propriedades do componente Table.
  */
 export interface TableProps<T> {
+  id?: string;
   columns: TableColumn<T>[]; // lista de colunas
   data: T[]; // dados da tabela (linhas)
   emptyMessage?: string; // mensagem quando não há dados

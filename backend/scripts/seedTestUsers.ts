@@ -3,7 +3,7 @@ import chalk from "chalk";
 import { faker } from "@faker-js/faker";
 
 /**
- * generateUsers()
+ * generateTestUsers()
  * --------------------------------------------------------------------
  * Gera uma lista de 2 usuários falsos (mock) usando faker e insere
  * cada um no banco de dados.
@@ -11,8 +11,8 @@ import { faker } from "@faker-js/faker";
  * A inserção usa ON CONFLICT(email) DO NOTHING para evitar duplicações
  * caso o seed seja executado mais de uma vez.
  */
-export async function generateUsers() {
-  console.log(chalk.cyan("\n👤 Generating users..."));
+export async function generateTestUsers() {
+  console.log(chalk.cyan("\n👤 Generating test users..."));
 
   // Cria 2 usuários falsos
   const users = Array.from({ length: 2 }, (_, i) => ({
@@ -77,7 +77,7 @@ const generateValue = (type: string, consumption: number) => {
 };
 
 /**
- * generateAccounts()
+ * generateTestAccounts()
  * --------------------------------------------------------------------
  * Para cada usuário inserido anteriormente:
  *  - gera contas mensais de 2024 a 2025
@@ -90,13 +90,14 @@ const generateValue = (type: string, consumption: number) => {
  *
  * Isso é MUITO mais eficiente do que uma inserção por vez.
  */
-export async function generateAccounts() {
-  console.log(chalk.cyan("💳 Generating monthly accounts..."));
+export async function generateTestAccounts() {
+  console.log(chalk.cyan("💳 Generating test monthly accounts..."));
 
   const accountsList = ["Water", "Energy", "Gas", "Internet"];
+  const testUsers = ["user1@example.com", "user2@example.com"];
 
   // Busca usuários para gerar contas
-  const users = await sql`SELECT id, address FROM Users`;
+  const users = await sql`SELECT id, address FROM Users WHERE email = ANY(${testUsers});`
 
   const startYear = 2024;
   const endYear = 2025;

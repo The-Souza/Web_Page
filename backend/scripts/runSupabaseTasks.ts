@@ -1,6 +1,6 @@
 import chalk from "chalk";
-import { generateUsers, generateAccounts } from "./seedTables.ts";
-import dropTables from "./dropTables.ts";
+import { generateTestUsers, generateTestAccounts } from "./seedTestUsers.ts";
+import dropTestData from "./dropTestData.ts";
 import { createTables } from "./setupDatabase.ts";
 import { runStep } from "../utils/logger.ts";
 import testAccounts from "../test/testAccounts.ts";
@@ -8,23 +8,22 @@ import testRoutes from "../test/testRoutes.ts";
 import { tablesExist } from "../helpers/tablesExists.ts";
 
 /**
- * seedDatabase()
+ * seedTestData()
  * ------------------------------------
- * Popula a base com dados iniciais (usuários e contas).
- * Antes disso, garante que as tabelas já tenham sido criadas.
+ * Insere dados de teste no banco de dados.
+ * Verifica se as tabelas existem antes de tentar inserir.
  */
-async function seedDatabase() {
+async function seedTestData() {
   const exists = await tablesExist();
 
   // Se as tabelas não existem, não faz sentido tentar inserir dados
   if (!exists) {
-    console.log(chalk.red("\n❌ Cannot seed database: tables do not exist."));
-    console.log(chalk.yellow("➡️  Run: npm run setup\n"));
+    console.log(chalk.red("\n❌ Cannot seed test data: tables do not exist."));
     process.exit(1);
   }
 
-  await generateUsers();
-  await generateAccounts();
+  await generateTestUsers();
+  await generateTestAccounts();
 }
 
 /**
@@ -38,7 +37,6 @@ async function runTests() {
 
   if (!exists) {
     console.log(chalk.red("\n❌ Cannot run tests: tables do not exist."));
-    console.log(chalk.yellow("➡️  Run: npm run setup and npm run seed\n"));
     process.exit(1);
   }
 
@@ -47,20 +45,20 @@ async function runTests() {
 }
 
 /**
- * dropDatabase()
+ * deleteTestUser()
  * ------------------------------------
- * Remove as tabelas do banco de dados.
+ * Remove os users de teste do banco de dados.
  * Só executa caso elas realmente existam, evitando erros desnecessários.
  */
-async function dropDatabase() {
+async function deleteTestUser() {
   const exists = await tablesExist();
 
   if (!exists) {
-    console.log(chalk.yellow("\n❌ Cannot drop database: tables do not exist.\n"));
+    console.log(chalk.yellow("\n❌ Cannot delete test user: tables do not exist.\n"));
     process.exit(1);
   }
 
-  await dropTables();
+  await dropTestData();
 }
 
 /**
@@ -84,7 +82,7 @@ async function setupDatabase() {
  * main()
  * ------------------------------------
  * Script CLI principal.
- * Lê argumentos passados via terminal (ex: --seed, --setup).
+ * Lê argumentos passados via terminal (ex: --seed:test, --setup).
  * Executa a rotina correspondente usando runStep(), que melhora logs e feedback visual.
  */
 async function main() {
@@ -92,7 +90,7 @@ async function main() {
   const args = process.argv.slice(2);
 
   // Lista de flags suportadas
-  const validArgs = ["--seed", "--test", "--drop-db", "--setup"];
+  const validArgs = ["--seed:test", "--test", "--drop:test", "--setup"];
 
   // Filtra apenas argumentos válidos
   const activeArgs = args.filter((a) => validArgs.includes(a));
@@ -101,9 +99,9 @@ async function main() {
   const task = activeArgs[0];
 
   switch (task) {
-    case "--seed":
+    case "--seed:test":
       try {
-        await runStep("Seeding Database", seedDatabase);
+        await runStep("Seeding Test Data", seedTestData);
         process.exit(0);
       } catch (err) {
         console.error("❌ Failed to seed tables:", err);
@@ -121,9 +119,9 @@ async function main() {
       }
       break;
 
-    case "--drop-db":
+    case "--drop:test":
       try {
-        await runStep("Dropping Tables", dropDatabase);
+        await runStep("Deleting Test User", deleteTestUser);
         process.exit(0);
       } catch (err) {
         console.error(chalk.red("❌ Failed to delete database:"), err);

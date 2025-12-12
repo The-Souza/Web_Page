@@ -7,9 +7,9 @@
     "dev": "vite",
     "backend": "cd backend && ts-node server.ts",
     "setup": "cd backend && ts-node ./scripts/runSupabaseTasks.ts --setup",
-    "seed": "cd backend && ts-node ./scripts/runSupabaseTasks.ts --seed",
+    "seed:test": "cd backend && ts-node ./scripts/runSupabaseTasks.ts --seed:test",
     "test": "cd backend && ts-node ./scripts/runSupabaseTasks.ts --test",
-    "drop-db": "cd backend && ts-node ./scripts/runSupabaseTasks.ts --drop-db",
+    "drop:test": "cd backend && ts-node ./scripts/runSupabaseTasks.ts --drop:test",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview"

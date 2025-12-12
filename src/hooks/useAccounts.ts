@@ -12,7 +12,16 @@ export function useAccounts(email?: string) {
   const [loading, setLoading] = useState(true);
 
   // 🔹 Ref para armazenar contas recentemente marcadas como pagas, agrupadas por tipo
-  const pendingPaidUpdates = useRef<Record<string, string[]>>({});
+  const pendingUpdates = useRef<{
+    mode: "paid" | "unpaid" | null; // controla o grupo ativo
+    paid: Record<string, string[]>; // grupos de contas marcadas como paid
+    unpaid: Record<string, string[]>; // grupos de contas marcadas como unpaid
+  }>({
+    mode: null,
+    paid: {},
+    unpaid: {},
+  });
+
   // 🔹 Timeout para consolidar toasts de várias atualizações em um único toast
   const pendingTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -67,36 +76,61 @@ export function useAccounts(email?: string) {
         prev.map((acc) => (acc.id === accountId ? { ...acc, paid } : acc))
       );
 
-      // 🔹 Apenas consolidamos toasts para contas marcadas como pagas
-      if (!paid) return;
+      // ---------------------------------------------
+      // 🔥 LÓGICA DE AGRUPAMENTO MELHORADA
+      // ---------------------------------------------
 
-      // 🔹 Limpa qualquer toast antigo para não acumular mensagens
+      const mode = paid ? "paid" : "unpaid";
+
+      // 🔹 Se o modo mudou, limpamos TUDO do modo anterior
+      if (pendingUpdates.current.mode && pendingUpdates.current.mode !== mode) {
+        pendingUpdates.current.paid = {};
+        pendingUpdates.current.unpaid = {};
+        if (pendingTimeout.current) clearTimeout(pendingTimeout.current);
+      }
+
+      pendingUpdates.current.mode = mode;
+
       hideToast();
 
-      // 🔹 Adiciona a conta ao mapa de updates, agrupando por tipo
-      if (!pendingPaidUpdates.current[accountType])
-        pendingPaidUpdates.current[accountType] = [];
-      pendingPaidUpdates.current[accountType].push(accountLabel);
+      // 🔹 Adiciona no grupo correto (paid ou unpaid)
+      const targetGroup =
+        mode === "paid"
+          ? pendingUpdates.current.paid
+          : pendingUpdates.current.unpaid;
 
-      // 🔹 Reinicia timeout para consolidar múltiplas atualizações
+      if (!targetGroup[accountType]) targetGroup[accountType] = [];
+      targetGroup[accountType].push(accountLabel);
+
+      // 🔹 Reinicia timeout
       if (pendingTimeout.current) clearTimeout(pendingTimeout.current);
+
       pendingTimeout.current = setTimeout(() => {
-        // 🔹 Monta o texto do toast agrupando contas por tipo
-        const lines = Object.entries(pendingPaidUpdates.current)
+        const group =
+          pendingUpdates.current.mode === "paid"
+            ? pendingUpdates.current.paid
+            : pendingUpdates.current.unpaid;
+
+        const lines = Object.entries(group)
           .map(([type, labels]) => `• ${type}: ${labels.join(", ")}`)
           .join("\n");
 
         // 🔹 Exibe o toast final consolidado
         showToast({
           type: "success",
-          title: "Accounts marked as paid",
+          title:
+            pendingUpdates.current.mode === "paid"
+              ? "Accounts marked as paid"
+              : "Accounts marked as unpaid",
           text: lines,
         });
 
-        // 🔹 Limpa estado temporário e timeout
-        pendingPaidUpdates.current = {};
+        // 🔹 Limpa tudo após exibir
+        pendingUpdates.current.paid = {};
+        pendingUpdates.current.unpaid = {};
+        pendingUpdates.current.mode = null;
         pendingTimeout.current = null;
-      }, 1500); // 1.5s de delay para agrupar múltiplas atualizações
+      }, 1500);
     } catch {
       // 🔹 Mostra toast de erro caso algo dê errado
       showToast({

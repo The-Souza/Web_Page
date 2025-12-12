@@ -152,7 +152,7 @@ export function MainLayout() {
             />
             <Button
               variant="bottomless"
-              text="Register Account"
+              text="Accounts"
               onClick={() => handleNavigation("/register-account")}
             />
             <Button

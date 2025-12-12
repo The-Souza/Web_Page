@@ -29,7 +29,7 @@ const accountSchema = z.object({
   accountType: z.string().min(1, "Account type is required"),
 
   consumption: z.preprocess((val) => {
-    const n = Number(val);
+    const n = Number(String(val).replace(",", "."));
     return isNaN(n) ? undefined : n;
   }, z.number().min(0.000001, "Consumption must be a number greater than 0")),
 
@@ -39,7 +39,7 @@ const accountSchema = z.object({
   }, z.number().min(1, "Days must be between 1 and 31").max(31, "Days must be between 1 and 31")),
 
   value: z.preprocess((val) => {
-    const n = Number(val);
+    const n = Number(String(val).replace(",", "."));
     return isNaN(n) ? undefined : n;
   }, z.number().min(0.000001, "Value must be greater than 0")),
 
@@ -88,7 +88,7 @@ export default function RegisterAccount() {
   const { showToast } = useToast();
 
   // Hook global de contas do usuário
-  const { accounts, setAccounts } = useAccounts(user?.email);
+  const { accounts, setAccounts, updatePaid } = useAccounts(user?.email);
 
   // Hook de filtros e resumos
   const summary = useAccountSummary(accounts);
@@ -183,14 +183,16 @@ export default function RegisterAccount() {
     if (!user?.email) return;
 
     async function loadAccounts() {
-      setLoading(true, "Loading accounts...");
-      const response = await getAccounts(user!.email);
+      setLoading(true);
+      try {
+        const response = await getAccounts(user!.email);
 
-      if (response.success && response.data) {
-        setAccounts(response.data);
+        if (response.success && response.data) {
+          setAccounts(response.data);
+        }
+      } finally {
+        setLoading(false);
       }
-
-      setLoading(false);
     }
 
     loadAccounts();
@@ -291,7 +293,14 @@ export default function RegisterAccount() {
         const response = await registerAccount(payload, token!);
 
         if (response.success && response.data) {
-          setAccounts((prev) => [...prev, response.data!]);
+          const normalizedAccount: Account = {
+            ...response.data,
+            value: response.data.value ?? data.value,
+            consumption: response.data.consumption ?? data.consumption,
+            accountType: response.data.accountType ?? data.accountType,
+          };
+
+          setAccounts((prev) => [...prev, normalizedAccount]);
           showToast({
             type: "success",
             title: "Account added",
@@ -441,15 +450,33 @@ export default function RegisterAccount() {
           },
           {
             key: "paid",
-            label: "Paid",
-            render: (value) => (value ? "✅ Paid" : "❌ Unpaid"),
+            label: "Paid/Unpaid",
+            render: (value, acc) => (
+              <div className="flex items-center justify-center">
+                <div className="w-[6rem]">
+                  <Button
+                    text={value ? "Unpaid" : "Paid"}
+                    icon="money"
+                    size="full"
+                    variant={value ? "unpaid" : "solid"}
+                    onClick={() =>
+                      updatePaid(
+                        acc.id,
+                        !value, // inverte o estado
+                        acc.accountType,
+                        acc.address
+                      )
+                    }
+                  />
+                </div>
+              </div>
+            ),
           },
           {
             key: "actions",
-            label: "Custom",
-            className: "px-4 py-3 flex justify-center items-center",
+            label: "Actions",
             render: (_, row) => (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 justify-center">
                 <Button
                   size="full"
                   variant="solid"
@@ -540,7 +567,8 @@ export default function RegisterAccount() {
                 label="Consumption"
                 theme="light"
                 placeholder="Consumption in m³ or kWh"
-                type="number"
+                type="text"
+                inputMode="decimal"
                 error={errors.consumption?.message}
               />
 
@@ -557,7 +585,8 @@ export default function RegisterAccount() {
                 {...register("value")}
                 label="Value"
                 placeholder="90,45"
-                type="number"
+                type="text"
+                inputMode="decimal"
                 error={errors.value?.message}
               />
 

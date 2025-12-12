@@ -48,7 +48,7 @@ export function Header({
           <i className="fa-solid fa-bars text-greenLight fa-2xl"></i>
         </button>
         <img src="/icon.png" alt="Logo" className="w-10 h-10" />
-        <Title text={text} size="3xl" />
+        <Title text={text} size={isMobile ? "2xl" : "3xl"} />
       </div>
 
       {/* Lado direito: avatar do usuário e botão de logout (apenas desktop) */}

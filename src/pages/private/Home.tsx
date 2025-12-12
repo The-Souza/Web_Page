@@ -186,23 +186,24 @@ export default function Home() {
               {
                 key: "paid",
                 label: "Paid/Unpaid",
-                className: "px-4 py-3 flex justify-center items-center",
                 render: (value, acc) => (
-                  <div className="w-[6rem]">
-                    <Button
-                      text={value ? "Unpaid" : "Paid"}
-                      icon="money"
-                      size="full"
-                      variant={value ? "unpaid" : "solid"}
-                      onClick={() =>
-                        updatePaid(
-                          acc.id,
-                          !value, // inverte o estado
-                          acc.accountType,
-                          acc.address
-                        )
-                      }
-                    />
+                  <div className="flex items-center justify-center">
+                    <div className="w-[6rem]">
+                      <Button
+                        text={value ? "Unpaid" : "Paid"}
+                        icon="money"
+                        size="full"
+                        variant={value ? "unpaid" : "solid"}
+                        onClick={() =>
+                          updatePaid(
+                            acc.id,
+                            !value, // inverte o estado
+                            acc.accountType,
+                            acc.address
+                          )
+                        }
+                      />
+                    </div>
                   </div>
                 ),
               },

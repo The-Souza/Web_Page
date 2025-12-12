@@ -190,7 +190,9 @@ export function computeAccountTypeSummary(accounts: Account[], month: string) {
  * ⚡ Relacionamento:
  * - Útil para exibir totais, pagos e não pagos de MonthSummary ou AccountTypeSummary
  */
-export function formatCurrency(value: number): string {
+export function formatCurrency(value?: number): string {
+  if (typeof value !== "number") return "—";
+
   return value.toLocaleString("pt-BR", {
     style: "currency",
     currency: "BRL",
@@ -210,7 +212,10 @@ export function formatCurrency(value: number): string {
  * @param consumption Valor numérico do consumo
  * @returns Uma string com o consumo acompanhado da unidade correta
  */
-export function formatConsumption(type: string, consumption: number): string {
+export function formatConsumption(type?: string, consumption?: number): string {
+  if (typeof consumption !== "number") return "—";
+  if (!type) return String(consumption);
+  
   switch (type.toLowerCase()) {
     case "water":
       return `${consumption} m³`;

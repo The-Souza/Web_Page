@@ -216,3 +216,46 @@ export async function deleteAccount(
     res.status(500).json({ success: false, message: "Internal server error" });
   }
 }
+
+/**
+ * PATCH /api/accounts/:id
+ * Atualiza dados gerais da conta (exceto paid isolado).
+ * - Recebe o ID da conta via URL params.
+ * - Recebe os campos a atualizar via corpo da requisição (JSON).
+ * - Requer autenticação JWT.
+ * - Retorna a conta atualizada em caso de sucesso.
+ * - Valida se o ID é um número válido; caso contrário retorna 400.
+ */
+export async function updateAccount(
+  req: AuthenticatedRequest,
+  res: express.Response
+) {
+  try {
+    const id = Number(req.params.id);
+
+    if (isNaN(id)) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid account id" });
+    }
+
+    if (!req.user) {
+      return res
+        .status(401)
+        .json({ success: false, message: "Unauthorized" });
+    }
+
+    const updatedAccount = await accountService.updateAccount(id, req.body);
+
+    return res.json({
+      success: true,
+      data: updatedAccount,
+      message: "Account updated successfully",
+    });
+  } catch (err) {
+    console.error("❌ Error updating account:", err);
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal server error" });
+  }
+}

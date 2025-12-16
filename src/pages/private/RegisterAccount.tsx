@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -62,7 +62,7 @@ const accountTypeOptions = [
   { label: "Internet", value: "Internet" },
 ];
 
-const currentYear = new Date().getFullYear();
+const currentYear = 2024;
 
 // Gera anos futuros
 const yearOptions = Array.from({ length: 6 }, (_, i) => ({
@@ -95,12 +95,18 @@ export default function RegisterAccount() {
 
   // Controle de edição no formulário
   const [editingAccount, setEditingAccount] = useState<Account | null>(null);
-  const [accountsForTable, setAccountsForTable] = useState<Account[]>([]);
+  const [startIndex, setStartIndex] = useState(0);
+  const [pageSize] = useState(5);
 
   // -------------------- MODAIS --------------------
   const [isFormModalOpen, setFormModalOpen] = useState(false);
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
   const [accountToDelete, setAccountToDelete] = useState<Account | null>(null);
+
+  function normalizeMonth(month: string, year: string | number): string {
+    const paddedMonth = String(month).padStart(2, "0");
+    return `${paddedMonth}/${year}`;
+  }
 
   // ------------------------------------------------------------
   // ✏️ Preenche o formulário ao editar uma conta
@@ -115,7 +121,14 @@ export default function RegisterAccount() {
     setValue("value", account.value);
     setValue("paid", account.paid);
     setValue("year", String(account.year));
-    setValue("month", account.month);
+
+    // 🔥 AQUI ESTÁ O FIX
+    // Se vier "01/2025", pega só o mês
+    const normalizedMonth = account.month.includes("/")
+      ? account.month.split("/")[0]
+      : account.month;
+
+    setValue("month", normalizedMonth);
 
     setFormModalOpen(true);
   };
@@ -127,6 +140,10 @@ export default function RegisterAccount() {
     setAccountToDelete(account);
     setDeleteModalOpen(true);
   };
+
+  const paginatedAccounts = useMemo(() => {
+    return summary.filteredAccounts.slice(startIndex, startIndex + pageSize);
+  }, [summary.filteredAccounts, startIndex, pageSize]);
 
   // ------------------------------------------------------------
   // 🗑️ Confirma exclusão
@@ -198,6 +215,10 @@ export default function RegisterAccount() {
     loadAccounts();
   }, [setLoading, user, setAccounts]);
 
+  useEffect(() => {
+    setStartIndex(0);
+  }, [summary.filteredAccounts]);
+
   // ------------------------------------------------------------
   // 📝 Configuração do formulário (React Hook Form + Zod)
   // ------------------------------------------------------------
@@ -260,16 +281,24 @@ export default function RegisterAccount() {
           {
             ...data,
             year: Number(data.year),
-            month: String(data.month),
+            month: normalizeMonth(data.month, data.year),
           },
           token!
         );
+
+        if (!response.data?.id) {
+          throw new Error("Account id not returned from API");
+        }
 
         if (response.success && response.data) {
           setAccounts((prev) =>
             prev.map((a) => (a.id === editingAccount.id ? response.data! : a))
           );
-          showToast({ type: "success", text: "Account updated!" });
+          showToast({
+            type: "success",
+            title: "Account updated!",
+            text: response.message,
+          });
         } else {
           showToast({ type: "error", text: response.message });
         }
@@ -294,10 +323,21 @@ export default function RegisterAccount() {
 
         if (response.success && response.data) {
           const normalizedAccount: Account = {
-            ...response.data,
-            value: response.data.value ?? data.value,
-            consumption: response.data.consumption ?? data.consumption,
-            accountType: response.data.accountType ?? data.accountType,
+            id: response.data.id,
+            userId: user.id,
+            userEmail: user.email,
+
+            address: data.address,
+            accountType: data.accountType,
+
+            year: Number(data.year),
+            month: normalizeMonth(data.month, data.year),
+
+            consumption: data.consumption,
+            days: data.days,
+            value: data.value,
+
+            paid: data.paid,
           };
 
           setAccounts((prev) => [...prev, normalizedAccount]);
@@ -352,7 +392,7 @@ export default function RegisterAccount() {
                 value: y,
               }))}
               placeholder="Select a year"
-              value={String(watch("year") ?? "")}
+              value={summary.selectedYear}
               onChange={(val) => summary.setSelectedYear(val)}
             />
 
@@ -364,7 +404,7 @@ export default function RegisterAccount() {
                 value: m,
               }))}
               placeholder="Select a month"
-              value={String(watch("month") ?? "")}
+              value={summary.selectedMonth}
               onChange={(val) => summary.setSelectedMonth(val)}
             />
 
@@ -376,7 +416,7 @@ export default function RegisterAccount() {
                 value: t,
               }))}
               placeholder="Select a type"
-              value={String(watch("accountType") ?? "")}
+              value={summary.selectedType}
               onChange={(val) => summary.setSelectedType(val)}
             />
 
@@ -388,14 +428,11 @@ export default function RegisterAccount() {
                 value: String(p), // converte boolean → string
               }))}
               placeholder="Select an account status"
-              value={String(watch("paid") ?? "")}
+              value={
+                summary.selectedPaid === "" ? "" : String(summary.selectedPaid)
+              }
               onChange={(val) => {
-                // Converte string → boolean | ""
-                if (val === "") {
-                  summary.setSelectedPaid("");
-                } else {
-                  summary.setSelectedPaid(val === "true");
-                }
+                summary.setSelectedPaid(val === "" ? "" : val === "true");
               }}
             />
           </div>
@@ -429,9 +466,14 @@ export default function RegisterAccount() {
       -------------------------------------------------------- */}
       <Table<Account>
         id="table-accounts"
-        data={accountsForTable}
+        data={paginatedAccounts}
         rowKey={(acc) => acc.id}
         columns={[
+          {
+            key: "__index",
+            label: "Nº",
+            render: (_, __, rowIndex) => startIndex + rowIndex + 1,
+          },
           { key: "address", label: "Address" },
           { key: "year", label: "Year" },
           { key: "month", label: "Month" },
@@ -455,16 +497,17 @@ export default function RegisterAccount() {
               <div className="flex items-center justify-center">
                 <div className="w-[6rem]">
                   <Button
-                    text={value ? "Unpaid" : "Paid"}
+                    text={value ? "Paid" : "Unpaid"}
                     icon="money"
                     size="full"
-                    variant={value ? "unpaid" : "solid"}
+                    variant={value ? "solid" : "unpaid"}
                     onClick={() =>
                       updatePaid(
                         acc.id,
                         !value, // inverte o estado
                         acc.accountType,
-                        acc.address
+                        acc.address,
+                        acc.month
                       )
                     }
                   />
@@ -499,8 +542,8 @@ export default function RegisterAccount() {
       <Pagination
         items={summary.filteredAccounts}
         initialPageSize={5}
-        onPageChange={({ paginatedItems }) => {
-          setAccountsForTable(paginatedItems);
+        onPageChange={({ startIndex }) => {
+          setStartIndex(startIndex);
         }}
       />
 
@@ -566,7 +609,7 @@ export default function RegisterAccount() {
                 {...register("consumption")}
                 label="Consumption"
                 theme="light"
-                placeholder="Consumption in m³ or kWh"
+                placeholder="123,450"
                 type="text"
                 inputMode="decimal"
                 error={errors.consumption?.message}
@@ -590,40 +633,30 @@ export default function RegisterAccount() {
                 error={errors.value?.message}
               />
 
-              {/* Campo Paid */}
-              <div className="flex flex-col gap-1">
-                <label className="font-lato font-semibold text-md">
-                  Paid Status
-                </label>
-                <div className="flex gap-4">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="radio"
-                      value="true"
-                      checked={paidValue === true}
-                      onChange={() => setValue("paid", true)}
-                      className="accent-greenLight"
-                    />
-                    <span>Paid</span>
-                  </label>
+              {/* Campo Paid — APENAS NO MODAL DE CRIAÇÃO */}
+              {!editingAccount && (
+                <div className="flex flex-col items-start justify-center gap-1">
+                  <span className="font-lato font-semibold">
+                    {paidValue ? "Paid" : "Unpaid"}
+                  </span>
 
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="radio"
-                      value="false"
-                      checked={paidValue === false}
-                      onChange={() => setValue("paid", false)}
-                      className="accent-red-400"
+                  <button
+                    type="button"
+                    onClick={() => setValue("paid", !paidValue)}
+                    className={`
+                    relative w-14 h-8 rounded-full transition-colors
+                    ${paidValue ? "bg-greenLight" : "bg-red-400"}
+                  `}
+                  >
+                    <span
+                      className={`
+                        absolute top-1 left-1 w-6 h-6 bg-white rounded-full transition-transform
+                        ${paidValue ? "translate-x-6" : "translate-x-0"}
+                      `}
                     />
-                    <span>Unpaid</span>
-                  </label>
+                  </button>
                 </div>
-                {errors.paid && (
-                  <p className="text-red-500 text-sm font-lato">
-                    {errors.paid.message}
-                  </p>
-                )}
-              </div>
+              )}
             </div>
 
             <div className="flex gap-3 mt-4">

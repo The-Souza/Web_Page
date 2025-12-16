@@ -126,9 +126,11 @@ export function useAccountSummary(accounts: Account[]) {
     // Normaliza formato (MM/YYYY)
     const normalizedAccounts = accounts.map((acc) => ({
       ...acc,
-      month: acc.month.padStart(7, "0"),
+      month: acc.month ? acc.month.padStart(7, "0") : "", // Verifica se `month` não é undefined
     }));
-    const normalizedPrevMonth = previousMonth.padStart(7, "0");
+    const normalizedPrevMonth = previousMonth
+      ? previousMonth.padStart(7, "0")
+      : "";
 
     // Verifica se existe registro do mês anterior
     const hasPreviousMonthData = normalizedAccounts.some(
@@ -206,6 +208,7 @@ export function useAccountSummary(accounts: Account[]) {
     selectedYear,
     selectedMonth,
     selectedType,
+    selectedPaid,
 
     setSelectedYear,
     setSelectedMonth,

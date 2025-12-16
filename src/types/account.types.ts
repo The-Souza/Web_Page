@@ -47,3 +47,9 @@ export interface RegisterAccountPayload {
   value: number | string;      // Valor total da conta
   paid: boolean;               // Status inicial de pagamento
 }
+
+// Toast item para contas, usado em notificações ou resumos rápidos.
+export type AccountToastItem = {
+  label: string;
+  month: string;
+};

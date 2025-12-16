@@ -39,9 +39,7 @@ export type SupabaseAccountRow = {
   days: number;
   value: number;
   paid: boolean;
-  users?: {
-    email: string | null;
-  } | null;                   // email vindo do join com tabela users
+  users?: { email: string | null; }[] | null;                  // email vindo do join com tabela users
 };
 
 // -------------------------------

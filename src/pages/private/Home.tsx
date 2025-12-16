@@ -190,16 +190,17 @@ export default function Home() {
                   <div className="flex items-center justify-center">
                     <div className="w-[6rem]">
                       <Button
-                        text={value ? "Unpaid" : "Paid"}
+                        text={value ? "Paid" : "Unpaid"}
                         icon="money"
                         size="full"
-                        variant={value ? "unpaid" : "solid"}
+                        variant={value ? "solid" : "unpaid"}
                         onClick={() =>
                           updatePaid(
                             acc.id,
                             !value, // inverte o estado
                             acc.accountType,
-                            acc.address
+                            acc.address,
+                            acc.month
                           )
                         }
                       />

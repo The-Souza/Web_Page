@@ -26,7 +26,7 @@ function adaptSupabaseToRecord(rec: SupabaseAccountRow): AccountRecord {
     Value: rec.value,
     Paid: rec.paid,
     // Email pode vir nulo dependendo do relacionamento LEFT JOIN
-    Email: rec.users?.email ?? undefined,
+    Email: rec.users?.[0]?.email ?? undefined,
   };
 }
 
@@ -231,4 +231,68 @@ export async function addAccount(account: NewAccount): Promise<number> {
 export async function deleteAccount(id: number): Promise<void> {
   const { error } = await supabase.from("accounts").delete().eq("id", id);
   if (error) throw error;
+}
+
+/** Atualiza uma conta existente com os dados fornecidos.
+ *
+ * - Recebe o ID da conta e um objeto parcial com os campos a atualizar.
+ * - Constrói dinamicamente o payload de atualização.
+ * - Retorna a conta atualizada no formato Account.
+ */
+export async function updateAccount(
+  id: number,
+  data: Partial<{
+    address: string;
+    accountType: string;
+    year: number;
+    month: string;
+    consumption: number;
+    days: number;
+    value: number;
+  }>
+): Promise<Account> {
+  const updatePayload: Record<string, unknown> = {};
+
+  if (data.address !== undefined) updatePayload.address = data.address;
+  if (data.accountType !== undefined)
+    updatePayload.account = data.accountType;
+  if (data.year !== undefined) updatePayload.year = data.year;
+
+  if (data.month !== undefined) {
+    const month =
+      data.month.includes("/")
+        ? Number(data.month.split("/")[0])
+        : Number(data.month);
+
+    updatePayload.month = month;
+  }
+
+  if (data.consumption !== undefined)
+    updatePayload.consumption = data.consumption;
+  if (data.days !== undefined) updatePayload.days = data.days;
+  if (data.value !== undefined) updatePayload.value = data.value;
+
+  const { data: updated, error } = await supabase
+    .from("accounts")
+    .update(updatePayload)
+    .eq("id", id)
+    .select(
+      `
+      id,
+      userid,
+      address,
+      account,
+      year,
+      month,
+      consumption,
+      days,
+      value,
+      users!left(email)
+    `
+    )
+    .single();
+
+  if (error) throw error;
+
+  return mapAccount(adaptSupabaseToRecord(updated as SupabaseAccountRow));
 }

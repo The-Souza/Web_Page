@@ -12,7 +12,7 @@ import type { ReactNode } from "react";
 export interface TableColumn<T> {
   key: keyof T | string;  // chave do objeto da linha que a coluna irá exibir
   label: string; // texto do cabeçalho da coluna
-  render?: (value: unknown, row: T) => ReactNode;
+  render?: (value: unknown, row: T, rowIndex: number) => ReactNode;
   // função opcional para renderização customizada do valor da célula
   className?: string; // classes CSS opcionais para a célula
 }

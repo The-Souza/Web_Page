@@ -6,6 +6,7 @@ import {
   updateAccountPaid,
   registerAccount,
   deleteAccount,
+  updateAccount,
 } from "../controllers/account.controller.ts";
 import { authenticateJWT } from "../middleware/auth.middleware.ts";
 
@@ -51,5 +52,11 @@ router.post("/register-account", authenticateJWT, registerAccount);
  * Rota para deletar uma conta específica pelo seu ID.
  */
 router.delete("/:id", authenticateJWT, deleteAccount);
+
+/**
+ * PATCH /api/accounts/:id
+ * Rota para atualizar uma conta específica pelo seu ID.
+ */
+router.patch("/:id", authenticateJWT, updateAccount);
 
 export default router;

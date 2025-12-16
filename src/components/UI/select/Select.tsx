@@ -35,6 +35,7 @@ export const Select = forwardRef<SelectHandle, SelectProps>(
       maxHeight = "15rem",
       onChange,
       theme = "dark",
+      value
     }: SelectProps,
     ref
   ) => {
@@ -60,6 +61,7 @@ export const Select = forwardRef<SelectHandle, SelectProps>(
       required,
       disabled,
       defaultValue,
+      value,
     });
 
     // 🔹 Expondo métodos via ref (imperative handle)
@@ -86,10 +88,6 @@ export const Select = forwardRef<SelectHandle, SelectProps>(
       return () =>
         document.removeEventListener("mousedown", handleClickOutside);
     }, [resetSelect]);
-
-    // 🔹 Resetando destaque ao mudar opções filtradas ou abrir/fechar dropdown
-    useEffect(() => setHighlightedIndex(-1), [filteredOptions]);
-    useEffect(() => setHighlightedIndex(-1), [isOpen]);
 
     // 🔹 Função para selecionar uma opção
     const handleSelect = (option: SelectOption) => {

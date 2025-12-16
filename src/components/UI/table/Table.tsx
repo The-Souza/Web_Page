@@ -24,9 +24,12 @@ export function Table<T extends Record<string, unknown>>({
           {/* Cabeçalho da tabela */}
           <thead className="uppercase text-sm font-raleway text-greenLight font-semibold bg-greenDark">
             <tr>
-              {columns.map((col) => (
-                <th key={String(col.key)} className="px-4 py-3 text-center">
-                  {col.label} {/* Label da coluna */}
+              {columns.map((col, index) => (
+                <th
+                  key={`th-${String(col.key)}-${index}`}
+                  className="px-4 py-3 text-center"
+                >
+                  {col.label}
                 </th>
               ))}
             </tr>
@@ -34,8 +37,7 @@ export function Table<T extends Record<string, unknown>>({
 
           <tbody>
             {data.length === 0 ? (
-              // Linha exibida quando não há dados
-              <tr>
+              <tr key="empty-row">
                 <td
                   colSpan={columns.length}
                   className="text-center py-6 text-greenLight text-xl font-lato italic"
@@ -44,27 +46,27 @@ export function Table<T extends Record<string, unknown>>({
                 </td>
               </tr>
             ) : (
-              // Renderização das linhas de dados
               data.map((row, rowIndex) => {
-                const key = rowKey ? rowKey(row) : String(rowIndex); // chave da linha
+                const key = rowKey ? String(rowKey(row)) : `row-${rowIndex}`;
+
                 return (
                   <tr
                     key={key}
                     className="transition-colors border-t font-lato text-white border-greenLight/30 hover:bg-greenDark/30"
                   >
-                    {columns.map((col) => {
+                    {columns.map((col, colIndex) => {
                       const cellValue =
                         typeof col.key === "string" && col.key in row
                           ? row[col.key]
                           : undefined;
+
                       return (
                         <td
-                          key={String(col.key)}
-                          className={col.className ?? "px-4 py-3 text-center"} // classes personalizadas ou padrão
+                          key={`td-${key}-${colIndex}`}
+                          className={col.className ?? "px-4 py-3 text-center"}
                         >
-                          {/* Renderiza usando função personalizada ou valor padrão */}
                           {col.render
-                            ? col.render(cellValue, row)
+                            ? col.render(cellValue, row, rowIndex)
                             : String(cellValue ?? "")}
                         </td>
                       );

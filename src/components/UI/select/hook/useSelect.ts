@@ -1,5 +1,9 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
-import type { SelectOption, UseSelectProps, UseSelectReturn } from "../Select.types";
+import type {
+  SelectOption,
+  UseSelectProps,
+  UseSelectReturn,
+} from "../Select.types";
 
 /**
  * useSelect
@@ -13,7 +17,9 @@ import type { SelectOption, UseSelectProps, UseSelectReturn } from "../Select.ty
  * - Reset e limpeza de seleção
  * - Sincronização com valor externo (props.value)
  */
-export const useSelect = (props: UseSelectProps & { value?: string }): UseSelectReturn => {
+export const useSelect = (
+  props: UseSelectProps & { value?: string }
+): UseSelectReturn => {
   const {
     options = [],
     placeholder = "Select an option",

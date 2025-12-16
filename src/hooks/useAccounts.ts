@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import type { Account } from "@/types/account.types";
+import type { Account, AccountToastItem } from "@/types/account.types";
 import { useToast } from "@/providers/hook/useToast";
 import { apiClient } from "@/services/ApiClient.service";
 
@@ -14,8 +14,8 @@ export function useAccounts(email?: string) {
   // 🔹 Ref para armazenar contas recentemente marcadas como pagas, agrupadas por tipo
   const pendingUpdates = useRef<{
     mode: "paid" | "unpaid" | null; // controla o grupo ativo
-    paid: Record<string, string[]>; // grupos de contas marcadas como paid
-    unpaid: Record<string, string[]>; // grupos de contas marcadas como unpaid
+    paid: Record<string, AccountToastItem[]>; // grupos de contas marcadas como paid
+    unpaid: Record<string, AccountToastItem[]>; // grupos de contas marcadas como unpaid
   }>({
     mode: null,
     paid: {},
@@ -55,12 +55,14 @@ export function useAccounts(email?: string) {
    * @param paid Boolean indicando se a conta foi paga
    * @param accountType Tipo da conta (ex: Water, Energy)
    * @param accountLabel Nome/identificação da conta (ex: endereço)
+   * @param accountMonth Mês da conta
    */
   const updatePaid = async (
     accountId: number,
     paid: boolean,
     accountType: string,
-    accountLabel: string
+    accountLabel: string,
+    accountMonth: string
   ) => {
     try {
       // 🔹 Atualiza o backend usando apiClient
@@ -100,7 +102,11 @@ export function useAccounts(email?: string) {
           : pendingUpdates.current.unpaid;
 
       if (!targetGroup[accountType]) targetGroup[accountType] = [];
-      targetGroup[accountType].push(accountLabel);
+
+      targetGroup[accountType].push({
+        label: accountLabel,
+        month: accountMonth,
+      });
 
       // 🔹 Reinicia timeout
       if (pendingTimeout.current) clearTimeout(pendingTimeout.current);
@@ -112,7 +118,13 @@ export function useAccounts(email?: string) {
             : pendingUpdates.current.unpaid;
 
         const lines = Object.entries(group)
-          .map(([type, labels]) => `• ${type}: ${labels.join(", ")}`)
+          .map(([type, items]) => {
+            const formatted = items
+              .map(({ label, month }) => `${label} (${month})`)
+              .join(", ");
+
+            return `• ${type}: ${formatted}`;
+          })
           .join("\n");
 
         // 🔹 Exibe o toast final consolidado

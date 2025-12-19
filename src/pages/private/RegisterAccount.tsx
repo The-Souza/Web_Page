@@ -1,10 +1,18 @@
-import { useRef, useEffect, useState, useMemo } from "react";
+import { useRef, useEffect, useState, useMemo, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useAuth } from "@/providers/hook/useAuth";
-import { useToast } from "@/providers/hook/useToast";
-import { Select, Button, Title, Table, Input, Pagination } from "@/components";
+import {
+  Select,
+  Button,
+  Title,
+  Table,
+  Input,
+  Pagination,
+  Modal,
+} from "@/components";
+import type { SelectHandle } from "@/components/UI/select/Select.types";
+import type { Account } from "@/types/account.types";
 import {
   registerAccount,
   getAccounts,
@@ -12,142 +20,345 @@ import {
   deleteAccount,
 } from "@/services";
 import { useLoading } from "@/providers/hook/useLoading";
-import type { SelectHandle } from "@/components/UI/select/Select.types";
-import type { Account, RegisterAccountPayload } from "@/types/account.types";
 import { useAccountSummary } from "@/hooks/useAccountSummary";
+import { useAuth } from "@/providers/hook/useAuth";
+import { useToast } from "@/providers/hook/useToast";
 import { useAccounts } from "@/hooks/useAccounts";
 import { formatConsumption, formatCurrency } from "@/helpers/accountHelpers";
-import Modal from "@/components/UI/modal/Modal";
+import { normalizeMonth } from "@/helpers/accountFormHelpers";
+import {
+  ACCOUNT_TYPE_OPTIONS,
+  MONTH_OPTIONS,
+  YEAR_OPTIONS,
+} from "@/constants/accountOptions";
 
-// ------------------------------------------------------------
-// 🧠 SCHEMA DE VALIDAÇÃO COM ZOD
-// ------------------------------------------------------------
-// - Define os campos do formulário
-// - Normaliza valores numéricos
-// - Garante coerência e mensagens de erro automáticas
+/* ========================================================================
+ * 🧠 VALIDATION SCHEMA
+ * ------------------------------------------------------------------------
+ * Schema de validação usando Zod.
+ * Responsável por:
+ * - Validar os campos do formulário
+ * - Normalizar valores antes da validação (preprocess)
+ * - Garantir regras de negócio básicas
+ * ====================================================================== */
 const accountSchema = z.object({
+  // Tipo da conta (ex: água, luz, internet)
   accountType: z.string().min(1, "Account type is required"),
 
+  // Consumo:
+  // - Converte string com vírgula para número
+  // - Retorna undefined se não for número (dispara erro do Zod)
+  // - Valor mínimo > 0
   consumption: z.preprocess((val) => {
     const n = Number(String(val).replace(",", "."));
     return isNaN(n) ? undefined : n;
   }, z.number().min(0.000001, "Consumption must be a number greater than 0")),
 
+  // Dias:
+  // - Converte para número
+  // - Aceita apenas valores entre 1 e 31
   days: z.preprocess((val) => {
     const n = Number(val);
     return isNaN(n) ? undefined : n;
   }, z.number().min(1, "Days must be between 1 and 31").max(31, "Days must be between 1 and 31")),
 
+  // Valor monetário:
+  // - Normaliza vírgula para ponto
+  // - Garante valor maior que zero
   value: z.preprocess((val) => {
     const n = Number(String(val).replace(",", "."));
     return isNaN(n) ? undefined : n;
   }, z.number().min(0.000001, "Value must be greater than 0")),
 
+  // Status de pagamento
   paid: z.boolean(),
+
+  // Endereço da conta
   address: z.string().min(1, "Address is required"),
+
+  // Ano da conta
   year: z.string().min(1, "Year is required"),
+
+  // Mês da conta
   month: z.string().min(1, "Month is required"),
 });
 
-// Dados gerados a partir do schema
+// Tipo inferido automaticamente a partir do schema
 type AccountFormData = z.infer<typeof accountSchema>;
 
-// ------------------------------------------------------------
-// 📅 OPÇÕES FIXAS PARA SELECTS
-// ------------------------------------------------------------
-const accountTypeOptions = [
-  { label: "Water", value: "Water" },
-  { label: "Energy", value: "Energy" },
-  { label: "Gas", value: "Gas" },
-  { label: "Internet", value: "Internet" },
-];
+/* ========================================================================
+ * 📦 CONSTANTS
+ * ------------------------------------------------------------------------
+ * Valores iniciais do formulário.
+ * Usado para:
+ * - Reset
+ * - Inicialização do React Hook Form
+ * ====================================================================== */
+const DEFAULT_FORM_VALUES = {
+  accountType: "",
+  consumption: "",
+  days: "",
+  value: "",
+  paid: false,
+  address: "",
+  year: "",
+  month: "",
+};
 
-const currentYear = 2024;
-
-// Gera anos futuros
-const yearOptions = Array.from({ length: 6 }, (_, i) => ({
-  label: String(currentYear + i),
-  value: String(currentYear + i),
-}));
-
-// Gera meses 01–12
-const monthOptions = Array.from({ length: 12 }, (_, i) => {
-  const month = String(i + 1).padStart(2, "0");
-  return { label: month, value: month };
-});
-
-// ------------------------------------------------------------
-// 🧱 COMPONENTE PRINCIPAL: RegisterAccount
-// ------------------------------------------------------------
+/* ========================================================================
+ * 🧱 COMPONENT
+ * ====================================================================== */
 export default function RegisterAccount() {
-  // Dados do usuário autenticado
+  /* --------------------------------------------------------------------
+   * 🔌 EXTERNAL HOOKS
+   * --------------------------------------------------------------------
+   * Hooks de contexto e dados externos
+   * ------------------------------------------------------------------ */
   const { user, token } = useAuth();
-
-  // Providers gerais
   const { setLoading } = useLoading();
   const { showToast } = useToast();
 
-  // Hook global de contas do usuário
+  // Hook responsável por buscar, armazenar e atualizar contas
   const { accounts, setAccounts, updatePaid } = useAccounts(user?.email);
 
-  // Hook de filtros e resumos
+  // Hook que deriva filtros, totais e listas a partir das contas
   const summary = useAccountSummary(accounts);
 
-  // Controle de edição no formulário
+  /* --------------------------------------------------------------------
+   * 🧠 STATE
+   * ------------------------------------------------------------------ */
+  // Conta em modo de edição (null = criação)
   const [editingAccount, setEditingAccount] = useState<Account | null>(null);
-  const [startIndex, setStartIndex] = useState(0);
-  const [pageSize] = useState(5);
 
-  // -------------------- MODAIS --------------------
+  // Controle de paginação
+  const [startIndex, setStartIndex] = useState(0);
+  const [pageSize, setPageSize] = useState(5);
+
+  // Controle dos modais
   const [isFormModalOpen, setFormModalOpen] = useState(false);
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
+
+  // Conta selecionada para exclusão
   const [accountToDelete, setAccountToDelete] = useState<Account | null>(null);
 
-  function normalizeMonth(month: string, year: string | number): string {
-    const paddedMonth = String(month).padStart(2, "0");
-    return `${paddedMonth}/${year}`;
-  }
+  /* --------------------------------------------------------------------
+   * 📌 REFS
+   * --------------------------------------------------------------------
+   * Referências para selects customizados
+   * Usadas para limpar seleção imperativamente
+   * ------------------------------------------------------------------ */
+  const yearFilterRef = useRef<SelectHandle>(null);
+  const monthFilterRef = useRef<SelectHandle>(null);
+  const typeFilterRef = useRef<SelectHandle>(null);
+  const paidFilterRef = useRef<SelectHandle>(null);
 
-  // ------------------------------------------------------------
-  // ✏️ Preenche o formulário ao editar uma conta
-  // ------------------------------------------------------------
-  const handleEdit = (account: Account) => {
+  const yearFormRef = useRef<SelectHandle>(null);
+  const monthFormRef = useRef<SelectHandle>(null);
+  const typeFormRef = useRef<SelectHandle>(null);
+
+  /* --------------------------------------------------------------------
+   * 🧮 DERIVED STATE
+   * --------------------------------------------------------------------
+   * Contas filtradas + paginadas
+   * Memoriza para evitar renders desnecessários
+   * ------------------------------------------------------------------ */
+  const paginatedAccounts = useMemo(() => {
+    return summary.filteredAccounts.slice(startIndex, startIndex + pageSize);
+  }, [summary.filteredAccounts, startIndex, pageSize]);
+
+  /* --------------------------------------------------------------------
+   * 📝 FORM (React Hook Form + Zod)
+   * ------------------------------------------------------------------ */
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    formState: { errors },
+    reset,
+  } = useForm<z.input<typeof accountSchema>, unknown, AccountFormData>({
+    resolver: zodResolver(accountSchema),
+    defaultValues: DEFAULT_FORM_VALUES,
+    mode: "onBlur",
+  });
+
+  // Observa valor do campo "paid" para UI reativa
+  const paidValue = watch("paid");
+
+  /* --------------------------------------------------------------------
+   * 🧹 HELPERS (SRP)
+   * ------------------------------------------------------------------ */
+
+  // Carrega contas do backend
+  const loadAccounts = useCallback(async () => {
+    if (!user?.email) return;
+
+    setLoading(true);
+    try {
+      const response = await getAccounts(user.email);
+      if (response.success && response.data) {
+        setAccounts(response.data);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [user?.email, setAccounts, setLoading]);
+
+  // Limpa selects do formulário
+  const clearFormSelects = () => {
+    yearFormRef.current?.clearSelection();
+    monthFormRef.current?.clearSelection();
+    typeFormRef.current?.clearSelection();
+  };
+
+  // Limpa selects dos filtros
+  const clearFilterSelects = () => {
+    yearFilterRef.current?.clearSelection();
+    monthFilterRef.current?.clearSelection();
+    typeFilterRef.current?.clearSelection();
+    paidFilterRef.current?.clearSelection();
+  };
+
+  // Fecha modal de formulário e reseta estado
+  const closeFormModal = () => {
+    setFormModalOpen(false);
+    setEditingAccount(null);
+    reset(DEFAULT_FORM_VALUES);
+    clearFormSelects();
+  };
+
+  // Reseta apenas o formulário
+  const resetForm = () => {
+    reset(DEFAULT_FORM_VALUES);
+    setValue("paid", false);
+    clearFormSelects();
+  };
+
+  // Abre formulário em modo edição
+  const openEditForm = (account: Account) => {
     setEditingAccount(account);
 
-    setValue("address", account.address);
-    setValue("accountType", account.accountType);
-    setValue("consumption", account.consumption);
-    setValue("days", account.days);
-    setValue("value", account.value);
-    setValue("paid", account.paid);
-    setValue("year", String(account.year));
-
-    // 🔥 AQUI ESTÁ O FIX
-    // Se vier "01/2025", pega só o mês
-    const normalizedMonth = account.month.includes("/")
-      ? account.month.split("/")[0]
-      : account.month;
-
-    setValue("month", normalizedMonth);
+    reset({
+      address: account.address,
+      accountType: account.accountType,
+      consumption: account.consumption,
+      days: account.days,
+      value: account.value,
+      paid: account.paid,
+      year: String(account.year),
+      month: account.month.split("/")[0],
+    });
 
     setFormModalOpen(true);
   };
 
-  // ------------------------------------------------------------
-  // 🗑️ Abertura do modal de exclusão
-  // ------------------------------------------------------------
+  /* --------------------------------------------------------------------
+   * 🎯 HANDLERS
+   * ------------------------------------------------------------------ */
+  const handleEdit = (account: Account) => {
+    openEditForm(account);
+  };
+
   const handleDeleteClick = (account: Account) => {
     setAccountToDelete(account);
     setDeleteModalOpen(true);
   };
 
-  const paginatedAccounts = useMemo(() => {
-    return summary.filteredAccounts.slice(startIndex, startIndex + pageSize);
-  }, [summary.filteredAccounts, startIndex, pageSize]);
+  // Limpa filtros e estados derivados
+  const clearFilters = () => {
+    clearFilterSelects();
 
-  // ------------------------------------------------------------
-  // 🗑️ Confirma exclusão
-  // ------------------------------------------------------------
+    summary.setSelectedYear("");
+    summary.setSelectedMonth("");
+    summary.setSelectedType("");
+    summary.setSelectedPaid("");
+  };
+
+  /* --------------------------------------------------------------------
+   * 🔄 EFFECTS
+   * ------------------------------------------------------------------ */
+
+  // Carrega contas ao iniciar ou trocar usuário
+  useEffect(() => {
+    loadAccounts();
+  }, [user?.email, loadAccounts]);
+
+  // Reseta paginação ao mudar filtros
+  useEffect(() => {
+    setStartIndex(0);
+  }, [summary.filteredAccounts]);
+
+  /* --------------------------------------------------------------------
+   * 📩 SUBMIT
+   * ------------------------------------------------------------------ */
+  const onSubmit = async (data: AccountFormData) => {
+    if (!user?.id || !user?.email) return;
+
+    setLoading(true, editingAccount ? "Updating..." : "Saving...");
+
+    try {
+      if (editingAccount) {
+        // Atualização
+        const response = await updateAccount(
+          editingAccount.id,
+          {
+            ...data,
+            year: Number(data.year),
+            month: normalizeMonth(data.month, data.year),
+          },
+          token!
+        );
+
+        if (response.success) {
+          await loadAccounts();
+          showToast({
+            type: "success",
+            title: "Account updated!",
+            text: response.message,
+          });
+        } else {
+          showToast({ type: "error", text: response.message });
+        }
+      } else {
+        // Criação
+        const response = await registerAccount(
+          {
+            userId: user.id,
+            userEmail: user.email,
+            ...data,
+          },
+          token!
+        );
+
+        if (response.success) {
+          await loadAccounts();
+          showToast({
+            type: "success",
+            title: "Account added",
+            text: response.message,
+          });
+        } else {
+          showToast({ type: "error", text: response.message });
+        }
+      }
+
+      resetForm();
+      closeFormModal();
+    } catch {
+      showToast({
+        type: "error",
+        text: editingAccount
+          ? "Error updating account"
+          : "Error registering account",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /* --------------------------------------------------------------------
+   * 🗑️ Confirma exclusão
+   * ------------------------------------------------------------------ */
   const confirmDelete = async () => {
     if (!accountToDelete) return;
 
@@ -168,209 +379,6 @@ export default function RegisterAccount() {
     setLoading(false);
     setDeleteModalOpen(false);
     setAccountToDelete(null);
-  };
-
-  const resetFormFields = () => {
-    reset(defaultValues);
-    setValue("paid", false);
-    yearFormRef.current?.clearSelection();
-    monthFormRef.current?.clearSelection();
-    typeFormRef.current?.clearSelection();
-    paidFormRef.current?.clearSelection();
-  };
-
-  const clearFilters = () => {
-    yearFilterRef.current?.clearSelection();
-    monthFilterRef.current?.clearSelection();
-    typeFilterRef.current?.clearSelection();
-    paidFilterRef.current?.clearSelection();
-
-    summary.setSelectedYear("");
-    summary.setSelectedMonth("");
-    summary.setSelectedType("");
-    summary.setSelectedPaid("");
-
-    reset(defaultValues);
-  };
-
-  // ------------------------------------------------------------
-  // 🔄 Busca inicial das contas do usuário
-  // ------------------------------------------------------------
-  useEffect(() => {
-    if (!user?.email) return;
-
-    async function loadAccounts() {
-      setLoading(true);
-      try {
-        const response = await getAccounts(user!.email);
-
-        if (response.success && response.data) {
-          setAccounts(response.data);
-        }
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    loadAccounts();
-  }, [setLoading, user, setAccounts]);
-
-  useEffect(() => {
-    setStartIndex(0);
-  }, [summary.filteredAccounts]);
-
-  // ------------------------------------------------------------
-  // 📝 Configuração do formulário (React Hook Form + Zod)
-  // ------------------------------------------------------------
-  const defaultValues = {
-    accountType: "",
-    consumption: "",
-    days: "",
-    value: "",
-    paid: false,
-    address: "",
-    year: "",
-    month: "",
-  };
-
-  const {
-    register,
-    handleSubmit,
-    setValue,
-    watch,
-    formState: { errors },
-    reset,
-  } = useForm<z.input<typeof accountSchema>, unknown, AccountFormData>({
-    resolver: zodResolver(accountSchema),
-    defaultValues,
-    mode: "onBlur",
-  });
-
-  // Observa o valor "paid" (radio button)
-  const paidValue = watch("paid");
-
-  // Refs para limpeza dos selects
-  // Filtros
-  const yearFilterRef = useRef<SelectHandle>(null);
-  const monthFilterRef = useRef<SelectHandle>(null);
-  const typeFilterRef = useRef<SelectHandle>(null);
-  const paidFilterRef = useRef<SelectHandle>(null);
-
-  // Modal
-  const yearFormRef = useRef<SelectHandle>(null);
-  const monthFormRef = useRef<SelectHandle>(null);
-  const typeFormRef = useRef<SelectHandle>(null);
-  const paidFormRef = useRef<SelectHandle>(null);
-
-  // ------------------------------------------------------------
-  // 📩 SUBMIT — Cria ou atualiza conta
-  // ------------------------------------------------------------
-  const onSubmit = async (data: AccountFormData) => {
-    if (!user?.id || !user?.email) {
-      showToast({ type: "error", text: "User not found. Log in again." });
-      return;
-    }
-
-    setLoading(true, editingAccount ? "Updating..." : "Saving...");
-
-    try {
-      if (editingAccount) {
-        // UPDATE
-        const response = await updateAccount(
-          editingAccount.id,
-          {
-            ...data,
-            year: Number(data.year),
-            month: normalizeMonth(data.month, data.year),
-          },
-          token!
-        );
-
-        if (!response.data?.id) {
-          throw new Error("Account id not returned from API");
-        }
-
-        if (response.success && response.data) {
-          setAccounts((prev) =>
-            prev.map((a) => (a.id === editingAccount.id ? response.data! : a))
-          );
-          showToast({
-            type: "success",
-            title: "Account updated!",
-            text: response.message,
-          });
-        } else {
-          showToast({ type: "error", text: response.message });
-        }
-
-        setEditingAccount(null);
-      } else {
-        // CREATE
-        const payload: RegisterAccountPayload = {
-          userId: user.id,
-          userEmail: user.email,
-          address: data.address,
-          accountType: data.accountType,
-          year: data.year,
-          month: data.month,
-          consumption: data.consumption,
-          days: data.days,
-          value: data.value,
-          paid: data.paid,
-        };
-
-        const response = await registerAccount(payload, token!);
-
-        if (response.success && response.data) {
-          const normalizedAccount: Account = {
-            id: response.data.id,
-            userId: user.id,
-            userEmail: user.email,
-
-            address: data.address,
-            accountType: data.accountType,
-
-            year: Number(data.year),
-            month: normalizeMonth(data.month, data.year),
-
-            consumption: data.consumption,
-            days: data.days,
-            value: data.value,
-
-            paid: data.paid,
-          };
-
-          setAccounts((prev) => [...prev, normalizedAccount]);
-          showToast({
-            type: "success",
-            title: "Account added",
-            text: response.message,
-          });
-        } else {
-          showToast({ type: "error", text: response.message });
-        }
-      }
-
-      // 🔹 Limpa apenas selects do formulário (não filtros)
-      yearFormRef.current?.clearSelection();
-      monthFormRef.current?.clearSelection();
-      typeFormRef.current?.clearSelection();
-      paidFormRef.current?.clearSelection();
-
-      reset(defaultValues);
-
-      // Garantir que os radios resetem
-      setValue("paid", false);
-    } catch {
-      showToast({
-        type: "error",
-        text: editingAccount
-          ? "Error updating account"
-          : "Error registering account",
-      });
-    } finally {
-      setLoading(false);
-    }
   };
 
   // ------------------------------------------------------------
@@ -452,7 +460,7 @@ export default function RegisterAccount() {
               size="full"
               variant="solid"
               onClick={() => {
-                resetFormFields(); // apenas form
+                resetForm(); // apenas form
                 setEditingAccount(null);
                 setFormModalOpen(true);
               }}
@@ -542,8 +550,9 @@ export default function RegisterAccount() {
       <Pagination
         items={summary.filteredAccounts}
         initialPageSize={5}
-        onPageChange={({ startIndex }) => {
+        onPageChange={({ startIndex, itemsPerPage }) => {
           setStartIndex(startIndex);
+          setPageSize(itemsPerPage);
         }}
       />
 
@@ -553,10 +562,7 @@ export default function RegisterAccount() {
       <Modal
         isOpen={isFormModalOpen}
         variant="default"
-        onClose={() => {
-          setFormModalOpen(false);
-          setEditingAccount(null);
-        }}
+        onClose={closeFormModal}
       >
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="flex flex-col gap-5">
@@ -575,7 +581,7 @@ export default function RegisterAccount() {
                 theme="light"
                 required={true}
                 placeholder="Select year"
-                options={yearOptions}
+                options={YEAR_OPTIONS}
                 onChange={(val) => setValue("year", val)}
                 value={String(watch("year") ?? "")}
                 error={errors.year?.message}
@@ -587,7 +593,7 @@ export default function RegisterAccount() {
                 theme="light"
                 required={true}
                 placeholder="Select month"
-                options={monthOptions}
+                options={MONTH_OPTIONS}
                 onChange={(val) => setValue("month", val)}
                 value={String(watch("month") ?? "")}
                 error={errors.month?.message}
@@ -599,7 +605,7 @@ export default function RegisterAccount() {
                 theme="light"
                 required={true}
                 placeholder="Select account type"
-                options={accountTypeOptions}
+                options={ACCOUNT_TYPE_OPTIONS}
                 onChange={(val) => setValue("accountType", val)}
                 value={String(watch("accountType") ?? "")}
                 error={errors.accountType?.message}
@@ -665,10 +671,7 @@ export default function RegisterAccount() {
                 variant="unpaid"
                 size="full"
                 text="Cancel"
-                onClick={() => {
-                  resetFormFields(); // reseta apenas form
-                  setFormModalOpen(false);
-                }}
+                onClick={closeFormModal}
               />
             </div>
           </div>

@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import type { ModalProps } from "./Modal.types";
 import classNames from "classnames";
 
-export default function Modal({
+export function Modal({
   isOpen,
   onClose,
   children,

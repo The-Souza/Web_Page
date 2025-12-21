@@ -15,7 +15,35 @@ export interface TableColumn<T> {
   render?: (value: unknown, row: T, rowIndex: number) => ReactNode;
   // função opcional para renderização customizada do valor da célula
   className?: string; // classes CSS opcionais para a célula
+  sortable?: boolean; // indica se a coluna é ordenável
+  sortType?: "string" | "number" | "boolean"; // tipo de dado para ordenação
 }
+/**
+ * DefaultSort
+ * ------------------------------------------------------------
+ * Define a ordenação inicial da tabela.
+ *
+ * Generics:
+ * - T: tipo do objeto da linha.
+ */
+export interface DefaultSort<T> {
+  key: keyof T | string; // chave da coluna para ordenação inicial
+  direction?: SortDirection; // direção de ordenação inicial
+}
+
+/**
+ * UseTableSortProps
+ * ------------------------------------------------------------
+ * Propriedades para o hook de ordenação da tabela.
+ */
+export interface UseTableSortProps<T> {
+  data: T[]; // dados da tabela (linhas)
+  columns: TableColumn<T>[]; // lista de colunas
+  defaultSort?: DefaultSort<T>; // ordenação inicial opcional
+}
+
+export type SortDirection = "asc" | "desc"; // direção de ordenação
+export type SortType = "string" | "number" | "boolean"; // tipo de dado para ordenação
 
 /**
  * TableProps
@@ -28,6 +56,7 @@ export interface TableProps<T> {
   data: T[]; // dados da tabela (linhas)
   emptyMessage?: string; // mensagem quando não há dados
   className?: string; // classes CSS opcionais para o container da tabela
+  defaultSort?: DefaultSort<T>; // ordenação inicial opcional
   rowKey?: (row: T) => string | number; 
   // função para gerar chave única de cada linha (evita usar índice)
 }

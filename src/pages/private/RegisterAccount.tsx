@@ -476,31 +476,41 @@ export default function RegisterAccount() {
         id="table-accounts"
         data={paginatedAccounts}
         rowKey={(acc) => acc.id}
+        defaultSort={{
+          key: "year",
+          direction: "asc"
+        }}
         columns={[
           {
             key: "__index",
             label: "Nº",
             render: (_, __, rowIndex) => startIndex + rowIndex + 1,
           },
-          { key: "address", label: "Address" },
-          { key: "year", label: "Year" },
-          { key: "month", label: "Month" },
-          { key: "accountType", label: "Type" },
+          { key: "address", label: "Address", sortable: true, sortType: "string" },
+          { key: "year", label: "Year", sortable: true, sortType: "number" },
+          { key: "month", label: "Month", sortable: true, sortType: "string" },
+          { key: "accountType", label: "Type", sortable: true, sortType: "string" },
           {
             key: "consumption",
             label: "Consumption",
             render: (val, row) =>
               formatConsumption(row.accountType, val as number),
+            sortable: true,
+            sortType: "number",
           },
-          { key: "days", label: "Days" },
+          { key: "days", label: "Days", sortable: true, sortType: "number" },
           {
             key: "value",
             label: "Value",
             render: (val) => formatCurrency(val as number),
+            sortable: true,
+            sortType: "number",
           },
           {
             key: "paid",
             label: "Paid/Unpaid",
+            sortable: true,
+            sortType: "boolean",
             render: (value, acc) => (
               <div className="flex items-center justify-center">
                 <div className="w-[6rem]">

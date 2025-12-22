@@ -56,11 +56,10 @@ const accountSchema = z.object({
 
   // Dias:
   // - Converte para número
-  // - Aceita apenas valores entre 1 e 31
   days: z.preprocess((val) => {
     const n = Number(val);
     return isNaN(n) ? undefined : n;
-  }, z.number().min(1, "Days must be between 1 and 31").max(31, "Days must be between 1 and 31")),
+  }, z.number().min(1, "Days must be at least 1")),
 
   // Valor monetário:
   // - Normaliza vírgula para ponto
@@ -265,14 +264,14 @@ export default function RegisterAccount() {
   };
 
   // Limpa filtros e estados derivados
-  const clearFilters = () => {
+  const clearFilters = useCallback(async () => {
     clearFilterSelects();
 
     summary.setSelectedYear("");
     summary.setSelectedMonth("");
     summary.setSelectedType("");
     summary.setSelectedPaid("");
-  };
+  }, [summary]);
 
   /* --------------------------------------------------------------------
    * 🔄 EFFECTS
@@ -287,6 +286,13 @@ export default function RegisterAccount() {
   useEffect(() => {
     setStartIndex(0);
   }, [summary.filteredAccounts]);
+
+  // Se filtros resultarem em lista vazia, limpa filtros
+  useEffect(() => {
+    if (summary.filteredAccounts.length === 0 && accounts.length > 0) {
+      clearFilters();
+    }
+  }, [summary.filteredAccounts.length, accounts.length, clearFilters]);
 
   /* --------------------------------------------------------------------
    * 📩 SUBMIT
@@ -390,7 +396,7 @@ export default function RegisterAccount() {
       <div className="flex flex-col gap-4 items-start w-full">
         <Title text="Accounts" size="2xl" />
 
-        <div className="w-full flex flex-col xl:flex-row gap-4 items-end">
+        <div className="w-full flex flex-col xl:flex-row gap-4 items-end justify-between">
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 w-full xl:w-auto">
             <Select
               ref={yearFilterRef}
@@ -402,6 +408,7 @@ export default function RegisterAccount() {
               placeholder="Select a year"
               value={summary.selectedYear}
               onChange={(val) => summary.setSelectedYear(val)}
+              sort={{ by: "label", direction: "asc" }}
             />
 
             <Select
@@ -414,6 +421,7 @@ export default function RegisterAccount() {
               placeholder="Select a month"
               value={summary.selectedMonth}
               onChange={(val) => summary.setSelectedMonth(val)}
+              sort={{ by: "label", direction: "asc" }}
             />
 
             <Select
@@ -426,11 +434,12 @@ export default function RegisterAccount() {
               placeholder="Select a type"
               value={summary.selectedType}
               onChange={(val) => summary.setSelectedType(val)}
+              sort={{ by: "label", direction: "asc" }}
             />
 
             <Select
               ref={paidFilterRef}
-              label="Type"
+              label="Status (Paid/Unpaid)"
               options={summary.availablePaids.map((p) => ({
                 label: p ? "Paid" : "Unpaid",
                 value: String(p), // converte boolean → string
@@ -442,10 +451,11 @@ export default function RegisterAccount() {
               onChange={(val) => {
                 summary.setSelectedPaid(val === "" ? "" : val === "true");
               }}
+              sort={{ by: "label", direction: "asc" }}
             />
           </div>
 
-          <div className="flex w-full xl:flex-1 gap-4">
+          <div className="flex w-full xl:flex-1 2xl:max-w-[30rem] gap-4">
             {/* Limpar filtros */}
             <Button
               text="Clear filters"
@@ -478,7 +488,7 @@ export default function RegisterAccount() {
         rowKey={(acc) => acc.id}
         defaultSort={{
           key: "year",
-          direction: "asc"
+          direction: "asc",
         }}
         columns={[
           {
@@ -486,10 +496,20 @@ export default function RegisterAccount() {
             label: "Nº",
             render: (_, __, rowIndex) => startIndex + rowIndex + 1,
           },
-          { key: "address", label: "Address", sortable: true, sortType: "string" },
+          {
+            key: "address",
+            label: "Address",
+            sortable: true,
+            sortType: "string",
+          },
           { key: "year", label: "Year", sortable: true, sortType: "number" },
           { key: "month", label: "Month", sortable: true, sortType: "string" },
-          { key: "accountType", label: "Type", sortable: true, sortType: "string" },
+          {
+            key: "accountType",
+            label: "Type",
+            sortable: true,
+            sortType: "string",
+          },
           {
             key: "consumption",
             label: "Consumption",
@@ -595,6 +615,7 @@ export default function RegisterAccount() {
                 onChange={(val) => setValue("year", val)}
                 value={String(watch("year") ?? "")}
                 error={errors.year?.message}
+                sort={{ by: "label", direction: "asc" }}
               />
 
               <Select
@@ -607,6 +628,7 @@ export default function RegisterAccount() {
                 onChange={(val) => setValue("month", val)}
                 value={String(watch("month") ?? "")}
                 error={errors.month?.message}
+                sort={{ by: "label", direction: "asc" }}
               />
 
               <Select
@@ -619,6 +641,7 @@ export default function RegisterAccount() {
                 onChange={(val) => setValue("accountType", val)}
                 value={String(watch("accountType") ?? "")}
                 error={errors.accountType?.message}
+                sort={{ by: "label", direction: "asc" }}
               />
 
               <Input

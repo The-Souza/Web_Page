@@ -35,7 +35,8 @@ export const Select = forwardRef<SelectHandle, SelectProps>(
       maxHeight = "15rem",
       onChange,
       theme = "dark",
-      value
+      value,
+      sort
     }: SelectProps,
     ref
   ) => {
@@ -62,6 +63,7 @@ export const Select = forwardRef<SelectHandle, SelectProps>(
       disabled,
       defaultValue,
       value,
+      sort,
     });
 
     // 🔹 Expondo métodos via ref (imperative handle)

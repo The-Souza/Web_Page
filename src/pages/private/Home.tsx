@@ -95,6 +95,7 @@ export default function Home() {
                   summary.setSelectedMonth("");
                   monthSelectRef.current?.clear();
                 }}
+                sort={{ by: "label", direction: "asc" }}
               />
 
               {/* Select de mês */}
@@ -107,6 +108,7 @@ export default function Home() {
                 }))}
                 placeholder="Select a month"
                 onChange={(val) => summary.setSelectedMonth(val)}
+                sort={{ by: "label", direction: "asc" }}
               />
             </div>
           </div>
@@ -168,24 +170,57 @@ export default function Home() {
           <Table<Account>
             data={summary.accountsForSelectedMonth}
             rowKey={(acc) => acc.id}
+            defaultSort={{
+              key: "value",
+              direction: "desc",
+            }}
             columns={[
-              { key: "address", label: "Address" },
-              { key: "accountType", label: "Account" },
+              {
+                key: "address",
+                label: "Address",
+                sortable: true,
+                sortType: "string",
+              },
+              {
+                key: "year",
+                label: "Year",
+              },
+              {
+                key: "month",
+                label: "Month",
+              },
+              {
+                key: "accountType",
+                label: "Account",
+                sortable: true,
+                sortType: "number",
+              },
               {
                 key: "consumption",
                 label: "Consumption",
                 render: (val, row) =>
                   formatConsumption(row.accountType, val as number),
+                sortable: true,
+                sortType: "number",
               },
-              { key: "days", label: "Days" },
+              {
+                key: "days",
+                label: "Days",
+                sortable: true,
+                sortType: "number",
+              },
               {
                 key: "value",
                 label: "Value (R$)",
                 render: (val) => formatCurrency(val as number),
+                sortable: true,
+                sortType: "number",
               },
               {
                 key: "paid",
                 label: "Paid/Unpaid",
+                sortable: true,
+                sortType: "boolean",
                 render: (value, acc) => (
                   <div className="flex items-center justify-center">
                     <div className="w-[6rem]">

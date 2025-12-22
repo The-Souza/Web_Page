@@ -6,7 +6,6 @@
  * 
  * Exemplos:
  * "/home"              -> "Loading home page..."
- * "/dashboard"         -> "Loading dashboard..."
  * "/register-account"  -> "Loading account registration..."
  * "/"                   -> "Logging in..."
  * "/signup"             -> "Creating account..."
@@ -17,7 +16,6 @@
  */
 export const ROUTE_MESSAGES: Record<string, string> = {
   "/home": "Loading home page...",
-  "/dashboard": "Loading dashboard...",
   "/register-account": "Loading accounts...",
   "/": "Logging in...",
   "/signup": "Creating account...",

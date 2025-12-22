@@ -3,7 +3,6 @@ import SignIn from "@/pages/auth/SignIn";
 import SignUp from "@/pages/auth/SignUp";
 import ResetPassword from "@/pages/auth/ResetPassword";
 import Home from "@/pages/private/Home";
-import Dashboard from "@/pages/private/Dashboard";
 import ResgisterAccount from "@/pages/private/RegisterAccount";
 import { PrivateRoute } from "@/hooks/PrivateRoute";
 import { AuthLayout } from "@/layouts/AuthLayout";
@@ -35,9 +34,6 @@ export function App() {
 
             {/* Página inicial privada */}
             <Route path="/home" element={<Home />} />
-
-            {/* Dashboard do usuário */}
-            <Route path="/dashboard" element={<Dashboard />} />
 
             {/* Tela de cadastro de conta */}
             <Route path="/register-account" element={<ResgisterAccount />} />

@@ -7,6 +7,7 @@ import {
 import { usePagination } from "./hook/usePagination";
 import type { PaginationProps } from "./Pagination.types";
 import { useEffect } from "react";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 export function Pagination<T>({
   items,
@@ -16,14 +17,14 @@ export function Pagination<T>({
 }: PaginationProps<T>) {
   // Hook de paginação centralizado, isolando toda lógica (SRP)
   const {
-    currentPage,         // página atual
-    totalPages,          // total de páginas
-    pageSize,            // quantidade de itens por página
-    visiblePageNumbers,  // números de página exibidos (ex: 3 → 1, 2, 3)
-    currentRange,        // índices inicial e final dos itens exibidos
-    paginatedItems,      // fatia dos itens da página atual
-    goToPage,            // função para mudar de página
-    changePageSize,      // função para alterar o tamanho da página
+    currentPage, // página atual
+    totalPages, // total de páginas
+    pageSize, // quantidade de itens por página
+    visiblePageNumbers, // números de página exibidos (ex: 3 → 1, 2, 3)
+    currentRange, // índices inicial e final dos itens exibidos
+    paginatedItems, // fatia dos itens da página atual
+    goToPage, // função para mudar de página
+    changePageSize, // função para alterar o tamanho da página
   } = usePagination<T>({
     items,
     itemsPerPage: initialPageSize,
@@ -42,8 +43,17 @@ export function Pagination<T>({
     });
   }, [currentPage, pageSize, currentRange, paginatedItems, onPageChange]);
 
+  const isMobile = useMediaQuery("(max-width: 640px)");
+
+  // Ajusta o tamanho da página para 5 itens em telas móveis
+  useEffect(() => {
+    if (isMobile && pageSize !== 5) {
+      changePageSize(5);
+    }
+  }, [isMobile, pageSize, changePageSize]);
+
   return (
-    <div className="flex flex-col sm:flex-row items-center justify-end w-full h-10 gap-4">
+    <div className="flex flex-col sm:flex-row items-center md:justify-between lg:justify-end w-full h-10 gap-4">
       {/* -------------------------------------------- */}
       {/* BLOCO ESQUERDO — informações + seletor de itens */}
       {/* -------------------------------------------- */}

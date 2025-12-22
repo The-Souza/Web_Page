@@ -1,4 +1,4 @@
-// Representa o resumo de um mês para exibição em dashboards ou gráficos.
+// Representa o resumo de um mês para exibição em gráficos.
 // Inclui totais financeiros e porcentagens.
 export type MonthSummary = {
   totalValue: number;        // Soma total de valores do mês
@@ -25,7 +25,6 @@ export type Account = {
 };
 
 // Resumo agrupado por tipo de conta (energia, água, gás...)
-// Útil para dashboards e relatórios comparativos.
 export type AccountTypeSummary = {
   type: string;          // Tipo da conta
   totalValue: number;    // Soma total dos valores deste tipo

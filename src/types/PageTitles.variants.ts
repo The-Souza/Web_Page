@@ -2,6 +2,5 @@
 // Utilizado no header para exibir o nome correto da página atual
 export const pageTitles: Record<string, string> = {
   "/home": "Home",                 // título da rota Home
-    "/dashboard": "Dashboard",       // título da rota Dashboard
   "/register-account": "Accounts", // título da rota de cadastro de contas
 };

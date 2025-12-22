@@ -89,7 +89,8 @@ export function MainLayout() {
   const headerText = pageTitles[location.pathname] || "Page"; // título padrão
 
   // Detecta se o dispositivo é mobile (para abrir/fechar menu)
-  const isMobile = useMediaQuery("(max-width: 639px)");
+  const isMobile = useMediaQuery("(max-width: 1044px)");
+  const logoutVisible = useMediaQuery("(max-width: 639px)");
 
   return (
     <div
@@ -118,7 +119,7 @@ export function MainLayout() {
         <div
           className={classNames(
             "bg-dark text-greenLight flex flex-col items-start gap-4 p-4 border-r-2 border-t-2",
-            "border-greenLight transition-transform duration-300 z-50 w-56 sm:w-64",
+            "border-greenLight transition-transform duration-300 z-50 w-64",
             {
               "fixed top-[80px] sm:top-[84px] left-0 h-full": true, // posição fixa
               "-translate-x-full": !menuOpen, // escondido
@@ -127,7 +128,7 @@ export function MainLayout() {
           )}
         >
           {/* Se mobile, mostra avatar e botão de logout no menu */}
-          {isMobile && (
+          {logoutVisible && (
             <div className="flex flex-col items-center gap-3">
               <UserIcon userName={user?.name || ""} icon="classic" />
               <Button
@@ -141,7 +142,7 @@ export function MainLayout() {
           )}
 
           {/* Linha divisória no mobile */}
-          {isMobile && <div className="w-full h-[1.5px] bg-greenLight"></div>}
+          {logoutVisible && <div className="w-full h-[1.5px] bg-greenLight"></div>}
 
           {/* Botões de navegação */}
           <div className="flex flex-col items-start gap-1">
@@ -155,11 +156,6 @@ export function MainLayout() {
               text="Accounts"
               onClick={() => handleNavigation("/register-account")}
             />
-            <Button
-              variant="bottomless"
-              text="Dashboard"
-              onClick={() => handleNavigation("/dashboard")}
-            />
           </div>
         </div>
 
@@ -168,7 +164,7 @@ export function MainLayout() {
           className={classNames(
             "flex-1 transition-all duration-300 p-4 sm:p-8 bg-forest w-full",
             {
-              "ml-56 sm:ml-64": menuOpen && !isMobile, // desloca conteúdo se menu desktop aberto
+              "ml-64": menuOpen && !isMobile, // desloca conteúdo se menu desktop aberto
             }
           )}
         >

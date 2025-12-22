@@ -6,6 +6,31 @@ import type {
 } from "../Select.types";
 
 /**
+ * sortOptions
+ * ------------------------------------------------------------
+ * Função utilitária para ordenar opções com base em critérios fornecidos.
+ * @param options item a ser ordenado
+ * @param sort critérios de ordenação
+ * @returns opções ordenadas
+ */
+function sortOptions(
+  options: SelectOption[],
+  sort?: { by?: "label" | "value"; direction?: "asc" | "desc" }
+): SelectOption[] {
+  if (!sort) return options;
+
+  const { by = "label", direction = "asc" } = sort;
+
+  return [...options].sort((a, b) => {
+    const aVal = String(a[by]).toLowerCase();
+    const bVal = String(b[by]).toLowerCase();
+
+    const result = aVal.localeCompare(bVal);
+    return direction === "asc" ? result : -result;
+  });
+}
+
+/**
  * useSelect
  * ------------------------------------------------------------
  * Hook customizado para gerenciar o estado de um componente Select.
@@ -26,15 +51,21 @@ export const useSelect = (
     disabled = false,
     required = false,
     defaultValue,
+    sort,
   } = props;
 
   // 🔹 Estado para abrir/fechar dropdown
   const [isOpen, setIsOpen] = useState(false);
 
+  // 🔹 Opções ordenadas
+  const sortedOptions = useMemo(() => {
+    return sortOptions(options, sort);
+  }, [options, sort]);
+
   // 🔹 Estado para a opção selecionada
   const [selected, setSelected] = useState<SelectOption | null>(
     defaultValue
-      ? options.find((opt) => opt.value === defaultValue) ?? null
+      ? sortedOptions.find((opt) => opt.value === defaultValue) ?? null
       : null
   );
 
@@ -46,11 +77,12 @@ export const useSelect = (
 
   // 🔹 Opções filtradas com base no filtro
   const filteredOptions = useMemo(() => {
-    if (!filter) return options;
-    return options.filter((opt) =>
+    if (!filter) return sortedOptions;
+
+    return sortedOptions.filter((opt) =>
       opt.label.toLowerCase().includes(filter.toLowerCase())
     );
-  }, [filter, options]);
+  }, [filter, sortedOptions]);
 
   // 🔹 Alterna abertura do dropdown
   const toggleOpen = useCallback(() => {
@@ -129,14 +161,16 @@ export const useSelect = (
   // 🔹 Sincronização com valor externo (props.value)
   useEffect(() => {
     if (props.value !== undefined) {
-      const matched = options.find((opt) => opt.value === props.value) || null;
+      const matched =
+        sortedOptions.find((opt) => opt.value === props.value) ?? null;
+
       if (matched) {
         selectOption(matched);
       } else {
         clearSelection();
       }
     }
-  }, [props.value, options, selectOption, clearSelection]);
+  }, [props.value, sortedOptions, selectOption, clearSelection]);
 
   return {
     selectedValue: selected?.value ?? null,

@@ -21,6 +21,7 @@ export interface SelectOption {
  * - required?: indica se a seleção é obrigatória.
  * - disabled?: desabilita o select.
  * - defaultValue?: valor inicial selecionado.
+ * - sort?: configuração de ordenação das opções.
  */
 export interface UseSelectProps {
   options: SelectOption[];
@@ -28,6 +29,7 @@ export interface UseSelectProps {
   required?: boolean;
   disabled?: boolean;
   defaultValue?: string;
+  sort?: SelectSortConfig;
 }
 
 /**
@@ -132,4 +134,14 @@ export interface SelectDropdownProps {
 export interface SelectOptionsProps {
   options: SelectOption[];
   onSelect: (option: SelectOption) => void;
+}
+
+/**
+ * SelectSortConfig
+ * ------------------------------------------------------------
+ * Configuração opcional de ordenação das opções do Select.
+ */
+export interface SelectSortConfig {
+  by?: "label" | "value";
+  direction?: "asc" | "desc";
 }

@@ -1,5 +1,7 @@
-import { sql } from "../utils/db.ts";
+import { getDb } from "../utils/db.ts";
 import chalk from "chalk";
+
+const sql = getDb();
 
 /**
  * createTables()

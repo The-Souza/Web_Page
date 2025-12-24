@@ -1,4 +1,4 @@
-import { sql } from "../utils/db.ts";
+import { getDb } from "../utils/db";
 
 /**
  * Verifica se as tabelas essenciais ('users' e 'accounts') existem no schema público.
@@ -11,6 +11,7 @@ import { sql } from "../utils/db.ts";
  * @returns true se **ambas** as tabelas existirem, false caso contrário
  */
 export async function tablesExist() {
+  const sql = getDb();
   // Consulta o catálogo do banco para verificar a existência das tabelas
   const result = await sql`
     SELECT table_name 

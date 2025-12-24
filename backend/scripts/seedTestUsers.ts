@@ -1,6 +1,8 @@
-import { sql } from "../utils/db.ts";
+import { getDb } from "../utils/db.ts";
 import chalk from "chalk";
 import { faker } from "@faker-js/faker";
+
+const sql = getDb();
 
 /**
  * generateTestUsers()

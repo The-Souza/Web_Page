@@ -5,7 +5,7 @@ import {
   resetPassword,
   checkUserExists,
 } from "../controllers/user.controller.ts";
-import { sql } from "../utils/db.ts";
+import { getDb } from "../utils/db.ts";
 
 const router = Router();
 
@@ -42,6 +42,7 @@ router.post("/check-user-exists", checkUserExists);
  */
 router.get("/", async (req, res) => {
   try {
+    const sql = getDb();
     const users = await sql`
       SELECT id, name, email, address
       FROM users

@@ -1,6 +1,8 @@
-import { supabase } from "../utils/supabaseClient.ts";
 import type { User, UserRecord } from "../models/user.types.ts";
 import { omitFields } from "../helpers/omitFields.ts";
+import { createSupabaseClient } from "../utils/supabaseClient.ts";
+
+const supabase = createSupabaseClient();
 
 /**
  * Converte um registro cru retornado pelo banco (UserRecord)

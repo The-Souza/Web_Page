@@ -1,4 +1,4 @@
-import { sql } from "../utils/db.ts";
+import { getDb } from "../utils/db.ts";
 import chalk from "chalk";
 
 /**
@@ -11,6 +11,7 @@ export default async function dropTestData() {
   console.log(chalk.yellow("\n⚠️  Deleting test users and accounts..."));
 
   try {
+    const sql = getDb();
     const testEmails = ["user1@example.com", "user2@example.com"];
 
     // 🔹 Remove contas associadas aos usuários de teste

@@ -1,10 +1,12 @@
-import { supabase } from "../utils/supabaseClient.ts";
 import type {
   Account,
   AccountRecord,
   SupabaseAccountRow,
   NewAccount,
 } from "../models/account.types.ts";
+import { createSupabaseClient } from "../utils/supabaseClient.ts";
+
+const supabase = createSupabaseClient();
 
 /**
  * Converte o formato original retornado pelo Supabase

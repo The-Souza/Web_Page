@@ -40,13 +40,35 @@ export function Header({
   return (
     <header className={headerClass}>
       {/* Lado esquerdo: menu hambúrguer, logo e título */}
-      <div className="flex gap-4 sm:gap-4 items-center justify-center">
+      <div className="flex gap-3 items-center justify-center">
         <button
-          className="cursor-pointer"
+          className="relative w-10 h-10 flex items-center justify-center"
           onClick={toggleMenu}
+          aria-label={menuOpen ? "Close menu" : "Open menu"}
         >
-          <i className="fa-solid fa-bars text-greenLight fa-2xl"></i>
+          {/* Bars */}
+          <i
+            className={classNames(
+              "fa-solid fa-bars text-greenLight fa-2xl absolute transition-all duration-200",
+              {
+                "opacity-0 rotate-90 scale-75": menuOpen,
+                "opacity-100 rotate-0 scale-100": !menuOpen,
+              }
+            )}
+          />
+
+          {/* X */}
+          <i
+            className={classNames(
+              "fa-solid fa-xmark text-greenLight fa-2xl absolute transition-all duration-200",
+              {
+                "opacity-100 rotate-0 scale-100": menuOpen,
+                "opacity-0 -rotate-90 scale-75": !menuOpen,
+              }
+            )}
+          />
         </button>
+
         <img src="/icon.png" alt="Logo" className="w-10 h-10" />
         <Title text={text} size={isMobile ? "2xl" : "3xl"} />
       </div>

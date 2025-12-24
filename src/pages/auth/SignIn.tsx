@@ -66,7 +66,7 @@ export default function SignIn() {
         "Login Successful",
         "Login Failed",
         `Welcome back, ${response.data?.user?.name || "user"}!`,
-        "Invalid email or password"
+        response.message
       );
 
       // se login bem-sucedido, atualiza contexto de auth e redireciona

@@ -1,7 +1,10 @@
 import { forwardRef, useImperativeHandle, useState, useRef } from "react";
 import classNames from "classnames";
 import { TYPE_VARIANTS } from "./models/Type.variants";
-import { DOCK_VARIANTS_DESKTOP, DOCK_VARIANTS_MOBILE } from "./models/Dock.variants";
+import {
+  DOCK_VARIANTS_DESKTOP,
+  DOCK_VARIANTS_MOBILE,
+} from "./models/Dock.variants";
 import type { ToastContextType } from "@/providers/provider.types";
 import type { ToastProps, ToastState } from "./models/Toast.types";
 import { defaultToast } from "./models/Toast.dafaults";
@@ -93,19 +96,9 @@ export const Toast = forwardRef<ToastContextType, object>((_, ref) => {
 
       {/* Conteúdo do toast */}
       <div className="flex-1 sm:max-w-[26.8125rem] h-auto">
-        <div className="flex justify-between">
-          {/* Título */}
-          <h2 className="text-[#2D3748] font-lato font-extrabold text-md leading-6 tracking-normal">
-            {toastData.title}
-          </h2>
-
-          {/* Botão de fechar */}
-          <button aria-label="close" onClick={hideToast}>
-            <i
-              className={classNames("fa fa-times cursor-pointer", typeVariant.closeColor)}
-            ></i>
-          </button>
-        </div>
+        <h2 className="text-[#2D3748] font-lato font-extrabold text-md leading-6 tracking-normal">
+          {toastData.title}
+        </h2>
 
         {/* Texto */}
         <div className="text-[#2D3748] font-lato font-bold text-sm leading-6 tracking-normal whitespace-pre-line">

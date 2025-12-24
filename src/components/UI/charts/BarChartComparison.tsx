@@ -228,22 +228,17 @@ export const CustomBarChart = ({
               name="Paid"
               stackId="a"
               fill="url(#paidGradient)"
-              radius={isMobile ? [0, 8, 8, 0] : [8, 8, 0, 0]}
-              label={{
-                position: isMobile ? "right" : "top",
-                fill: font.color,
-                fontSize: isMobile ? font.sizeMobile : font.sizeDesktop,
-                fontFamily: font.family,
-                formatter: (label: ReactNode) => {
-                  const n = Number(label as number);
-                  return !isNaN(n)
-                    ? n.toLocaleString("pt-BR", {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })
-                    : label;
-                },
-              }}
+              radius={isMobile ? [0, 0, 0, 0] : [0, 0, 0, 0]}
+              label={
+                isMobile
+                  ? false
+                  : {
+                      position: "top",
+                      fill: font.color,
+                      fontSize: font.sizeDesktop,
+                      fontFamily: font.family,
+                    }
+              }
               barSize={isMobile ? 20 : undefined}
             />
 
@@ -253,7 +248,7 @@ export const CustomBarChart = ({
               name="Unpaid"
               stackId="a"
               fill="url(#unpaidGradient)"
-              radius={isMobile ? [0, 8, 8, 0] : [8, 8, 0, 0]}
+              radius={isMobile ? [0, 0, 0, 0] : [0, 0, 0, 0]}
               label={{
                 position: isMobile ? "right" : "top",
                 fill: font.color,

@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -17,21 +16,21 @@ import { useLoading } from "@/providers/hook/useLoading";
 
 // 🔹 Schema de validação usando Zod
 const schema = z
-.object({
-  email: z
-  .string()
-  .nonempty("Email is required")
-  .email("Invalid email address"),
-  newPassword: z
-  .string()
-  .nonempty("Password is required")
-  .min(6, "Password must be at least 6 characters"),
-  confirmNewPassword: z.string().nonempty("Confirm New Password is required"),
-})
-.refine((data) => data.newPassword === data.confirmNewPassword, {
-  message: "Passwords do not match",
-  path: ["confirmNewPassword"], // atribui erro ao campo confirmNewPassword
-});
+  .object({
+    email: z
+      .string()
+      .nonempty("Email is required")
+      .email("Invalid email address"),
+    newPassword: z
+      .string()
+      .nonempty("Password is required")
+      .min(6, "Password must be at least 6 characters"),
+    confirmNewPassword: z.string().nonempty("Confirm New Password is required"),
+  })
+  .refine((data) => data.newPassword === data.confirmNewPassword, {
+    message: "Passwords do not match",
+    path: ["confirmNewPassword"], // atribui erro ao campo confirmNewPassword
+  });
 
 type FormData = z.infer<typeof schema>;
 
@@ -39,8 +38,8 @@ type FormData = z.infer<typeof schema>;
  * ResetPassword
  * ------------------------------------------------------------
  * Componente de tela para redefinir a senha de um usuário.
- * Utiliza React Hook Form para gerenciamento de formulário, 
- * Zod para validação, e integra com serviços de API para checar 
+ * Utiliza React Hook Form para gerenciamento de formulário,
+ * Zod para validação, e integra com serviços de API para checar
  * usuário e redefinir senha. Inclui feedback visual via toast e loading.
  */
 export default function ResetPassword() {
@@ -54,6 +53,7 @@ export default function ResetPassword() {
     register,
     handleSubmit,
     watch,
+    setValue,
     formState: { errors },
   } = useForm<FormData>({ resolver: zodResolver(schema) });
 
@@ -90,14 +90,25 @@ export default function ResetPassword() {
     checkEmail();
   }, [emailValue, showToast, setLoading]);
 
+  // 🔹 Limpa campos de senha se o email for apagado
+  useEffect(() => {
+    if (!emailValue) {
+      // usuário apagou o email → limpa estado e campos dependentes
+      setUserExists(false);
+
+      setValue("newPassword", "");
+      setValue("confirmNewPassword", "");
+    }
+  }, [emailValue, setValue]);
+
   // 🔹 Função chamada ao enviar o formulário
   const onSubmit = async (data: FormData) => {
     setLoading(true); // inicia loader
 
     try {
       // simula delay
-      await new Promise(res => setTimeout(res, 1000));
-      
+      await new Promise((res) => setTimeout(res, 1000));
+
       // chama API para resetar senha
       const response = await resetPassword(data.email, data.newPassword);
 
@@ -108,7 +119,7 @@ export default function ResetPassword() {
         "Password changed successfully",
         "Error changing password",
         "You can now log in with your new password.",
-        "The new password cannot be the same as your current password."
+        response.message
       );
 
       if (response.success) navigate("/"); // redireciona para login

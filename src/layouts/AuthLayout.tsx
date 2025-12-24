@@ -7,10 +7,7 @@ export function AuthLayout() {
   return (
     <div
       className="
-        auth-container w-full p-6 sm:p-10
-        bg-[url('@/assets/img/bg.jpg')] bg-cover bg-center bg-no-repeat
-        min-h-screen flex items-center justify-center
-      "
+        auth-container w-full p-6 sm:p-10 bg-forest min-h-screen flex items-center justify-center"
     >
       {/* O <Outlet /> renderiza dinamicamente o componente da rota filha,
           como <SignIn />, <SignUp />, <ResetPassword /> */}

@@ -11,5 +11,5 @@ export const defaultToast: Required<Omit<ToastProps, "onClose">> = {
   title: "Notification",  // Título padrão do toast
   text: "",               // Texto padrão do toast (vazio)
   duration: 3,            // Duração em segundos antes de sumir automaticamente
-  dock: "top-left",       // Posição padrão na tela
+  dock: "top-center",       // Posição padrão na tela
 };

@@ -72,7 +72,7 @@ const schema = z
         "User registered successfully!",
         "Registration Failed",
         "You can now log in with your credentials.",
-        "Email already in use"
+        response.message
       );
 
       // redireciona para login caso o cadastro tenha sido bem-sucedido

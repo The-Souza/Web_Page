@@ -10,7 +10,7 @@
     "seed:test": "cd backend && ts-node ./scripts/runSupabaseTasks.ts --seed:test",
     "test": "cd backend && ts-node ./scripts/runSupabaseTasks.ts --test",
     "drop:test": "cd backend && ts-node ./scripts/runSupabaseTasks.ts --drop:test",
-    "build": "tsc -b && vite build",
+    "build": "tsc -p tsconfig.app.json && vite build",
     "lint": "eslint .",
     "preview": "vite preview"
   },

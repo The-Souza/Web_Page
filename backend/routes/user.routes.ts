@@ -4,8 +4,8 @@ import {
   login,
   resetPassword,
   checkUserExists,
-} from "../controllers/user.controller.ts";
-import { getDb } from "../utils/db.ts";
+} from "../controllers/user.controller.js";
+import { getDb } from "../utils/db.js";
 
 const router = Router();
 

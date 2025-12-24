@@ -1,8 +1,14 @@
 import { createClient } from "@supabase/supabase-js";
 import dotenv from "dotenv";
+import path from "path";
+import { fileURLToPath } from "url";
 
-dotenv.config();
-// Carrega todas as variáveis de ambiente definidas no .env para `process.env`.
+// Para converter import.meta.url em caminho de arquivo
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Carrega o .env dentro da pasta backend
+dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
 /**
  * Cria e exporta uma instância do cliente Supabase.

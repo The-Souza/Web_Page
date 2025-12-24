@@ -3,7 +3,7 @@ import {
   getAccountsByUserId,
   getAccountsByUserEmail,
   updateAccountPaid,
-} from "../services/account.service.ts";
+} from "../services/account.service.js";
 import chalk from "chalk";
 
 /**

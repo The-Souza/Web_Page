@@ -1,6 +1,6 @@
-import { verifyToken } from "../utils/jwt.ts";
+import { verifyToken } from "../utils/jwt.js";
 import type { Response, NextFunction } from "express";
-import type { AuthenticatedRequest } from "../models/authRequest.ts";
+import type { AuthenticatedRequest } from "../models/authRequest.js";
 
 /**
  * authenticateJWT

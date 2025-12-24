@@ -1,11 +1,11 @@
 import chalk from "chalk";
-import { generateTestUsers, generateTestAccounts } from "./seedTestUsers.ts";
-import dropTestData from "./dropTestData.ts";
-import { createTables } from "./setupDatabase.ts";
-import { runStep } from "../utils/logger.ts";
-import testAccounts from "../test/testAccounts.ts";
-import testRoutes from "../test/testRoutes.ts";
-import { tablesExist } from "../helpers/tablesExists.ts";
+import { generateTestUsers, generateTestAccounts } from "./seedTestUsers.js";
+import dropTestData from "./dropTestData.js";
+import { createTables } from "./setupDatabase.js";
+import { runStep } from "../utils/logger.js";
+import testAccounts from "../test/testAccounts.js";
+import testRoutes from "../test/testRoutes.js";
+import { tablesExist } from "../helpers/tablesExists.js";
 
 /**
  * seedTestData()

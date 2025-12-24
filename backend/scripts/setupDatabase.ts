@@ -1,4 +1,4 @@
-import { getDb } from "../utils/db.ts";
+import { getDb } from "../utils/db.js";
 import chalk from "chalk";
 
 const sql = getDb();

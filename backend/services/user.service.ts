@@ -1,6 +1,6 @@
-import type { User, UserRecord } from "../models/user.types.ts";
-import { omitFields } from "../helpers/omitFields.ts";
-import { createSupabaseClient } from "../utils/supabaseClient.ts";
+import type { User, UserRecord } from "../models/user.types.js";
+import { omitFields } from "../helpers/omitFields.js";
+import { createSupabaseClient } from "../utils/supabaseClient.js";
 
 const supabase = createSupabaseClient();
 

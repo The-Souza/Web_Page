@@ -1,5 +1,5 @@
 import chalk from "chalk";
-import { prettyPrint } from "../utils/logger.ts";
+import { prettyPrint } from "../utils/logger.js";
 import dotenv from "dotenv";
 
 // Carrega variáveis do arquivo .env para process.env

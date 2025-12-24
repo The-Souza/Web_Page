@@ -3,8 +3,8 @@ import type {
   AccountRecord,
   SupabaseAccountRow,
   NewAccount,
-} from "../models/account.types.ts";
-import { createSupabaseClient } from "../utils/supabaseClient.ts";
+} from "../models/account.types.js";
+import { createSupabaseClient } from "../utils/supabaseClient.js";
 
 const supabase = createSupabaseClient();
 

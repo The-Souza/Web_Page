@@ -7,8 +7,8 @@ import {
   registerAccount,
   deleteAccount,
   updateAccount,
-} from "../controllers/account.controller.ts";
-import { authenticateJWT } from "../middleware/auth.middleware.ts";
+} from "../controllers/account.controller.js";
+import { authenticateJWT } from "../middleware/auth.middleware.js";
 
 const router = Router();
 

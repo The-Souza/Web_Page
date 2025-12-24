@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
-import { JwtPayloadSchema, type JwtPayload } from "../models/jwt.schema.ts";
+import { JwtPayloadSchema, type JwtPayload } from "../models/jwt.schema.js";
 
 dotenv.config();
 

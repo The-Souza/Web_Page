@@ -11,14 +11,15 @@ function colorizeKey(key: string) {
   // Deixa as chaves (nomes de propriedades) amarelas.
 }
 
-function colorizeValue(value: string) {
-  // Aplica uma cor para o valor dependendo do tipo.
+function colorizeValue(value: unknown): string {
   if (typeof value === "string") return chalk.green(`"${value}"`);
-  if (typeof value === "number") return chalk.green(value);
-  if (typeof value === "boolean") return chalk.green(value);
+  if (typeof value === "number") return chalk.green(String(value));
+  if (typeof value === "boolean") return chalk.green(String(value));
   if (value === null) return chalk.green("null");
-  return value; // Caso rara de outros tipos.
+
+  return chalk.green(String(value));
 }
+
 
 /* 
   ==========================================================================

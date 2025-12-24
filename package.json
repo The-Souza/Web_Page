@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "backend": "cd backend && ts-node server.ts",
+    "dev:backend": "tsx backend/server.ts",
     "setup": "cd backend && ts-node ./scripts/runSupabaseTasks.ts --setup",
     "seed:test": "cd backend && ts-node ./scripts/runSupabaseTasks.ts --seed:test",
     "test": "cd backend && ts-node ./scripts/runSupabaseTasks.ts --test",
@@ -61,6 +61,7 @@
     "postcss": "^8.5.6",
     "tailwindcss": "^3.4.17",
     "ts-node": "^10.9.2",
+    "tsx": "^4.21.0",
     "typescript": "~5.8.3",
     "typescript-eslint": "^8.39.1",
     "vite": "^7.1.2",

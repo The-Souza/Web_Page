@@ -1,8 +1,8 @@
 import express from "express";
-import { logData } from "../utils/logger.ts";
-import * as userService from "../services/user.service.ts";
-import type { User, PublicUser } from "../models/user.types.ts";
-import { generateToken } from "../utils/jwt.ts";
+import { logData } from "../utils/logger.js";
+import * as userService from "../services/user.service.js";
+import type { User, PublicUser } from "../models/user.types.js";
+import { generateToken } from "../utils/jwt.js";
 
 // Utiliza a função interna do service para retornar dados seguros do usuário
 const publicUser = userService.mapRecordToUserSafe;

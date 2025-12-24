@@ -1,6 +1,6 @@
 import express from "express";
-import * as accountService from "../services/account.service.ts";
-import type { AuthenticatedRequest } from "../models/authRequest.ts";
+import * as accountService from "../services/account.service.js";
+import type { AuthenticatedRequest } from "../models/authRequest.js";
 
 /**
  * Helper para interpretar o query param "paid".

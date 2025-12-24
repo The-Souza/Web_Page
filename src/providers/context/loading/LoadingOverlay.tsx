@@ -1,4 +1,4 @@
-import React from "react";
+import type { LoadingOverlayProps } from "@/types/loadingOverdalay";
 
 /**
  * LoadingOverlay
@@ -12,7 +12,8 @@ import React from "react";
  * Props:
  * - message?: string → Mensagem exibida abaixo do ícone
  */
-export const LoadingOverlay: React.FC<{ message?: string }> = ({ message }) => {
+export function LoadingOverlay({ message }: LoadingOverlayProps) {
+
   return (
     <div
       role="status"           // Acessibilidade: indica que é um status de carregamento

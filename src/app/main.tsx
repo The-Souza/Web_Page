@@ -1,15 +1,22 @@
-import React from "react";
-import ReactDOM from "react-dom/client";
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import { BrowserRouter } from "react-router-dom";
 import { App } from "./App";
 import { Providers } from "@/providers/providers";
-import { BrowserRouter } from "react-router-dom";
 import "@/styles/index.css";
 
-// Inicializa a aplicação React, vinculando ao elemento <div id="root"> no index.html.
-ReactDOM.createRoot(document.getElementById("root")!).render(
+// Obtém o elemento raiz da aplicação
+const rootElement = document.getElementById("root");
+
+if (!rootElement) {
+  throw new Error("Root element #root not found");
+}
+
+// Inicializa a aplicação React
+createRoot(rootElement).render(
   // StrictMode ativa verificações extras durante o desenvolvimento,
   // ajudando a detectar problemas potenciais.
-  <React.StrictMode>
+  <StrictMode>
     {/* BrowserRouter habilita o roteamento baseado em URL */}
     <BrowserRouter>
       {/* Providers envolve toda a aplicação,
@@ -21,5 +28,5 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
         <App />
       </Providers>
     </BrowserRouter>
-  </React.StrictMode>
+  </StrictMode>
 );

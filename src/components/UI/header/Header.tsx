@@ -1,7 +1,7 @@
 import type { HeaderProps } from "./Header.types";
 import classNames from "classnames";
 import { Title, Button, UserIcon } from "@/components/index";
-import { useMediaQuery } from "@/hooks/useMediaQuery.tmp";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 /**
  * Header

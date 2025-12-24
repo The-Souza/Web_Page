@@ -7,7 +7,7 @@ import {
 import { usePagination } from "./hook/usePagination";
 import type { PaginationProps } from "./Pagination.types";
 import { useEffect } from "react";
-import { useMediaQuery } from "@/hooks/useMediaQuery.tmp";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 export function Pagination<T>({
   items,

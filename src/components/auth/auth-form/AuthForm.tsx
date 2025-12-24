@@ -1,7 +1,7 @@
 import type { JSX } from "react";
 import type { AuthFormProps } from "./AuthForm.types";
 import classNames from "classnames";
-import { useMediaQuery } from "@/hooks/useMediaQuery";
+import { useMediaQuery } from "@/hooks/useMediaQuery.tmp";
 
 /**
  * AuthForm

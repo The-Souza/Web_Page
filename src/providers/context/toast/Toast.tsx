@@ -8,7 +8,7 @@ import {
 import type { ToastContextType } from "@/providers/provider.types";
 import type { ToastProps, ToastState } from "./models/Toast.types";
 import { defaultToast } from "./models/Toast.dafaults";
-import { useMediaQuery } from "@/hooks/useMediaQuery";
+import { useMediaQuery } from "@/hooks/useMediaQuery.tmp";
 
 /**
  * Toast

@@ -3,7 +3,7 @@ import { useAuth } from "@/providers/hook/useAuth";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import classNames from "classnames";
-import { useMediaQuery } from "@/hooks/useMediaQuery";
+import { useMediaQuery } from "@/hooks/useMediaQuery.tmp";
 import { useLoading } from "@/providers/hook/useLoading";
 import { ROUTE_MESSAGES } from "@/types/routeMessages.variants";
 import { pageTitles } from "@/types/PageTitles.variants";

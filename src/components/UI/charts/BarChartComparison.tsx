@@ -11,7 +11,7 @@ import {
 import { Title } from "@/components";
 import type { CustomBarChartProps } from "./Chart.types";
 import { defaultChartColors, defaultChartFont } from "./Chart.config";
-import { useMediaQuery } from "@/hooks/useMediaQuery";
+import { useMediaQuery } from "@/hooks/useMediaQuery.tmp";
 import { useMemo } from "react";
 import type { ReactNode } from "react";
 

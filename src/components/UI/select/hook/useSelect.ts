@@ -1,51 +1,113 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
-import type { SelectOption, UseSelectProps, UseSelectReturn } from "../Select.types";
+import type {
+  SelectOption,
+  UseSelectProps,
+  UseSelectReturn,
+} from "../Select.types";
 
-export const useSelect = (props: UseSelectProps & { value?: string }): UseSelectReturn => {
+/**
+ * sortOptions
+ * ------------------------------------------------------------
+ * Função utilitária para ordenar opções com base em critérios fornecidos.
+ * @param options item a ser ordenado
+ * @param sort critérios de ordenação
+ * @returns opções ordenadas
+ */
+function sortOptions(
+  options: SelectOption[],
+  sort?: { by?: "label" | "value"; direction?: "asc" | "desc" }
+): SelectOption[] {
+  if (!sort) return options;
+
+  const { by = "label", direction = "asc" } = sort;
+
+  return [...options].sort((a, b) => {
+    const aVal = String(a[by]).toLowerCase();
+    const bVal = String(b[by]).toLowerCase();
+
+    const result = aVal.localeCompare(bVal);
+    return direction === "asc" ? result : -result;
+  });
+}
+
+/**
+ * useSelect
+ * ------------------------------------------------------------
+ * Hook customizado para gerenciar o estado de um componente Select.
+ * Suporta:
+ * - Seleção de opção
+ * - Filtragem de opções
+ * - Navegação via teclado
+ * - Controle de abertura/fechamento do dropdown
+ * - Reset e limpeza de seleção
+ * - Sincronização com valor externo (props.value)
+ */
+export const useSelect = (
+  props: UseSelectProps & { value?: string }
+): UseSelectReturn => {
   const {
     options = [],
     placeholder = "Select an option",
     disabled = false,
     required = false,
     defaultValue,
+    sort,
   } = props;
 
+  // 🔹 Estado para abrir/fechar dropdown
   const [isOpen, setIsOpen] = useState(false);
+
+  // 🔹 Opções ordenadas
+  const sortedOptions = useMemo(() => {
+    return sortOptions(options, sort);
+  }, [options, sort]);
+
+  // 🔹 Estado para a opção selecionada
   const [selected, setSelected] = useState<SelectOption | null>(
     defaultValue
-      ? options.find((opt) => opt.value === defaultValue) ?? null
+      ? sortedOptions.find((opt) => opt.value === defaultValue) ?? null
       : null
   );
+
+  // 🔹 Estado para filtro de busca
   const [filter, setFilter] = useState("");
+
+  // 🔹 Estado para índice destacado no teclado
   const [highlightedIndex, setHighlightedIndex] = useState<number>(-1);
 
+  // 🔹 Opções filtradas com base no filtro
   const filteredOptions = useMemo(() => {
-    if (!filter) return options;
-    return options.filter((opt) =>
+    if (!filter) return sortedOptions;
+
+    return sortedOptions.filter((opt) =>
       opt.label.toLowerCase().includes(filter.toLowerCase())
     );
-  }, [filter, options]);
+  }, [filter, sortedOptions]);
 
+  // 🔹 Alterna abertura do dropdown
   const toggleOpen = useCallback(() => {
     if (!disabled) {
       setIsOpen((prev) => !prev);
-      setHighlightedIndex(-1);
+      setHighlightedIndex(-1); // reset índice ao abrir/fechar
     }
   }, [disabled]);
 
+  // 🔹 Seleciona uma opção
   const selectOption = useCallback((option: SelectOption) => {
     setSelected(option);
     setIsOpen(false);
-    setFilter("");
+    setFilter(""); // limpa filtro
     setHighlightedIndex(-1);
   }, []);
 
+  // 🔹 Reseta dropdown sem alterar seleção
   const resetSelect = useCallback(() => {
     setFilter("");
     setIsOpen(false);
     setHighlightedIndex(-1);
   }, []);
 
+  // 🔹 Limpa seleção e dropdown
   const clearSelection = useCallback(() => {
     setSelected(null);
     setFilter("");
@@ -53,6 +115,14 @@ export const useSelect = (props: UseSelectProps & { value?: string }): UseSelect
     setHighlightedIndex(-1);
   }, []);
 
+  /**
+   * handleKeyDown
+   * --------------------------------------------------------
+   * Gerencia navegação via teclado:
+   * - ArrowDown / ArrowUp: navegação
+   * - Enter: seleciona opção destacada
+   * - Escape: fecha/reset
+   */
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (!isOpen) return;
 
@@ -76,6 +146,7 @@ export const useSelect = (props: UseSelectProps & { value?: string }): UseSelect
     }
   };
 
+  // 🔹 Validação de campo obrigatório
   const isValid = useMemo(() => {
     if (required && !disabled) {
       return selected !== null;
@@ -83,20 +154,23 @@ export const useSelect = (props: UseSelectProps & { value?: string }): UseSelect
     return true;
   }, [required, disabled, selected]);
 
+  // 🔹 Label exibida no botão
   const selectedLabel =
     selected?.label && !isOpen ? selected.label : filter || placeholder;
 
-  // ✅ Agora sim: sincronização do valor externo DEPOIS que tudo foi declarado
+  // 🔹 Sincronização com valor externo (props.value)
   useEffect(() => {
     if (props.value !== undefined) {
-      const matched = options.find((opt) => opt.value === props.value) || null;
+      const matched =
+        sortedOptions.find((opt) => opt.value === props.value) ?? null;
+
       if (matched) {
         selectOption(matched);
       } else {
         clearSelection();
       }
     }
-  }, [props.value, options, selectOption, clearSelection]);
+  }, [props.value, sortedOptions, selectOption, clearSelection]);
 
   return {
     selectedValue: selected?.value ?? null,

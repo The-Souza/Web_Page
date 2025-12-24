@@ -11,6 +11,17 @@ import { SelectDropdown } from "./core/SelectDropdown";
 import { useSelect } from "./hook/useSelect";
 import classNames from "classnames";
 
+/**
+ * Select
+ * ------------------------------------------------------------
+ * Componente de Select customizado, com suporte a:
+ * - Controle de estado interno e externo via ref (reset, clear)
+ * - Filtragem de opções
+ * - Navegação via teclado
+ * - Temas "light" e "dark"
+ * - Dropdown com altura máxima customizável
+ * - Validação de campo obrigatório
+ */
 export const Select = forwardRef<SelectHandle, SelectProps>(
   (
     {
@@ -24,11 +35,15 @@ export const Select = forwardRef<SelectHandle, SelectProps>(
       maxHeight = "15rem",
       onChange,
       theme = "dark",
+      value,
+      sort
     }: SelectProps,
     ref
   ) => {
+    // 🔹 Ref para detectar cliques fora do componente
     const wrapperRef = useRef<HTMLDivElement>(null);
 
+    // 🔹 Hook customizado que gerencia estado interno do select
     const {
       selectedValue,
       selectedLabel,
@@ -47,16 +62,21 @@ export const Select = forwardRef<SelectHandle, SelectProps>(
       required,
       disabled,
       defaultValue,
+      value,
+      sort,
     });
 
+    // 🔹 Expondo métodos via ref (imperative handle)
     useImperativeHandle(ref, () => ({
       reset: () => resetSelect(),
       clear: () => clearSelection(),
       clearSelection: () => clearSelection(),
     }));
 
+    // 🔹 Estado local para controlar índice destacado no teclado
     const [highlightedIndex, setHighlightedIndex] = useState<number>(0);
 
+    // 🔹 Efeito para fechar dropdown ao clicar fora
     useEffect(() => {
       const handleClickOutside = (event: MouseEvent) => {
         if (
@@ -71,23 +91,24 @@ export const Select = forwardRef<SelectHandle, SelectProps>(
         document.removeEventListener("mousedown", handleClickOutside);
     }, [resetSelect]);
 
-    useEffect(() => {
-      setHighlightedIndex(-1);
-    }, [filteredOptions]);
-
-    useEffect(() => {
-      setHighlightedIndex(-1);
-    }, [isOpen]);
-
+    // 🔹 Função para selecionar uma opção
     const handleSelect = (option: SelectOption) => {
       selectOption(option);
-      if (onChange) onChange(option.value);
+      if (onChange) onChange(option.value); // dispara callback externo
     };
 
+    /**
+     * handleKeyDown
+     * --------------------------------------------------------
+     * Gerencia navegação via teclado:
+     * - ArrowDown / ArrowUp: navegar entre opções
+     * - Enter: selecionar opção destacada
+     * - Escape: fechar/resetar
+     * - Tab: navegar
+     * - Space: abrir dropdown
+     */
     const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
-      if (!isOpen) return;
-
-      if (filteredOptions.length === 0) return;
+      if (!isOpen || filteredOptions.length === 0) return;
 
       let nextIndex = highlightedIndex;
 
@@ -137,6 +158,7 @@ export const Select = forwardRef<SelectHandle, SelectProps>(
       setHighlightedIndex(nextIndex);
     };
 
+    // 🔹 Classe para o label, mudando cor se disabled
     const labelClass = classNames("block mb-1 text-md font-bold font-lato", {
       "text-greenLight": !disabled,
       "text-greenDark": disabled,
@@ -144,8 +166,10 @@ export const Select = forwardRef<SelectHandle, SelectProps>(
 
     return (
       <div ref={wrapperRef} className="relative min-w-[15rem] w-full">
+        {/* Label opcional */}
         {label && <label className={labelClass}>{label}</label>}
 
+        {/* Botão do Select */}
         <SelectButton
           isOpen={isOpen}
           disabled={disabled ?? false}
@@ -159,6 +183,7 @@ export const Select = forwardRef<SelectHandle, SelectProps>(
           theme={theme}
         />
 
+        {/* Dropdown de opções */}
         {isOpen && (
           <SelectDropdown
             filteredOptions={filteredOptions}
@@ -175,6 +200,7 @@ export const Select = forwardRef<SelectHandle, SelectProps>(
           />
         )}
 
+        {/* Mensagem de erro para campos obrigatórios */}
         {!isValid && required && !disabled && (
           <span className="text-red-500 text-sm font-lato mt-1 block">
             {error || "This field is required"}

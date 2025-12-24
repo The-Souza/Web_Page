@@ -11,10 +11,22 @@ import {
 import { Title } from "@/components";
 import type { CustomBarChartProps } from "./Chart.types";
 import { defaultChartColors, defaultChartFont } from "./Chart.config";
-import { useMediaQuery } from "@/hooks/UseMediaQuery";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { useMemo } from "react";
 import type { ReactNode } from "react";
 
+/**
+ * CustomBarChart
+ * ------------------------------------------------------------
+ * Componente de gráfico de barras personalizável para exibir
+ * valores "Paid" e "Unpaid" por mês.
+ *
+ * Principais funcionalidades:
+ * - Responsivo: muda layout horizontal/vertical conforme tela.
+ * - Gradientes e cores configuráveis.
+ * - Formatação de valores monetários.
+ * - Mensagem de "No data available" quando não há dados.
+ */
 export const CustomBarChart = ({
   data,
   title = "",
@@ -24,7 +36,7 @@ export const CustomBarChart = ({
 }: CustomBarChartProps) => {
   const isMobile = useMediaQuery("(max-width: 768px)");
 
-  // ✅ Ordena e normaliza os dados
+  // Ordena e normaliza os dados para renderização
   const sortedData = useMemo(() => {
     return [...data]
       .map((d) => ({
@@ -39,9 +51,10 @@ export const CustomBarChart = ({
       });
   }, [data]);
 
-  // ✅ Verifica se há algum valor relevante (Paid ou Unpaid)
+  // Verifica se há algum valor relevante (Paid ou Unpaid)
   const hasAnyValue = sortedData.some((d) => d.Paid > 0 || d.Unpaid > 0);
 
+  // Formata eixo Y com abreviação monetária (R$ 1k, R$ 1M, etc)
   function formatYAxisAbbr(value: number) {
     if (value >= 1_000_000) return `R$ ${Math.round(value / 1_000_000)}M`;
     if (value >= 1_000) return `R$ ${Math.round(value / 1_000)}k`;
@@ -50,12 +63,12 @@ export const CustomBarChart = ({
 
   return (
     <div
-      className="bg-dark shadow-greenLight rounded-2xl border-2 border-greenLight p-6 flex flex-col gap-4"
+      className="bg-dark rounded-2xl border-2 border-greenLight p-6 flex flex-col gap-4"
       style={{ backgroundColor: colors.background }}
     >
       {title && <Title text={title} size="xl" />}
 
-      {/* ✅ Caso não haja valores, mostra mensagem centralizada */}
+      {/* Caso não haja valores, mostra mensagem centralizada */}
       {!hasAnyValue ? (
         <div className="flex justify-center items-center text-greenLight text-xl italic font-lato">
           No data available
@@ -64,10 +77,11 @@ export const CustomBarChart = ({
         <ResponsiveContainer width="100%" height={height}>
           <BarChart
             data={sortedData}
-            layout={isMobile ? "vertical" : "horizontal"}
+            layout={isMobile ? "vertical" : "horizontal"} // layout responsivo
             barGap={4}
             barCategoryGap={isMobile ? 20 : 10}
           >
+            {/* Gradientes para Paid e Unpaid */}
             <defs>
               <linearGradient
                 id="paidGradient"
@@ -95,8 +109,10 @@ export const CustomBarChart = ({
               </linearGradient>
             </defs>
 
+            {/* Grid horizontal e vertical */}
             <CartesianGrid stroke={colors.grid} vertical={false} />
 
+            {/* Eixos X e Y responsivos */}
             {isMobile ? (
               <>
                 <YAxis
@@ -151,6 +167,7 @@ export const CustomBarChart = ({
               </>
             )}
 
+            {/* Tooltip customizado */}
             <Tooltip
               cursor={{ fill: "rgba(255,255,255,0.05)" }}
               content={({ payload, label }) => {
@@ -195,6 +212,7 @@ export const CustomBarChart = ({
               }}
             />
 
+            {/* Legenda */}
             <Legend
               wrapperStyle={{
                 color: font.color,
@@ -204,35 +222,33 @@ export const CustomBarChart = ({
               iconType="circle"
             />
 
+            {/* Barras Paid */}
             <Bar
               dataKey="Paid"
               name="Paid"
               stackId="a"
               fill="url(#paidGradient)"
-              radius={isMobile ? [0, 8, 8, 0] : [8, 8, 0, 0]}
-              label={{
-                position: isMobile ? "right" : "top",
-                fill: font.color,
-                fontSize: isMobile ? font.sizeMobile : font.sizeDesktop,
-                fontFamily: font.family,
-                formatter: (label: ReactNode) => {
-                  const n = Number(label as number);
-                  return !isNaN(n)
-                    ? n.toLocaleString("pt-BR", {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })
-                    : label;
-                },
-              }}
+              radius={isMobile ? [0, 0, 0, 0] : [0, 0, 0, 0]}
+              label={
+                isMobile
+                  ? false
+                  : {
+                      position: "top",
+                      fill: font.color,
+                      fontSize: font.sizeDesktop,
+                      fontFamily: font.family,
+                    }
+              }
               barSize={isMobile ? 20 : undefined}
             />
+
+            {/* Barras Unpaid */}
             <Bar
               dataKey="Unpaid"
               name="Unpaid"
               stackId="a"
               fill="url(#unpaidGradient)"
-              radius={isMobile ? [0, 8, 8, 0] : [8, 8, 0, 0]}
+              radius={isMobile ? [0, 0, 0, 0] : [0, 0, 0, 0]}
               label={{
                 position: isMobile ? "right" : "top",
                 fill: font.color,

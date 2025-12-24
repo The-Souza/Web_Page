@@ -1,54 +1,63 @@
-import { useAuth } from "@/hooks/UseAuth";
+import { useAuth } from "@/providers/hook/useAuth";
 import { useAccounts } from "@/hooks/useAccounts";
-import { Card, Title, Table, Select, CustomBarChart } from "@/components";
+import {
+  Card,
+  Title,
+  Table,
+  Select,
+  CustomBarChart,
+  Button,
+} from "@/components";
 import { useAccountSummary } from "@/hooks/useAccountSummary";
-import { formatCurrency } from "@/helpers/accountHelpers";
+import { formatConsumption, formatCurrency } from "@/helpers/accountHelpers";
 import type { Account } from "@/types/account.types";
 import { ACCOUNT_TYPE_ICONS } from "@/components/UI/card/Card.variants";
 import { useRef, useEffect } from "react";
 import type { SelectHandle } from "@/components/UI/select/Select.types";
-import { useLoading } from "@/components/providers/hook/useLoading";
+import { useLoading } from "@/providers/hook/useLoading";
+import { ACCOUNT_TYPES, COLORS } from "@/types/homeCards.variants";
 
-const COLORS = {
-  paid: "#00ff9f",
-  unpaid: "#ff4444",
-  positive: "text-green-400",
-  negative: "text-red-400",
-};
-
-const ACCOUNT_TYPES = ["Water", "Energy", "Gas", "Internet"];
-
+/**
+ * Home
+ * ------------------------------------------------------------
+ * Tela principal do usuário após login, exibindo resumo financeiro e contas.
+ * Funcionalidades principais:
+ * - Exibe cards de resumo de contas e comparativo mensal.
+ * - Permite filtro por ano e mês usando Selects.
+ * - Renderiza gráfico de barras customizado (CustomBarChart) para comparação mensal.
+ * - Tabela de contas detalhadas com possibilidade de marcar como pago.
+ * - Integração com hooks de autenticação, contas, resumo e loading.
+ */
 export default function Home() {
-  const { user } = useAuth();
-  const { accounts, loading, updatePaid } = useAccounts(user?.email);
-  const summary = useAccountSummary(accounts);
-  const monthSelectRef = useRef<SelectHandle | null>(null);
-  const { setLoading } = useLoading();
+  const { user } = useAuth(); // Usuário logado
+  const { accounts, loading, updatePaid } = useAccounts(user?.email); // Lista de contas e função para marcar pagamento
+  const summary = useAccountSummary(accounts); // Resumo das contas (totais, comparativos, filtros)
+  const monthSelectRef = useRef<SelectHandle | null>(null); // Ref para controle do Select de meses
+  const { setLoading } = useLoading(); // Hook de loading global
 
+  // 🔹 Prepara dados para gráfico de barras comparativo mensal
   const chartData = summary.monthSummaries
     .map(({ month, summary }) => ({
       month,
       Paid: Number(summary.paidValue.toFixed(2)),
       Unpaid: Number(summary.unpaidValue.toFixed(2)),
     }))
-    // ✅ Filtra meses sem nenhum valor relevante
+    // 🔹 Remove meses sem valores relevantes
     .filter((m) => m.Paid > 0 || m.Unpaid > 0);
 
+  // 🔹 Renderiza diferença do mês anterior com cores e sinais apropriados
   const renderDiff = (diff: number) => {
     let color = COLORS.positive;
     let sign = "";
 
     if (diff > 0) {
-      // Pagou mais → vermelho
-      color = COLORS.negative;
+      color = COLORS.negative; // Pagou mais → vermelho
       sign = "+";
     } else if (diff < 0) {
-      // Pagou menos → verde
-      color = COLORS.positive;
+      color = COLORS.positive; // Pagou menos → verde
       sign = "-";
     } else {
-      // Sem diferença → neutro
-      color = "text-white";
+      color = "text-white"; // Sem diferença
     }
 
     return (
@@ -59,6 +68,7 @@ export default function Home() {
     );
   };
 
+  // 🔹 Atualiza estado global de loading conforme carregamento de contas
   useEffect(() => {
     setLoading(loading, loading ? "Loading..." : undefined);
   }, [loading, setLoading]);
@@ -67,10 +77,12 @@ export default function Home() {
     <div className="flex flex-col gap-4 text-greenLight">
       {!loading && (
         <>
+          {/* 🔹 Título e filtros */}
           <div className="flex flex-col lg:flex-row gap-4 lg:items-center lg:justify-between">
             <Title text="Account Summary" size="2xl" />
 
             <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+              {/* Select de ano */}
               <Select
                 label="Year"
                 options={summary.availableYears.map((y) => ({
@@ -83,8 +95,10 @@ export default function Home() {
                   summary.setSelectedMonth("");
                   monthSelectRef.current?.clear();
                 }}
+                sort={{ by: "label", direction: "asc" }}
               />
 
+              {/* Select de mês */}
               <Select
                 ref={monthSelectRef}
                 label="Month"
@@ -94,9 +108,12 @@ export default function Home() {
                 }))}
                 placeholder="Select a month"
                 onChange={(val) => summary.setSelectedMonth(val)}
+                sort={{ by: "label", direction: "asc" }}
               />
             </div>
           </div>
+
+          {/* 🔹 Cards de resumo */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <Card
               title="Total for the month"
@@ -115,12 +132,12 @@ export default function Home() {
             />
           </div>
 
+          {/* 🔹 Cards por tipo de conta */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 flex-1">
             {ACCOUNT_TYPES.map((type) => {
               const data = summary.accountTypeSummary.find(
                 (item) => item.type === type
               );
-
               const totalValue = data?.totalValue ?? 0;
               const paidValue = data?.paidValue ?? 0;
               const unpaidValue = data?.unpaidValue ?? 0;
@@ -146,28 +163,84 @@ export default function Home() {
             })}
           </div>
 
+          {/* 🔹 Gráfico de barras comparativo */}
           <CustomBarChart data={chartData} title="Comparison by month" />
+
+          {/* 🔹 Tabela de contas detalhadas */}
           <Table<Account>
             data={summary.accountsForSelectedMonth}
             rowKey={(acc) => acc.id}
+            defaultSort={{
+              key: "value",
+              direction: "desc",
+            }}
             columns={[
-              { key: "accountType", label: "Account" },
-              { key: "address", label: "Address" },
+              {
+                key: "address",
+                label: "Address",
+                sortable: true,
+                sortType: "string",
+              },
+              {
+                key: "year",
+                label: "Year",
+              },
+              {
+                key: "month",
+                label: "Month",
+              },
+              {
+                key: "accountType",
+                label: "Account",
+                sortable: true,
+                sortType: "number",
+              },
+              {
+                key: "consumption",
+                label: "Consumption",
+                render: (val, row) =>
+                  formatConsumption(row.accountType, val as number),
+                sortable: true,
+                sortType: "number",
+              },
+              {
+                key: "days",
+                label: "Days",
+                sortable: true,
+                sortType: "number",
+              },
               {
                 key: "value",
                 label: "Value (R$)",
                 render: (val) => formatCurrency(val as number),
+                sortable: true,
+                sortType: "number",
               },
               {
                 key: "paid",
                 label: "Paid/Unpaid",
-                render: (val, acc) => (
-                  <input
-                    type="checkbox"
-                    checked={!!val}
-                    onChange={(e) => updatePaid(acc.id, e.target.checked)}
-                    className="accent-greenLight"
-                  />
+                sortable: true,
+                sortType: "boolean",
+                render: (value, acc) => (
+                  <div className="flex items-center justify-center">
+                    <div className="w-[6rem]">
+                      <Button
+                        text={value ? "Paid" : "Unpaid"}
+                        icon="money"
+                        size="full"
+                        variant={value ? "solid" : "unpaid"}
+                        onClick={() =>
+                          updatePaid(
+                            acc.id,
+                            !value, // inverte o estado
+                            acc.accountType,
+                            acc.address,
+                            acc.month
+                          )
+                        }
+                      />
+                    </div>
+                  </div>
                 ),
               },
             ]}

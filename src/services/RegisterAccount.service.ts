@@ -1,32 +1,80 @@
-import { apiFetch } from "@/helpers/apiFetch";
-import type { RegisterAccountPayload } from "@/types/account.types";
-import type { ApiResponse } from "@/types/apiResponse";
+import { apiClient } from "./ApiClient.service";
+import type { Account, RegisterAccountPayload } from "@/types/account.types";
 
-const BASE_URL = import.meta.env.VITE_API_URL;
+/**
+ * Registra uma nova conta do usuário.
+ *
+ * - Usa o apiClient para padronizar o retorno (ApiResponse<Account>)
+ * - Envia o token via Bearer Authorization
+ * - Transforma o payload em JSON
+ * - Retorna a resposta já validada pelo apiClient
+ */
+export const registerAccount = (
+  payload: RegisterAccountPayload,
+  token: string
+) => {
+  return apiClient<Account>("/accounts/register-account", {
+    method: "POST",
+    headers: {
+      // Token JWT enviado como Bearer
+      Authorization: `Bearer ${token}`,
+    },
+    // Corpo da requisição convertido para JSON
+    body: JSON.stringify(payload),
+  });
+};
 
-export async function registerAccount(
-  payload: RegisterAccountPayload
-): Promise<ApiResponse<RegisterAccountPayload>> {
-  try {
-    const response = await apiFetch(`${BASE_URL}/accounts/register`, {
-      method: "POST",
-      body: JSON.stringify(payload),
-    });
+/**
+ * Obtém todas as contas do usuário autenticado.
+ *
+ * - Chamado sem opções adicionais (GET padrão)
+ * - Espera uma lista de contas tipada como Account[]
+ */
+export const getAccounts = (email: string) => {
+  return apiClient<Account[]>(`/accounts/email/${email}`);
+};
 
-    const data = await response.json();
+/**
+ * Atualiza uma conta existente do usuário.
+ *
+ * - Recebe o ID da conta e um payload parcial (Partial<Account>)
+ *   permitindo atualizar apenas os campos necessários.
+ * - Método PATCH → atualização parcial de recurso.
+ * - Envia token JWT no header Authorization como Bearer.
+ * - Envia o payload em formato JSON.
+ * - Retorna a conta atualizada já validada pelo apiClient.
+ */
+export const updateAccount = (
+  accountId: number,
+  payload: Partial<Account>,
+  token: string
+) => {
+  return apiClient<Account>(`/accounts/${accountId}`, {
+    method: "PATCH",
+    headers: {
+      // Token JWT obrigatório para autorizar a operação
+      Authorization: `Bearer ${token}`,
+    },
+    // Conteúdo enviado ao backend convertidos para JSON
+    body: JSON.stringify(payload),
+  });
+};
 
-    return {
-      success: response.ok,
-      message: data?.message || (response.ok
-        ? "Account registered successfully"
-        : "Failed to register account"),
-      data: data?.data ?? payload,
-    };
-  } catch (error) {
-    console.error("❌ Error in registerAccount:", error);
-    return {
-      success: false,
-      message: "Unexpected error while registering account.",
-    };
-  }
-}
+/**
+ * Deleta uma conta existente pelo ID.
+ *
+ * - Usa DELETE → remoção completa do recurso.
+ * - Requer token JWT enviado como Bearer para autorização.
+ * - Não precisa de body na requisição.
+ * - O retorno esperado é null, mas ainda dentro do padrão ApiResponse.
+ */
+export const deleteAccount = (accountId: number, token: string) => {
+  return apiClient<null>(`/accounts/${accountId}`, {
+    method: "DELETE",
+    headers: {
+      // Token JWT garantindo que o usuário tem permissão para excluir
+      Authorization: `Bearer ${token}`,
+    },
+  });
+};
+

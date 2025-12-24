@@ -1,64 +1,83 @@
 import type { Account, MonthSummary } from "@/types/account.types";
 
 /* -------------------------------------------------------------------------- */
-/* 🧮 Generic Utilities */
+/* 🧮 Funções utilitárias genéricas */
 /* -------------------------------------------------------------------------- */
 
 /**
  * Arredonda um número para 2 casas decimais de forma segura.
+ * Adiciona Number.EPSILON para evitar erros de ponto flutuante.
  */
 function roundTwo(value: number): number {
   return Math.round((value + Number.EPSILON) * 100) / 100;
 }
 
 /**
- * Soma os valores de uma lista de contas, com ou sem condição.
+ * Soma os valores de uma lista de contas.
+ * Permite aplicar uma condição opcional para filtrar quais contas somar.
+ *
+ * @param accounts → lista de contas
+ * @param predicate → função opcional para filtrar contas
+ * @returns soma arredondada com 2 casas decimais
  */
-function sumValues(accounts: Account[], predicate?: (acc: Account) => boolean): number {
+function sumValues(
+  accounts?: Account[],
+  predicate?: (acc: Account) => boolean
+): number {
+  if (!accounts?.length) return 0;
   const filtered = predicate ? accounts.filter(predicate) : accounts;
-  const total = filtered.reduce((acc, a) => acc + a.value, 0);
+  const total = filtered.reduce((acc, a) => acc + (a.value ?? 0), 0);
   return roundTwo(total);
 }
 
 /**
- * Retorna um conjunto único de valores de um campo.
+ * Retorna um array de valores únicos a partir de um array qualquer.
  */
 function unique<T>(values: T[]): T[] {
   return Array.from(new Set(values));
 }
 
 /* -------------------------------------------------------------------------- */
-/* 📅 Date Helpers */
+/* 📅 Helpers de datas */
 /* -------------------------------------------------------------------------- */
 
 /**
- * Retorna a string do mês anterior no formato MM/YYYY
+ * Retorna a string do mês anterior no formato MM/YYYY.
+ * Útil para calcular diferenças entre meses.
+ *
+ * Ex: "03/2025" → "02/2025"
  */
 export function getPreviousMonth(month: string): string {
   const [m, y] = month.split("/").map(Number);
-  const date = new Date(y, m - 2); // mês anterior
+  const date = new Date(y, (m ?? 1) - 2); // fallback para 1 se m for undefined
   const newMonth = (date.getMonth() + 1).toString().padStart(2, "0");
   const newYear = date.getFullYear();
   return `${newMonth}/${newYear}`;
 }
 
 /**
- * Retorna todos os anos disponíveis nos dados
+ * Retorna todos os anos disponíveis nos dados.
+ * Útil para filtros de anos ou geração de relatórios.
  */
-export function getAvailableYears(accounts: Account[]): string[] {
-  const years = accounts.map((a) => a.year.toString());
+export function getAvailableYears(accounts?: Account[]): string[] {
+  if (!accounts?.length) return [];
+  const years = accounts
+    .filter((a): a is Account => a?.year != null)
+    .map((a) => a.year!.toString());
   return unique(years);
 }
 
 /**
- * Retorna os meses disponíveis para um ano específico no formato MM/YYYY
+ * Retorna todos os meses disponíveis para um ano específico no formato MM/YYYY.
+ * Ordena do mês mais antigo para o mais recente.
  */
 export function getMonthsByYear(accounts: Account[], year: string): string[] {
   const months = accounts
-    .filter((a) => a.year.toString() === year)
-    .map((a) => a.month);
+    .filter((a) => a?.year != null && a.year.toString() === year)
+    .map((a) => a.month)
+    .filter((m): m is string => m != null);
 
-  // Ordena os meses de 01 a 12
+  // Ordena primeiro pelo ano, depois pelo mês
   return unique(months).sort((a, b) => {
     const [ma, ya] = a.split("/").map(Number);
     const [mb, yb] = b.split("/").map(Number);
@@ -67,11 +86,12 @@ export function getMonthsByYear(accounts: Account[], year: string): string[] {
 }
 
 /* -------------------------------------------------------------------------- */
-/* 💰 Calculations */
+/* 💰 Cálculos financeiros */
 /* -------------------------------------------------------------------------- */
 
 /**
- * Objeto vazio para quando não houver dados selecionados
+ * Objeto padrão para quando não há dados de resumo do mês.
+ * Evita undefined e permite cálculos seguros mesmo sem contas.
  */
 export const emptySummary: MonthSummary = {
   totalValue: 0,
@@ -83,20 +103,36 @@ export const emptySummary: MonthSummary = {
 
 /**
  * Calcula o resumo financeiro de um mês específico.
+ *
+ * ⚡ Relacionamento:
+ * - totalValue → soma de todos os valores do mês
+ * - paidValue → soma dos valores marcados como pagos
+ * - unpaidValue → diferença entre total e pagos
+ * - paidPercentage → percentual de contas pagas
+ * - diffFromLastMonth → pode ser calculado usando getDiffFromLastMonth
+ *
+ * @param accounts → lista de contas
+ * @param month → mês desejado
+ * @returns MonthSummary com totais, pagos, não pagos e percentual
  */
-export function computeMonthSummary(accounts: Account[], month: string): MonthSummary {
-  const monthAccounts = accounts.filter((acc) => acc.month === month);
+export function computeMonthSummary(
+  accounts?: Account[],
+  month?: string
+): MonthSummary {
+  if (!accounts?.length || !month) return emptySummary;
 
-  if (monthAccounts.length === 0) return emptySummary;
+  const monthAccounts = accounts.filter((acc) => acc?.month === month);
+  if (!monthAccounts.length) return emptySummary;
 
   const totalValue = sumValues(monthAccounts);
   const paidValue = sumValues(monthAccounts, (a) => a.paid);
   const unpaidValue = roundTwo(totalValue - paidValue);
-  const paidPercentage = totalValue > 0 ? roundTwo((paidValue / totalValue) * 100) : 0;
+  const paidPercentage =
+    totalValue > 0 ? roundTwo((paidValue / totalValue) * 100) : 0;
 
   return {
-    totalValue: roundTwo(totalValue),
-    paidValue: roundTwo(paidValue),
+    totalValue,
+    paidValue,
     unpaidValue,
     paidPercentage,
     diffFromLastMonth: 0,
@@ -104,14 +140,27 @@ export function computeMonthSummary(accounts: Account[], month: string): MonthSu
 }
 
 /**
- * Calcula a diferença de total entre o mês atual e o anterior.
+ * Calcula a diferença do total entre o mês atual e o anterior.
+ * ⚡ Relacionamento:
+ * - Recebe dois MonthSummary
+ * - Atualiza diffFromLastMonth para exibir evolução financeira
  */
-export function getDiffFromLastMonth(current: MonthSummary, previous: MonthSummary): number {
-  return roundTwo(current.totalValue - previous.totalValue);
+export function getDiffFromLastMonth(
+  current: MonthSummary = emptySummary,
+  previous: MonthSummary = emptySummary
+): number {
+  return roundTwo((current?.totalValue ?? 0) - (previous?.totalValue ?? 0));
 }
 
 /**
- * Calcula o resumo agrupado por tipo de conta.
+ * Calcula resumo agrupado por tipo de conta (ex: "Receita", "Despesa").
+ * ⚡ Relacionamento:
+ * - Permite detalhar cada tipo de conta dentro de um mês
+ * - Pode ser usado em gráficos ou relatórios detalhados
+ *
+ * @param accounts → lista de contas
+ * @param month → mês desejado
+ * @returns array de objetos: tipo, totalValue, paidValue, unpaidValue
  */
 export function computeAccountTypeSummary(accounts: Account[], month: string) {
   const monthAccounts = accounts.filter((acc) => acc.month === month);
@@ -123,22 +172,60 @@ export function computeAccountTypeSummary(accounts: Account[], month: string) {
     const paidValue = sumValues(filtered, (a) => a.paid);
     const unpaidValue = roundTwo(totalValue - paidValue);
 
-    return { type, totalValue: roundTwo(totalValue), paidValue: roundTwo(paidValue), unpaidValue };
+    return {
+      type,
+      totalValue,
+      paidValue,
+      unpaidValue,
+    };
   });
 }
 
 /* -------------------------------------------------------------------------- */
-/* 💵 Formatting */
+/* 💵 Formatação de valores */
 /* -------------------------------------------------------------------------- */
 
 /**
- * Formata número em moeda BRL
+ * Formata um número como moeda brasileira (BRL).
+ * ⚡ Relacionamento:
+ * - Útil para exibir totais, pagos e não pagos de MonthSummary ou AccountTypeSummary
  */
-export function formatCurrency(value: number): string {
+export function formatCurrency(value?: number): string {
+  if (typeof value !== "number") return "—";
+
   return value.toLocaleString("pt-BR", {
     style: "currency",
     currency: "BRL",
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
+}
+
+/**
+ * Formata o consumo de acordo com o tipo de conta.
+ *
+ * - Cada tipo possui sua unidade de medida específica
+ * - Mantém consistência visual ao exibir consumo em listas e resumos
+ * - Retorna somente o valor formatado, sem símbolos monetários
+ *
+ * @param type Tipo da conta (ex.: "water", "energy", "internet", "gas")
+ * @param consumption Valor numérico do consumo
+ * @returns Uma string com o consumo acompanhado da unidade correta
+ */
+export function formatConsumption(type?: string, consumption?: number): string {
+  if (typeof consumption !== "number") return "—";
+  if (!type) return String(consumption);
+  
+  switch (type.toLowerCase()) {
+    case "water":
+      return `${consumption} m³`;
+    case "energy":
+      return `${consumption} kWh`;
+    case "internet":
+      return `${consumption} Mbps`;
+    case "gas":
+      return `${consumption} m³`;
+    default:
+      return String(consumption);
+  }
 }

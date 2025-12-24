@@ -1,31 +1,22 @@
-import sql from "mssql";
-import dotenv from "dotenv";
-import path from "path"
-import { fileURLToPath } from "url";
+import postgres from "postgres";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+/**
+ * Singleton para conexão com o banco de dados PostgreSQL.
+ * Usa a variável de ambiente DATABASE_URL para conexão.
+ * Configura SSL obrigatório para conexões seguras.
+ */
+let sql: ReturnType<typeof postgres> | null = null;
 
-dotenv.config({ path: path.resolve(__dirname, "../.env") });
-
-const config: sql.config = {
-  user: process.env.DB_USER!,
-  password: process.env.DB_PASSWORD!,
-  database: process.env.DB_NAME!,
-  server: process.env.DB_SERVER!,
-  port: Number(process.env.DB_PORT!) || 1433,
-  options: {
-    encrypt: process.env.DB_ENCRYPT === "true",
-    trustServerCertificate: process.env.DB_TRUST_CERT === "true",
-  },
-};
-
-export async function getConnection(): Promise<sql.ConnectionPool> {
-  try {
-    const pool = await sql.connect(config);
-    return pool;
-  } catch (err) {
-    console.error("❌ Error connecting to SQL Server:", err);
-    throw err;
+/**
+ * Retorna a instância singleton do cliente PostgreSQL.
+ * @returns Instância do cliente PostgreSQL configurado.
+ */
+export function getDb() {
+  if (!sql) {
+    sql = postgres(process.env.DATABASE_URL!, {
+      ssl: "require",
+    });
   }
+
+  return sql;
 }

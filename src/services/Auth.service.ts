@@ -1,106 +1,65 @@
-import type { User, LoginResponse, CheckUserResponse } from "./Auth.types";
-import { logFrontend } from "@/utils/Logger";
+import { apiClient } from "./ApiClient.service";
+import type {
+  LoginResponse,
+  CheckUserResponse,
+  User,
+} from "@/types/auth.types";
 
-const BASE_URL = import.meta.env.VITE_API_URL;
-
-export const registerUser = async (user: User): Promise<LoginResponse> => {
-  try {
-    const res = await fetch(`${BASE_URL}/users/register`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(user),
-    });
-
-    const json = await res.json();
-    if (!res.ok) return { success: false, message: json.message };
-
-    logFrontend("USER REGISTERED");
-
-    return {
-      success: true,
-      message: json.message,
-      user: json.user,
-    };
-  } catch (err) {
-    console.error(err);
-    return { success: false, message: "Network error" };
-  }
+/**
+ * Registra um novo usuário.
+ *
+ * - Envia os dados de cadastro para o backend
+ * - Usa apiClient para padronizar erros e respostas
+ * - Retorna um ApiResponse<LoginResponse>
+ */
+export const registerUser = (user: User) => {
+  return apiClient<LoginResponse>("/users/register", {
+    method: "POST",
+    // Corpo da requisição enviado como JSON
+    body: JSON.stringify(user),
+  });
 };
 
-export const loginUser = async (
-  email: string,
-  password: string
-): Promise<LoginResponse> => {
-  try {
-    const res = await fetch(`${BASE_URL}/users/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
-    });
-
-    const json = await res.json();
-    if (!res.ok) return { success: false, message: json.message };
-
-    logFrontend("USER LOGGED IN");
-
-    return {
-      success: true,
-      message: json.message,
-      user: json.user,
-      token: json.token,
-    };
-  } catch (err) {
-    console.error(err);
-    return { success: false, message: "Network error" };
-  }
+/**
+ * Realiza o login do usuário.
+ *
+ * - Envia email e senha ao backend
+ * - Espera receber token + dados públicos do usuário
+ * - Toda validação de sucesso/erro é feita pelo apiClient
+ */
+export const loginUser = (email: string, password: string) => {
+  return apiClient<LoginResponse>("/users/login", {
+    method: "POST",
+    body: JSON.stringify({ email, password }),
+  });
 };
 
+/**
+ * Reseta a senha de um usuário existente.
+ *
+ * - Envia email + nova senha
+ * - Retorna a mesma estrutura de LoginResponse para consistência
+ */
 export const resetPassword = async (
   email: string,
   newPassword: string
 ): Promise<LoginResponse> => {
-  try {
-    const res = await fetch(`${BASE_URL}/users/reset-password`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password: newPassword }),
-    });
-
-    const json = await res.json();
-    if (!res.ok) return { success: false, message: json.message };
-
-    logFrontend("USER CHANGED PASSWORD");
-
-    return {
-      success: true,
-      message: json.message,
-      user: json.user,
-    };
-  } catch (err) {
-    console.error(err);
-    return { success: false, message: "Network error" };
-  }
+  return apiClient<LoginResponse>("/users/reset-password", {
+    method: "POST",
+    body: JSON.stringify({ email, password: newPassword }),
+  });
 };
 
-export const checkUserExists = async (
-  email: string
-): Promise<CheckUserResponse> => {
-  try {
-    const res = await fetch(`${BASE_URL}/users/check-user-exists`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email }),
-    });
-
-    const json = await res.json();
-
-    return {
-      success: json.success ?? res.ok,
-      exists: json.exists ?? false,
-      message: json.message,
-    } as CheckUserResponse;
-  } catch (err) {
-    console.error(err);
-    return { success: false, exists: false, message: "Network error" };
-  }
+/**
+ * Verifica se um usuário existe pelo email.
+ *
+ * - Envia email para o backend
+ * - Backend retorna "exists: true | false"
+ * - Tipagem forte com CheckUserResponse
+ */
+export const checkUserExists = (email: string) => {
+  return apiClient<CheckUserResponse>("/users/check-user-exists/", {
+    method: "POST",
+    body: JSON.stringify({ email }),
+  });
 };

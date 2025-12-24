@@ -5,25 +5,60 @@ import {
   resetPassword,
   checkUserExists,
 } from "../controllers/user.controller.ts";
-import { getConnection } from "../utils/db.ts";
+import { getDb } from "../utils/db.ts";
 
 const router = Router();
 
+/**
+ * POST /users/register
+ * Registra um novo usuário no sistema.
+ * Responsável por criar o registro na tabela de usuários.
+ */
 router.post("/register", register);
+
+/**
+ * POST /users/login
+ * Autentica o usuário e retorna token + dados básicos.
+ */
 router.post("/login", login);
+
+/**
+ * POST /users/reset-password
+ * Inicia ou conclui o fluxo de redefinição de senha.
+ */
 router.post("/reset-password", resetPassword);
+
+/**
+ * POST /users/check-user-exists
+ * Verifica se um email já está cadastrado para evitar duplicações.
+ */
 router.post("/check-user-exists", checkUserExists);
 
+/**
+ * GET /users/
+ * Retorna a lista completa de usuários.
+ * ⚠️ Rota usada para debug — não possui autenticação.
+ * Retorna apenas dados públicos, sem senha.
+ */
 router.get("/", async (req, res) => {
   try {
-    const conn = await getConnection();
-    const result = await conn.query(
-      "SELECT Id, Name, Email, Address FROM Users"
-    );
-    res.json({ success: true, users: result.recordset });
+    const sql = getDb();
+    const users = await sql`
+      SELECT id, name, email, address
+      FROM users
+    `;
+
+    res.json({
+      success: true,
+      users,
+    });
   } catch (err) {
     console.error("❌ Error fetching users:", err);
-    res.status(500).json({ success: false, message: "Internal server error" });
+
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
   }
 });
 

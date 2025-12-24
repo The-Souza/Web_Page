@@ -1,79 +1,173 @@
-import { useRef } from "react";
+import { useRef, useEffect, useState, useMemo, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useAuth } from "@/hooks/UseAuth";
-import { useToast } from "@/components/providers/hook/useToast";
-import { Input, Select, Button, Title } from "@/components";
-import { registerAccount } from "@/services";
-import { useLoading } from "@/components/providers/hook/useLoading";
+import {
+  Select,
+  Button,
+  Title,
+  Table,
+  Input,
+  Pagination,
+  Modal,
+} from "@/components";
 import type { SelectHandle } from "@/components/UI/select/Select.types";
-import type { RegisterAccountPayload } from "@/types/account.types";
+import type { Account } from "@/types/account.types";
+import {
+  registerAccount,
+  getAccounts,
+  updateAccount,
+  deleteAccount,
+} from "@/services";
+import { useLoading } from "@/providers/hook/useLoading";
+import { useAccountSummary } from "@/hooks/useAccountSummary";
+import { useAuth } from "@/providers/hook/useAuth";
+import { useToast } from "@/providers/hook/useToast";
+import { useAccounts } from "@/hooks/useAccounts";
+import { formatConsumption, formatCurrency } from "@/helpers/accountHelpers";
+import { normalizeMonth } from "@/helpers/accountFormHelpers";
+import {
+  ACCOUNT_TYPE_OPTIONS,
+  MONTH_OPTIONS,
+  YEAR_OPTIONS,
+} from "@/constants/accountOptions";
 
-// -------------------- 🧠 Validation Schema --------------------
+/* ========================================================================
+ * 🧠 VALIDATION SCHEMA
+ * ------------------------------------------------------------------------
+ * Schema de validação usando Zod.
+ * Responsável por:
+ * - Validar os campos do formulário
+ * - Normalizar valores antes da validação (preprocess)
+ * - Garantir regras de negócio básicas
+ * ====================================================================== */
 const accountSchema = z.object({
+  // Tipo da conta (ex: água, luz, internet)
   accountType: z.string().min(1, "Account type is required"),
 
+  // Consumo:
+  // - Converte string com vírgula para número
+  // - Retorna undefined se não for número (dispara erro do Zod)
+  // - Valor mínimo > 0
   consumption: z.preprocess((val) => {
-    const n = Number(val);
+    const n = Number(String(val).replace(",", "."));
     return isNaN(n) ? undefined : n;
   }, z.number().min(0.000001, "Consumption must be a number greater than 0")),
 
+  // Dias:
+  // - Converte para número
   days: z.preprocess((val) => {
     const n = Number(val);
     return isNaN(n) ? undefined : n;
-  }, z.number().min(1, "Days must be between 1 and 31").max(31, "Days must be between 1 and 31")),
+  }, z.number().min(1, "Days must be at least 1")),
 
+  // Valor monetário:
+  // - Normaliza vírgula para ponto
+  // - Garante valor maior que zero
   value: z.preprocess((val) => {
-    const n = Number(val);
+    const n = Number(String(val).replace(",", "."));
     return isNaN(n) ? undefined : n;
   }, z.number().min(0.000001, "Value must be greater than 0")),
 
+  // Status de pagamento
   paid: z.boolean(),
+
+  // Endereço da conta
   address: z.string().min(1, "Address is required"),
+
+  // Ano da conta
   year: z.string().min(1, "Year is required"),
+
+  // Mês da conta
   month: z.string().min(1, "Month is required"),
 });
 
+// Tipo inferido automaticamente a partir do schema
 type AccountFormData = z.infer<typeof accountSchema>;
 
-// -------------------- 📅 Select Options --------------------
-const accountTypeOptions = [
-  { label: "Water", value: "Water" },
-  { label: "Energy", value: "Energy" },
-  { label: "Gas", value: "Gas" },
-  { label: "Internet", value: "Internet" },
-];
+/* ========================================================================
+ * 📦 CONSTANTS
+ * ------------------------------------------------------------------------
+ * Valores iniciais do formulário.
+ * Usado para:
+ * - Reset
+ * - Inicialização do React Hook Form
+ * ====================================================================== */
+const DEFAULT_FORM_VALUES = {
+  accountType: "",
+  consumption: "",
+  days: "",
+  value: "",
+  paid: false,
+  address: "",
+  year: "",
+  month: "",
+};
 
-const currentYear = new Date().getFullYear();
-const yearOptions = Array.from({ length: 6 }, (_, i) => ({
-  label: String(currentYear + i),
-  value: String(currentYear + i),
-}));
-
-const monthOptions = Array.from({ length: 12 }, (_, i) => {
-  const month = String(i + 1).padStart(2, "0");
-  return { label: month, value: month };
-});
-
-// -------------------- 🧱 Main Component --------------------
+/* ========================================================================
+ * 🧱 COMPONENT
+ * ====================================================================== */
 export default function RegisterAccount() {
-  const { user } = useAuth();
-  const { showToast } = useToast();
+  /* --------------------------------------------------------------------
+   * 🔌 EXTERNAL HOOKS
+   * --------------------------------------------------------------------
+   * Hooks de contexto e dados externos
+   * ------------------------------------------------------------------ */
+  const { user, token } = useAuth();
   const { setLoading } = useLoading();
+  const { showToast } = useToast();
 
-  const defaultValues = {
-    accountType: "",
-    consumption: "",
-    days: "",
-    value: "",
-    paid: false,
-    address: "",
-    year: "",
-    month: "",
-  };
+  // Hook responsável por buscar, armazenar e atualizar contas
+  const { accounts, setAccounts, updatePaid } = useAccounts(user?.email);
 
-  // Tipagem do useForm adaptada para o Zod pre-processado
+  // Hook que deriva filtros, totais e listas a partir das contas
+  const summary = useAccountSummary(accounts);
+
+  /* --------------------------------------------------------------------
+   * 🧠 STATE
+   * ------------------------------------------------------------------ */
+  // Conta em modo de edição (null = criação)
+  const [editingAccount, setEditingAccount] = useState<Account | null>(null);
+
+  // Controle de paginação
+  const [startIndex, setStartIndex] = useState(0);
+  const [pageSize, setPageSize] = useState(5);
+
+  // Controle dos modais
+  const [isFormModalOpen, setFormModalOpen] = useState(false);
+  const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
+
+  // Conta selecionada para exclusão
+  const [accountToDelete, setAccountToDelete] = useState<Account | null>(null);
+
+  /* --------------------------------------------------------------------
+   * 📌 REFS
+   * --------------------------------------------------------------------
+   * Referências para selects customizados
+   * Usadas para limpar seleção imperativamente
+   * ------------------------------------------------------------------ */
+  const yearFilterRef = useRef<SelectHandle>(null);
+  const monthFilterRef = useRef<SelectHandle>(null);
+  const typeFilterRef = useRef<SelectHandle>(null);
+  const paidFilterRef = useRef<SelectHandle>(null);
+
+  const yearFormRef = useRef<SelectHandle>(null);
+  const monthFormRef = useRef<SelectHandle>(null);
+  const typeFormRef = useRef<SelectHandle>(null);
+
+  /* --------------------------------------------------------------------
+   * 🧮 DERIVED STATE
+   * --------------------------------------------------------------------
+   * Contas filtradas + paginadas
+   * Memoriza para evitar renders desnecessários
+   * ------------------------------------------------------------------ */
+  const paginatedAccounts = useMemo(() => {
+    return summary.filteredAccounts.slice(startIndex, startIndex + pageSize);
+  }, [summary.filteredAccounts, startIndex, pageSize]);
+
+  /* --------------------------------------------------------------------
+   * 📝 FORM (React Hook Form + Zod)
+   * ------------------------------------------------------------------ */
   const {
     register,
     handleSubmit,
@@ -83,223 +177,571 @@ export default function RegisterAccount() {
     reset,
   } = useForm<z.input<typeof accountSchema>, unknown, AccountFormData>({
     resolver: zodResolver(accountSchema),
-    defaultValues,
+    defaultValues: DEFAULT_FORM_VALUES,
     mode: "onBlur",
   });
 
+  // Observa valor do campo "paid" para UI reativa
   const paidValue = watch("paid");
 
-  // ---- refs para os selects ----
-  const yearSelectRef = useRef<SelectHandle>(null);
-  const monthSelectRef = useRef<SelectHandle>(null);
-  const accountTypeSelectRef = useRef<SelectHandle>(null);
+  /* --------------------------------------------------------------------
+   * 🧹 HELPERS (SRP)
+   * ------------------------------------------------------------------ */
 
-  // ---- envio de formulário ----
+  // Carrega contas do backend
+  const loadAccounts = useCallback(async () => {
+    if (!user?.email) return;
+
+    setLoading(true);
+    try {
+      const response = await getAccounts(user.email);
+      if (response.success && response.data) {
+        setAccounts(response.data);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [user?.email, setAccounts, setLoading]);
+
+  // Limpa selects do formulário
+  const clearFormSelects = () => {
+    yearFormRef.current?.clearSelection();
+    monthFormRef.current?.clearSelection();
+    typeFormRef.current?.clearSelection();
+  };
+
+  // Limpa selects dos filtros
+  const clearFilterSelects = () => {
+    yearFilterRef.current?.clearSelection();
+    monthFilterRef.current?.clearSelection();
+    typeFilterRef.current?.clearSelection();
+    paidFilterRef.current?.clearSelection();
+  };
+
+  // Fecha modal de formulário e reseta estado
+  const closeFormModal = () => {
+    setFormModalOpen(false);
+    setEditingAccount(null);
+    reset(DEFAULT_FORM_VALUES);
+    clearFormSelects();
+  };
+
+  // Reseta apenas o formulário
+  const resetForm = () => {
+    reset(DEFAULT_FORM_VALUES);
+    setValue("paid", false);
+    clearFormSelects();
+  };
+
+  // Abre formulário em modo edição
+  const openEditForm = (account: Account) => {
+    setEditingAccount(account);
+
+    reset({
+      address: account.address,
+      accountType: account.accountType,
+      consumption: account.consumption,
+      days: account.days,
+      value: account.value,
+      paid: account.paid,
+      year: String(account.year),
+      month: account.month.split("/")[0],
+    });
+
+    setFormModalOpen(true);
+  };
+
+  /* --------------------------------------------------------------------
+   * 🎯 HANDLERS
+   * ------------------------------------------------------------------ */
+  const handleEdit = (account: Account) => {
+    openEditForm(account);
+  };
+
+  const handleDeleteClick = (account: Account) => {
+    setAccountToDelete(account);
+    setDeleteModalOpen(true);
+  };
+
+  // Limpa filtros e estados derivados
+  const clearFilters = useCallback(async () => {
+    clearFilterSelects();
+
+    summary.setSelectedYear("");
+    summary.setSelectedMonth("");
+    summary.setSelectedType("");
+    summary.setSelectedPaid("");
+  }, [summary]);
+
+  /* --------------------------------------------------------------------
+   * 🔄 EFFECTS
+   * ------------------------------------------------------------------ */
+
+  // Carrega contas ao iniciar ou trocar usuário
+  useEffect(() => {
+    loadAccounts();
+  }, [user?.email, loadAccounts]);
+
+  // Reseta paginação ao mudar filtros
+  useEffect(() => {
+    setStartIndex(0);
+  }, [summary.filteredAccounts]);
+
+  // Se filtros resultarem em lista vazia, limpa filtros
+  useEffect(() => {
+    if (summary.filteredAccounts.length === 0 && accounts.length > 0) {
+      clearFilters();
+    }
+  }, [summary.filteredAccounts.length, accounts.length, clearFilters]);
+
+  /* --------------------------------------------------------------------
+   * 📩 SUBMIT
+   * ------------------------------------------------------------------ */
   const onSubmit = async (data: AccountFormData) => {
-    if (!user?.id || !user?.email) {
+    if (!user?.id || !user?.email) return;
+
+    setLoading(true, editingAccount ? "Updating..." : "Saving...");
+
+    try {
+      if (editingAccount) {
+        // Atualização
+        const response = await updateAccount(
+          editingAccount.id,
+          {
+            ...data,
+            year: Number(data.year),
+            month: normalizeMonth(data.month, data.year),
+          },
+          token!
+        );
+
+        if (response.success) {
+          await loadAccounts();
+          showToast({
+            type: "success",
+            title: "Account updated!",
+            text: response.message,
+          });
+        } else {
+          showToast({ type: "error", text: response.message });
+        }
+      } else {
+        // Criação
+        const response = await registerAccount(
+          {
+            userId: user.id,
+            userEmail: user.email,
+            ...data,
+          },
+          token!
+        );
+
+        if (response.success) {
+          await loadAccounts();
+          showToast({
+            type: "success",
+            title: "Account added",
+            text: response.message,
+          });
+        } else {
+          showToast({ type: "error", text: response.message });
+        }
+      }
+
+      resetForm();
+      closeFormModal();
+    } catch {
       showToast({
         type: "error",
-        text: "User not found. Please log in again.",
+        text: editingAccount
+          ? "Error updating account"
+          : "Error registering account",
       });
-      return;
-    }
-
-    setLoading(true, "Saving Account...");
-    try {
-      // Incluindo userId e userEmail no payload
-      const payload: RegisterAccountPayload = {
-        userId: user.id,
-        userEmail: user.email,
-        address: data.address,
-        accountType: data.accountType,
-        year: data.year,
-        month: data.month,
-        consumption: data.consumption,
-        days: data.days,
-        value: data.value,
-        paid: data.paid,
-      };
-
-      const response = await registerAccount(payload);
-
-      if (response.success) {
-        showToast({
-          type: "success",
-          text: "Account registered successfully",
-        });
-
-        // Reset geral: inputs + radio + selects
-        reset(defaultValues);
-        yearSelectRef.current?.clearSelection();
-        monthSelectRef.current?.clearSelection();
-        accountTypeSelectRef.current?.clearSelection();
-
-        setValue("year", "");
-        setValue("month", "");
-        setValue("accountType", "");
-        setValue("paid", false);
-
-        // Aqui você poderia atualizar localmente a lista de contas do usuário, se houver
-        // ex: setAccounts(prev => [...prev, response.account]);
-      } else {
-        showToast({
-          type: "error",
-          text: response.message || "Error registering account",
-        });
-      }
-    } catch (err) {
-      console.error("❌ Error registering account:", err);
-      showToast({ type: "error", text: "Error registering account" });
     } finally {
       setLoading(false);
     }
   };
 
+  /* --------------------------------------------------------------------
+   * 🗑️ Confirma exclusão
+   * ------------------------------------------------------------------ */
+  const confirmDelete = async () => {
+    if (!accountToDelete) return;
+
+    setLoading(true, "Deleting...");
+    const response = await deleteAccount(accountToDelete.id, token!);
+
+    if (response.success) {
+      setAccounts((prev) => prev.filter((a) => a.id !== accountToDelete.id));
+      showToast({
+        type: "success",
+        title: "Account deleted",
+        text: response.message,
+      });
+    } else {
+      showToast({ type: "error", text: response.message });
+    }
+
+    setLoading(false);
+    setDeleteModalOpen(false);
+    setAccountToDelete(null);
+  };
+
+  // ------------------------------------------------------------
+  // 🖥️ RENDERIZAÇÃO
+  // ------------------------------------------------------------
   return (
     <div className="flex flex-col gap-4 text-greenLight">
-      <Title text="Register Account" size="2xl" />
+      {/* HEADER + FILTROS ------------------------------------- */}
+      <div className="flex flex-col gap-4 items-start w-full">
+        <Title text="Accounts" size="2xl" />
 
-      <form
-        onSubmit={handleSubmit(onSubmit)}
-        className="bg-dark p-8 sm:p-10 rounded-2xl border-2 border-greenLight shadow-greenLight flex flex-col gap-4"
-      >
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          <Input
-            {...register("address")}
-            theme="light"
-            label="Address"
-            placeholder="Ex: Rua XYZ, nº 123"
-            error={errors.address?.message}
-          />
+        <div className="w-full flex flex-col xl:flex-row gap-4 items-end justify-between">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 w-full xl:w-auto">
+            <Select
+              ref={yearFilterRef}
+              label="Year"
+              options={summary.availableYears.map((y) => ({
+                label: y,
+                value: y,
+              }))}
+              placeholder="Select a year"
+              value={summary.selectedYear}
+              onChange={(val) => summary.setSelectedYear(val)}
+              sort={{ by: "label", direction: "asc" }}
+            />
 
-          <Select
-            ref={yearSelectRef}
-            label="Year"
-            theme="light"
-            required={true}
-            placeholder="Select year"
-            options={yearOptions}
-            onChange={(val) => setValue("year", val)}
-            value={watch("year") || ""}
-            error={errors.year?.message}
-          />
+            <Select
+              ref={monthFilterRef}
+              label="Month"
+              options={summary.availableMonths.map((m) => ({
+                label: m,
+                value: m,
+              }))}
+              placeholder="Select a month"
+              value={summary.selectedMonth}
+              onChange={(val) => summary.setSelectedMonth(val)}
+              sort={{ by: "label", direction: "asc" }}
+            />
 
-          <Select
-            ref={monthSelectRef}
-            label="Month"
-            theme="light"
-            required={true}
-            placeholder="Select month"
-            options={monthOptions}
-            onChange={(val) => setValue("month", val)}
-            value={watch("month") || ""}
-            error={errors.month?.message}
-          />
+            <Select
+              ref={typeFilterRef}
+              label="Type"
+              options={summary.availableTypes.map((t) => ({
+                label: t,
+                value: t,
+              }))}
+              placeholder="Select a type"
+              value={summary.selectedType}
+              onChange={(val) => summary.setSelectedType(val)}
+              sort={{ by: "label", direction: "asc" }}
+            />
 
-          <Select
-            ref={accountTypeSelectRef}
-            label="Account Type"
-            theme="light"
-            required={true}
-            placeholder="Select account type"
-            options={accountTypeOptions}
-            onChange={(val) => setValue("accountType", val)}
-            value={watch("accountType") || ""}
-            error={errors.accountType?.message}
-          />
+            <Select
+              ref={paidFilterRef}
+              label="Status (Paid/Unpaid)"
+              options={summary.availablePaids.map((p) => ({
+                label: p ? "Paid" : "Unpaid",
+                value: String(p), // converte boolean → string
+              }))}
+              placeholder="Select an account status"
+              value={
+                summary.selectedPaid === "" ? "" : String(summary.selectedPaid)
+              }
+              onChange={(val) => {
+                summary.setSelectedPaid(val === "" ? "" : val === "true");
+              }}
+              sort={{ by: "label", direction: "asc" }}
+            />
+          </div>
 
-          <Input
-            {...register("consumption")}
-            label="Consumption"
-            theme="light"
-            placeholder="Consumption in m³ or kWh"
-            type="number"
-            error={errors.consumption?.message}
-          />
+          <div className="flex w-full xl:flex-1 2xl:max-w-[30rem] gap-4">
+            {/* Limpar filtros */}
+            <Button
+              text="Clear filters"
+              size="full"
+              variant="solid"
+              onClick={clearFilters}
+            />
 
-          <Input
-            {...register("days")}
-            label="Days"
-            theme="light"
-            placeholder="Ex: 1 to 31"
-            type="number"
-            error={errors.days?.message}
-          />
-
-          <Input
-            {...register("value")}
-            label="Value"
-            placeholder="90,45"
-            type="number"
-            error={errors.value?.message}
-          />
-
-          {/* ----- Paid Status ----- */}
-          <div className="flex flex-col gap-1">
-            <label className="font-lato font-semibold text-md">
-              Paid Status
-            </label>
-            <div className="flex gap-4">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="radio"
-                  value="true"
-                  checked={paidValue === true}
-                  onChange={() => setValue("paid", true)}
-                  className="accent-greenLight"
-                />
-                <span>Paid</span>
-              </label>
-
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="radio"
-                  value="false"
-                  checked={paidValue === false}
-                  onChange={() => setValue("paid", false)}
-                  className="accent-red-400"
-                />
-                <span>Unpaid</span>
-              </label>
-            </div>
-            {errors.paid && (
-              <p className="text-red-500 text-sm font-lato">
-                {errors.paid.message}
-              </p>
-            )}
+            {/* Botão de criar */}
+            <Button
+              text="Add Account"
+              size="full"
+              variant="solid"
+              onClick={() => {
+                resetForm(); // apenas form
+                setEditingAccount(null);
+                setFormModalOpen(true);
+              }}
+            />
           </div>
         </div>
+      </div>
 
-        {/* ----- Buttons ----- */}
-        <div className="w-full sm:w-[20rem] flex flex-col sm:flex-row gap-3 self-end">
-          <Button
-            text="Reset"
-            type="button"
-            variant="solid"
-            size="full"
-            onClick={() => {
-              reset(defaultValues);
-              yearSelectRef.current?.clearSelection();
-              monthSelectRef.current?.clearSelection();
-              accountTypeSelectRef.current?.clearSelection();
+      {/* --------------------------------------------------------
+          📋 TABELA DE CONTAS FILTRADAS
+      -------------------------------------------------------- */}
+      <Table<Account>
+        id="table-accounts"
+        data={paginatedAccounts}
+        rowKey={(acc) => acc.id}
+        defaultSort={{
+          key: "year",
+          direction: "asc",
+        }}
+        columns={[
+          {
+            key: "__index",
+            label: "Nº",
+            render: (_, __, rowIndex) => startIndex + rowIndex + 1,
+          },
+          {
+            key: "address",
+            label: "Address",
+            sortable: true,
+            sortType: "string",
+          },
+          { key: "year", label: "Year", sortable: true, sortType: "number" },
+          { key: "month", label: "Month", sortable: true, sortType: "string" },
+          {
+            key: "accountType",
+            label: "Type",
+            sortable: true,
+            sortType: "string",
+          },
+          {
+            key: "consumption",
+            label: "Consumption",
+            render: (val, row) =>
+              formatConsumption(row.accountType, val as number),
+            sortable: true,
+            sortType: "number",
+          },
+          { key: "days", label: "Days", sortable: true, sortType: "number" },
+          {
+            key: "value",
+            label: "Value",
+            render: (val) => formatCurrency(val as number),
+            sortable: true,
+            sortType: "number",
+          },
+          {
+            key: "paid",
+            label: "Paid/Unpaid",
+            sortable: true,
+            sortType: "boolean",
+            render: (value, acc) => (
+              <div className="flex items-center justify-center">
+                <div className="w-[6rem]">
+                  <Button
+                    text={value ? "Paid" : "Unpaid"}
+                    icon="money"
+                    size="full"
+                    variant={value ? "solid" : "unpaid"}
+                    onClick={() =>
+                      updatePaid(
+                        acc.id,
+                        !value, // inverte o estado
+                        acc.accountType,
+                        acc.address,
+                        acc.month
+                      )
+                    }
+                  />
+                </div>
+              </div>
+            ),
+          },
+          {
+            key: "actions",
+            label: "Actions",
+            render: (_, row) => (
+              <div className="flex items-center gap-2 justify-center">
+                <Button
+                  size="full"
+                  variant="solid"
+                  icon="edit"
+                  onClick={() => handleEdit(row)}
+                />
+                <Button
+                  size="full"
+                  variant="solid"
+                  icon="trash"
+                  onClick={() => handleDeleteClick(row)}
+                />
+              </div>
+            ),
+          },
+        ]}
+        emptyMessage="No accounts found"
+      />
 
-              setValue("year", "");
-              setValue("month", "");
-              setValue("accountType", "");
-              setValue("paid", false);
-            }}
-          />
-          <Button text="Save" type="submit" variant="solid" size="full" />
+      <Pagination
+        items={summary.filteredAccounts}
+        initialPageSize={5}
+        onPageChange={({ startIndex, itemsPerPage }) => {
+          setStartIndex(startIndex);
+          setPageSize(itemsPerPage);
+        }}
+      />
+
+      {/* --------------------------------------------------------
+      📝 MODAL DE FORMULÁRIO (CRIAR/EDITAR)
+      -------------------------------------------------------- */}
+      <Modal
+        isOpen={isFormModalOpen}
+        variant="default"
+        onClose={closeFormModal}
+      >
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <div className="flex flex-col gap-5">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <Input
+                {...register("address")}
+                theme="light"
+                label="Address"
+                placeholder="Ex: Rua XYZ, nº 123"
+                error={errors.address?.message}
+              />
+
+              <Select
+                ref={yearFormRef}
+                label="Year"
+                theme="light"
+                required={true}
+                placeholder="Select year"
+                options={YEAR_OPTIONS}
+                onChange={(val) => setValue("year", val)}
+                value={String(watch("year") ?? "")}
+                error={errors.year?.message}
+                sort={{ by: "label", direction: "asc" }}
+              />
+
+              <Select
+                ref={monthFormRef}
+                label="Month"
+                theme="light"
+                required={true}
+                placeholder="Select month"
+                options={MONTH_OPTIONS}
+                onChange={(val) => setValue("month", val)}
+                value={String(watch("month") ?? "")}
+                error={errors.month?.message}
+                sort={{ by: "label", direction: "asc" }}
+              />
+
+              <Select
+                ref={typeFormRef}
+                label="Account Type"
+                theme="light"
+                required={true}
+                placeholder="Select account type"
+                options={ACCOUNT_TYPE_OPTIONS}
+                onChange={(val) => setValue("accountType", val)}
+                value={String(watch("accountType") ?? "")}
+                error={errors.accountType?.message}
+                sort={{ by: "label", direction: "asc" }}
+              />
+
+              <Input
+                {...register("consumption")}
+                label="Consumption"
+                theme="light"
+                placeholder="123,450"
+                type="text"
+                inputMode="decimal"
+                error={errors.consumption?.message}
+              />
+
+              <Input
+                {...register("days")}
+                label="Days"
+                theme="light"
+                placeholder="Ex: 1 to 31"
+                type="number"
+                error={errors.days?.message}
+              />
+
+              <Input
+                {...register("value")}
+                label="Value"
+                placeholder="90,45"
+                type="text"
+                inputMode="decimal"
+                error={errors.value?.message}
+              />
+
+              {/* Campo Paid — APENAS NO MODAL DE CRIAÇÃO */}
+              {!editingAccount && (
+                <div className="flex flex-col items-start justify-center gap-1">
+                  <span className="font-lato font-semibold">
+                    {paidValue ? "Paid" : "Unpaid"}
+                  </span>
+
+                  <button
+                    type="button"
+                    onClick={() => setValue("paid", !paidValue)}
+                    className={`
+                    relative w-14 h-8 rounded-full transition-colors
+                    ${paidValue ? "bg-greenLight" : "bg-red-400"}
+                  `}
+                  >
+                    <span
+                      className={`
+                        absolute top-1 left-1 w-6 h-6 bg-white rounded-full transition-transform
+                        ${paidValue ? "translate-x-6" : "translate-x-0"}
+                      `}
+                    />
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <div className="flex gap-3 mt-4">
+              <Button type="submit" variant="solid" size="full" text="Save" />
+              <Button
+                variant="unpaid"
+                size="full"
+                text="Cancel"
+                onClick={closeFormModal}
+              />
+            </div>
+          </div>
+        </form>
+      </Modal>
+
+      {/* --------------------------------------------------------
+      🗑️ MODAL DE CONFIRMAÇÃO DE EXCLUSÃO
+      -------------------------------------------------------- */}
+      <Modal
+        isOpen={isDeleteModalOpen}
+        variant="confirm"
+        onClose={() => setDeleteModalOpen(false)}
+      >
+        <div className="flex flex-col items-center gap-2 text-greenLight">
+          <Title text="Delete Account" size="2xl" />
+
+          <p className="font-lato text-md leading-10">
+            Are you sure you want to delete this account?
+          </p>
+
+          <div className="flex w-full gap-3">
+            <Button
+              text="Delete"
+              variant="solid"
+              size="full"
+              onClick={confirmDelete}
+            />
+            <Button
+              text="Cancel"
+              variant="unpaid"
+              size="full"
+              onClick={() => setDeleteModalOpen(false)}
+            />
+          </div>
         </div>
-      </form>
-
-      <section className="mt-8 border-t border-greenMid pt-6">
-        <Title text="Upload Excel (coming soon...)" size="lg" />
-        <p className="text-greenMid font-lato">
-          Soon you’ll be able to import multiple accounts from a spreadsheet
-          here.
-        </p>
-      </section>
+      </Modal>
     </div>
   );
 }

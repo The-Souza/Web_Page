@@ -1,9 +1,8 @@
 import { Routes, Route } from "react-router-dom";
-import { lazy, Suspense } from "react";
+import { lazy } from "react";
 import { PrivateRoute } from "@/hooks/PrivateRoute";
 import { AuthLayout } from "@/layouts/AuthLayout";
 import { MainLayout } from "@/layouts/MainLayout";
-import { LoadingFallback } from "@/hooks/loadingFallback";
 
 const SignIn = lazy(() => import("@/pages/auth/SignIn"));
 const SignUp = lazy(() => import("@/pages/auth/SignUp"));
@@ -14,7 +13,6 @@ const RegisterAccount = lazy(() => import("@/pages/private/RegisterAccount"));
 export function App() {
   return (
     <div className="flex flex-col items-center justify-center w-full min-h-screen">
-      <Suspense fallback={<LoadingFallback />}>
         <Routes>
           {/* ===== Rotas públicas (não precisam de autenticação) ===== */}
           <Route element={<AuthLayout />}>
@@ -41,7 +39,6 @@ export function App() {
             </Route>
           </Route>
         </Routes>
-      </Suspense>
     </div>
   );
 }

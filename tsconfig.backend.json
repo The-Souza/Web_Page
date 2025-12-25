@@ -1,19 +1,13 @@
 {
   "compilerOptions": {
-    "target": "ES2022",
+    "target": "ES2020",
     "module": "ESNext",
-    "moduleResolution": "node16",
-
-    "strict": true,
-    "skipLibCheck": true,
-
+    "moduleResolution": "Node",
+    "outDir": "backend/dist",
+    "rootDir": "backend",
     "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-
-    "allowImportingTsExtensions": false,
-    "verbatimModuleSyntax": true,
-
-    "noEmit": true
+    "strict": true,
+    "skipLibCheck": true
   },
-  "include": ["backend"]
+  "include": ["backend/**/*.ts"]
 }

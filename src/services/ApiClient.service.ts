@@ -7,29 +7,23 @@ const API_URL = import.meta.env.VITE_API_URL;
 /**
  * Normaliza diferentes tipos de Headers para Record<string, string>
  * @param headers HeadersInit (Headers | Record<string, string> | [string, string][])
- * @returns Record<string, string>
  */
 function normalizeHeaders(headers?: HeadersInit): Record<string, string> {
   if (!headers) return {};
 
   if (headers instanceof Headers) {
     const obj: Record<string, string> = {};
-    headers.forEach((value, key) => {
-      obj[key] = value;
-    });
+    headers.forEach((value, key) => (obj[key] = value));
     return obj;
   }
 
   if (Array.isArray(headers)) {
     const obj: Record<string, string> = {};
-    headers.forEach(([key, value]) => {
-      obj[key] = value;
-    });
+    headers.forEach(([key, value]) => (obj[key] = value));
     return obj;
   }
 
-  // já é Record<string, string>
-  return headers;
+  return headers as Record<string, string>;
 }
 
 /**
@@ -52,7 +46,7 @@ export async function apiClient<T>(
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...normalizeHeaders(options.headers),
     };
-
+    
     // Faz a requisição HTTP
     const response = await fetch(`${API_URL}${endpoint}`, {
       ...options,
@@ -80,11 +74,7 @@ export async function apiClient<T>(
     const data = rawJson?.data ?? rawJson;
 
     // Retorno padronizado
-    return {
-      success,
-      message: rawJson?.message,
-      data,
-    };
+    return { success, message: rawJson?.message, data };
   } catch {
     // Erro de rede ou outro inesperado
     return apiResponse.error<T>("Network error");

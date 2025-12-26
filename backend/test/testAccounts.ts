@@ -1,19 +1,10 @@
 import {
   getAllAccounts,
-  getAccountsByUserId,
   getAccountsByUserEmail,
   updateAccountPaid,
 } from "../services/account.service.js";
 import chalk from "chalk";
-
-/**
- * Função utilitária para exibir objetos no terminal
- * com indentação, cores e profundidade completa.
- */
-function prettyLog(label: string, data: object) {
-  console.log(chalk.blue(`\n[${label}]`));
-  console.dir(data, { depth: null, colors: true });
-}
+import { prettyLog } from "../utils/logger.js";
 
 /**
  * Função principal usada para testar manualmente
@@ -38,13 +29,6 @@ export default async function testAccounts() {
   console.log("💾 Total accounts:", allAccounts.length);
 
   //
-  // 🔹 Teste: getAccountsByUserId()
-  //
-  console.log("\n🔹 Testing getAccountsByUserId for userId = 1");
-  const userAccounts = await getAccountsByUserId(1);
-  console.log("💾 User 1 accounts:", userAccounts.length);
-
-  //
   // 🔹 Teste: getAccountsByUserEmail()
   //
   console.log("\n🔹 Testing getAccountsByUserEmail for user1@example.com");
@@ -55,8 +39,8 @@ export default async function testAccounts() {
   // 🔹 Teste: updateAccountPaid()
   // Atualiza a primeira conta como paga e lê novamente para conferir.
   //
-  if (userAccounts.length > 0) {
-    const first = userAccounts[0];
+  if (emailAccounts.length > 0) {
+    const first = emailAccounts[0];
 
     console.log(chalk.cyan(`\n🔹 Marking account ID=${first.id} as paid...`));
 
@@ -64,7 +48,7 @@ export default async function testAccounts() {
     await updateAccountPaid(first.id!, true);
 
     // Busca novamente contas do usuário para confirmar a mudança
-    const updated = await getAccountsByUserId(1);
+    const updated = await getAccountsByUserEmail("user1@example.com");
     const updatedFirst = updated.find((acc) => acc.id === first.id);
 
     // Exibe o registro atualizado em formato legível
@@ -73,8 +57,5 @@ export default async function testAccounts() {
     console.log(
       chalk.green(`\n✅ Account ID=${first.id} updated to paid=true!`)
     );
-  } else {
-    // Caso o DB não tenha contas para o usuário 1
-    console.log(chalk.yellow("\n⚠️  No account found for userId=1"));
   }
 }

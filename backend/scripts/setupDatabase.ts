@@ -1,7 +1,5 @@
-import { getDb } from "../utils/db.js";
+import { getDb } from "../utils/getDb.js";
 import chalk from "chalk";
-
-const sql = getDb();
 
 /**
  * createTables()
@@ -27,18 +25,17 @@ export async function createTables() {
    * - id: chave primária incremental (SERIAL)
    * - name: opcional
    * - email: obrigatório e único (UNIQUE NOT NULL)
-   * - address: opcional
    * - password: obrigatório (apenas para o ambiente interno de testes)
    *
    * NOTA: Em produção real normalmente você não armazenaria
    * senhas diretamente — usaria hashing (bcrypt, argon2, etc).
    */
+  const sql = getDb();
   await sql`
     CREATE TABLE IF NOT EXISTS Users (
       id SERIAL PRIMARY KEY,
       name TEXT,
       email TEXT UNIQUE NOT NULL,
-      address TEXT,
       password TEXT NOT NULL
     );
   `;

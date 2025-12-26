@@ -128,3 +128,12 @@ export async function runStep(title: string, fn: () => Promise<void>) {
     throw err; // Relança o erro para não silenciar
   }
 }
+
+/**
+ * Função utilitária para exibir logs formatados e organizados.
+ * Usa chalk para colorir o título e prettyPrint para formatação JSON.
+ */
+export function prettyLog(label: string, data: object) {
+  console.log(chalk.blue(`\n[${label}]`));
+  console.log(prettyPrint(data));
+}

@@ -1,5 +1,5 @@
 import type { Request } from "express";
-import type { JwtPayload } from "./jwt.schema.ts";
+import type { JwtPayload } from "./jwt.schema.js";
 
 /**
  * Request extendido que carrega o usuário decodificado do JWT.

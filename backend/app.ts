@@ -1,6 +1,5 @@
 import express from "express";
 import cors from "cors";
-
 import userRoutes from "./routes/user.routes.js";
 import accountRoutes from "./routes/account.routes.js";
 

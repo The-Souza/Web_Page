@@ -7,15 +7,12 @@
 // ---------------------------------------------------------
 // Este é o formato que o backend utiliza ao trabalhar com usuários
 // dentro dos services, controllers e testes.
-// - Alguns campos são opcionais porque podem não estar preenchidos
-//   no processo de registro (ex: name, address).
 // - "password" só existe quando manipulamos dados sensíveis,
 //   e nunca deve ser exposto externamente.
 export type User = {
   id: number;
-  name?: string | null;  // nome do usuário (opcional)
+  name: string;  // nome do usuário
   email: string;         // email é obrigatório
-  address?: string | null;
   password?: string;     // nunca retornado ao cliente
 };
 
@@ -31,7 +28,7 @@ export type User = {
 //   - resetPassword
 //
 // Assim, garantimos segurança e consistência.
-export type PublicUser = Omit<User, "address">;
+export type PublicUser = Omit<User, "password">;
 
 // ---------------------------------------------------------
 // Modelo que o Supabase realmente retorna
@@ -46,8 +43,7 @@ export type PublicUser = Omit<User, "address">;
 // - Esse modelo geralmente é convertido para `User` antes de ser usado.
 export type UserRecord = {
   id: number;
-  name: string | null;
+  name: string;
   email: string;
-  address: string | null;
   password?: string;
 };

@@ -5,13 +5,12 @@ export interface User {
   id?: number;              // ID do usuário no banco (opcional)
   name?: string;            // Nome do usuário (opcional)
   email: string;            // Email é obrigatório
-  address?: string | null;  // Endereço pode ser string ou null
   password?: string;        // Senha — normalmente nunca é retornada ao frontend
 }
 
 // Versão "segura" do usuário, enviada ao frontend.
-// Remove campos sensíveis: 'password' e 'address'.
-export type PublicUser = Omit<User, "password" | "address">;
+// Remove campos sensíveis: 'password'.
+export type PublicUser = Omit<User, "password">;
 
 // Resposta retornada em uma rota de login.
 // Inclui informações opcionais dependendo do resultado da autenticação.

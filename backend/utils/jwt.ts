@@ -1,8 +1,6 @@
+import "../utils/env.js";
 import jwt from "jsonwebtoken";
-import dotenv from "dotenv";
 import { JwtPayloadSchema, type JwtPayload } from "../models/jwt.schema.js";
-
-dotenv.config();
 
 const SECRET_KEY = process.env.JWT_SECRET!;
 const EXPIRES_IN = process.env.JWT_EXPIRES_IN!;

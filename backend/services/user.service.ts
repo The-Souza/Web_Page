@@ -1,8 +1,6 @@
 import type { User, UserRecord } from "../models/user.types.js";
 import { omitFields } from "../helpers/omitFields.js";
-import { createSupabaseClient } from "../utils/supabaseClient.js";
-
-const supabase = createSupabaseClient();
+import { getSupabase } from "../utils/getSupabase.js";
 
 /**
  * Converte um registro cru retornado pelo banco (UserRecord)
@@ -18,7 +16,6 @@ export function mapRecordToUserRaw(record: UserRecord): User | null {
     id: record.id,
     name: record.name,
     email: record.email,
-    address: record.address,
     password: record.password,
   };
 }
@@ -35,7 +32,7 @@ export function mapRecordToUserSafe(record: UserRecord | User | null) {
   if (!raw) return null;
 
   // Usa helper para remover campos sensíveis
-  return omitFields(raw, ["password", "address"]);
+  return omitFields(raw, ["password"]);
 }
 
 /**
@@ -46,6 +43,7 @@ export function mapRecordToUserSafe(record: UserRecord | User | null) {
  *  - false caso não exista
  */
 export const exists = async (email: string): Promise<boolean> => {
+  const supabase = getSupabase();
   const { data, error } = await supabase
     .from("users")
     .select("id")
@@ -60,14 +58,14 @@ export const exists = async (email: string): Promise<boolean> => {
  * Adiciona um novo usuário no banco.
  *
  * Observações:
- * - address e password são opcionais, então tratamos null.
+ * - password é opcional, então tratamos null.
  */
 export const add = async (user: User): Promise<void> => {
+  const supabase = getSupabase();
   const { error } = await supabase.from("users").insert([
     {
       name: user.name,
       email: user.email,
-      address: user.address ?? null,
       password: user.password ?? null,
     },
   ]);
@@ -86,6 +84,7 @@ export const authenticate = async (
   email: string,
   password: string
 ): Promise<User | null> => {
+  const supabase = getSupabase();
   const { data, error } = await supabase
     .from("users")
     .select("*")
@@ -111,6 +110,7 @@ export const updatePassword = async (
   email: string,
   password: string
 ): Promise<User | null> => {
+  const supabase = getSupabase();
   const { error } = await supabase
     .from("users")
     .update({ password })
@@ -135,6 +135,7 @@ export const updatePassword = async (
  * - Não lança erro se o usuário não existir.
  */
 export const getUserEmail = async (email: string): Promise<User | null> => {
+  const supabase = getSupabase();
   const { data, error } = await supabase
     .from("users")
     .select("*")

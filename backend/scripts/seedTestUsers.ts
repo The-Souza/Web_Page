@@ -1,8 +1,6 @@
-import { getDb } from "../utils/db.js";
+import { getDb } from "../utils/getDb.js";
 import chalk from "chalk";
 import { faker } from "@faker-js/faker";
-
-const sql = getDb();
 
 /**
  * generateTestUsers()
@@ -20,15 +18,16 @@ export async function generateTestUsers() {
   const users = Array.from({ length: 2 }, (_, i) => ({
     name: `User ${i + 1}`,
     email: `user${i + 1}@example.com`,
-    address: faker.location.streetAddress(),
     password: "123456", // Senha fixa apenas para ambiente de testes
   }));
+
+  const sql = getDb();
 
   // Insere cada usuário individualmente
   for (const user of users) {
     await sql`
-      INSERT INTO Users (name, email, address, password)
-      VALUES (${user.name}, ${user.email}, ${user.address}, ${user.password})
+      INSERT INTO Users (name, email, password)
+      VALUES (${user.name}, ${user.email}, ${user.password})
       ON CONFLICT (email) DO NOTHING;
     `;
   }
@@ -45,13 +44,13 @@ export async function generateTestUsers() {
 const generateConsumption = (type: string) => {
   switch (type) {
     case "Water":
-      return parseFloat((Math.random() * 30 + 10).toFixed(2));      // 10–40 m³
+      return parseFloat((Math.random() * 30 + 10).toFixed(2)); // 10–40 m³
     case "Energy":
-      return parseFloat((Math.random() * 500 + 100).toFixed(2));    // 100–600 kWh
+      return parseFloat((Math.random() * 500 + 100).toFixed(2)); // 100–600 kWh
     case "Gas":
-      return parseFloat((Math.random() * 50 + 10).toFixed(2));      // 10–60 m³
+      return parseFloat((Math.random() * 50 + 10).toFixed(2)); // 10–60 m³
     case "Internet":
-      return parseFloat((Math.random() * 500 + 50).toFixed(2));     // 50–550 GB
+      return parseFloat((Math.random() * 500 + 50).toFixed(2)); // 50–550 GB
     default:
       return parseFloat((Math.random() * 100).toFixed(2));
   }
@@ -97,9 +96,11 @@ export async function generateTestAccounts() {
 
   const accountsList = ["Water", "Energy", "Gas", "Internet"];
   const testUsers = ["user1@example.com", "user2@example.com"];
+  const sql = getDb();
 
   // Busca usuários para gerar contas
-  const users = await sql`SELECT id, address FROM Users WHERE email = ANY(${testUsers});`
+  const users =
+    await sql`SELECT id FROM Users WHERE email = ANY(${testUsers});`;
 
   const startYear = 2024;
   const endYear = 2025;
@@ -122,7 +123,7 @@ export async function generateTestAccounts() {
           // Acumula para inserção em lote
           inserts.push({
             userId: user.id,
-            address: user.address,
+            address: faker.location.streetAddress(),
             account: accountType,
             year,
             month,

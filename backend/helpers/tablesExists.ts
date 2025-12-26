@@ -1,4 +1,4 @@
-import { getDb } from "../utils/db";
+import { getDb } from "../utils/getDb.js";
 
 /**
  * Verifica se as tabelas essenciais ('users' e 'accounts') existem no schema público.

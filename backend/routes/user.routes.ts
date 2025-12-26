@@ -5,7 +5,7 @@ import {
   resetPassword,
   checkUserExists,
 } from "../controllers/user.controller.js";
-import { getDb } from "../utils/db.js";
+import { getDb } from "../utils/getDb.js";
 
 const router = Router();
 
@@ -44,7 +44,7 @@ router.get("/", async (req, res) => {
   try {
     const sql = getDb();
     const users = await sql`
-      SELECT id, name, email, address
+      SELECT id, name, email
       FROM users
     `;
 

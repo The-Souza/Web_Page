@@ -1,21 +1,7 @@
-import chalk from "chalk";
-import { prettyPrint } from "../utils/logger.js";
-import dotenv from "dotenv";
-
-// Carrega variáveis do arquivo .env para process.env
-dotenv.config();
+import { prettyLog } from "../utils/logger.js";
 
 // Porta onde o servidor Express está rodando
 const PORT = process.env.PORT;
-
-/**
- * Função utilitária para exibir logs formatados e organizados.
- * Usa chalk para colorir o título e prettyPrint para formatação JSON.
- */
-function prettyLog(label: string, data: object) {
-  console.log(chalk.blue(`\n[${label}]`));
-  console.log(prettyPrint(data));
-}
 
 /**
  * Testa rotas reais da API usando fetch.
@@ -43,13 +29,6 @@ export default async function testRoutes() {
   prettyLog("All Accounts", accounts);
 
   //
-  // 🔹 Buscar contas do usuário de ID 1
-  //
-  const userIdRes = await fetch(`http://localhost:${PORT}/api/accounts/user/1`);
-  const userAccounts = await userIdRes.json();
-  prettyLog("User accounts 1", userAccounts);
-
-  //
   // 🔹 Buscar contas pelo e-mail user1@example.com
   //
   const emailRes = await fetch(
@@ -63,25 +42,25 @@ export default async function testRoutes() {
   //    Exemplo: /api/accounts/user/1?paid=true
   //
   const userIdPaidRes = await fetch(
-    `http://localhost:${PORT}/api/accounts/user/1?paid=true`
+    `http://localhost:${PORT}/api/accounts/email/user1@example.com?paid=true`
   );
   const userAccountsPaid = await userIdPaidRes.json();
-  prettyLog("User accounts 1 (paid)", userAccountsPaid);
+  prettyLog("User accounts test (paid)", userAccountsPaid);
 
   //
   // 🔹 Buscar contas do usuário 1 filtrando APENAS as NÃO pagas
   //
   const userIdUnPaidRes = await fetch(
-    `http://localhost:${PORT}/api/accounts/user/1?paid=false`
+    `http://localhost:${PORT}/api/accounts/email/user1@example.com?paid=false`
   );
   const userAccountsUnPaid = await userIdUnPaidRes.json();
-  prettyLog("User accounts 1 (unpaid)", userAccountsUnPaid);
+  prettyLog("User accounts test (unpaid)", userAccountsUnPaid);
 
   //
   // 🔹 PATCH: Marcar a primeira conta do usuário 1 como paga
   //
-  if (userAccounts.length > 0) {
-    const first = userAccounts[0];
+  if (emailAccounts.length > 0) {
+    const first = emailAccounts[0];
 
     const patchRes = await fetch(
       `http://localhost:${PORT}/api/accounts/${first.id}/paid`,

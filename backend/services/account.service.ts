@@ -4,9 +4,7 @@ import type {
   SupabaseAccountRow,
   NewAccount,
 } from "../models/account.types.js";
-import { createSupabaseClient } from "../utils/supabaseClient.js";
-
-const supabase = createSupabaseClient();
+import { getSupabase } from "../utils/getSupabase.js";
 
 /**
  * Converte o formato original retornado pelo Supabase
@@ -61,6 +59,7 @@ function mapAccount(record: AccountRecord): Account {
  * - Ordena da mais recente para a mais antiga.
  */
 export async function getAllAccounts(): Promise<Account[]> {
+  const supabase = getSupabase();
   const { data, error } = await supabase
     .from("accounts")
     .select(
@@ -97,6 +96,7 @@ export async function getAccountsByUserId(
   userId: number,
   paid?: boolean
 ): Promise<Account[]> {
+  const supabase = getSupabase();
   let query = supabase
     .from("accounts")
     .select(
@@ -140,6 +140,7 @@ export async function getAccountsByUserEmail(
   email: string,
   paid?: boolean
 ): Promise<Account[]> {
+  const supabase = getSupabase();
   let query = supabase
     .from("accounts")
     .select(
@@ -179,6 +180,7 @@ export async function updateAccountPaid(
   id: number,
   paid: boolean
 ): Promise<void> {
+  const supabase = getSupabase();
   const { error } = await supabase
     .from("accounts")
     .update({ paid })
@@ -195,6 +197,7 @@ export async function updateAccountPaid(
  *   para extrair apenas o número do mês.
  */
 export async function addAccount(account: NewAccount): Promise<number> {
+  const supabase = getSupabase();
   const { data, error } = await supabase
     .from("accounts")
     .insert([
@@ -231,6 +234,7 @@ export async function addAccount(account: NewAccount): Promise<number> {
  * - Lança um erro caso a operação falhe, permitindo que o controller trate a resposta HTTP.
  */
 export async function deleteAccount(id: number): Promise<void> {
+  const supabase = getSupabase();
   const { error } = await supabase.from("accounts").delete().eq("id", id);
   if (error) throw error;
 }
@@ -274,6 +278,7 @@ export async function updateAccount(
   if (data.days !== undefined) updatePayload.days = data.days;
   if (data.value !== undefined) updatePayload.value = data.value;
 
+  const supabase = getSupabase(); 
   const { data: updated, error } = await supabase
     .from("accounts")
     .update(updatePayload)

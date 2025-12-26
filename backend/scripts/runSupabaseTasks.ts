@@ -1,3 +1,4 @@
+import "../utils/env.js";
 import chalk from "chalk";
 import { generateTestUsers, generateTestAccounts } from "./seedTestUsers.js";
 import dropTestData from "./dropTestData.js";

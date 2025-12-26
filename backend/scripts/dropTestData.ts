@@ -1,4 +1,4 @@
-import { getDb } from "../utils/db.js";
+import { getDb } from "../utils/getDb.js";
 import chalk from "chalk";
 
 /**

@@ -1,4 +1,4 @@
-import { Header, UserIcon, Button } from "@/components";
+import { Header, UserIcon, Button, ToggleTheme } from "@/components";
 import { useAuth } from "@/providers/hook/useAuth";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
@@ -58,20 +58,19 @@ export function MainLayout() {
    * - Redireciona para a rota
    */
   const handleNavigation = async (path: string) => {
-  const message = ROUTE_MESSAGES[path] || "Loading...";
-  setLoading(true, message); // passa a mensagem correta
+    const message = ROUTE_MESSAGES[path] || "Loading...";
+    setLoading(true, message); // passa a mensagem correta
 
-  try {
-    setMenuOpen(false);
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    navigate(path);
-  } finally {
-    setTimeout(() => {
-      setLoading(false);
-    }, 200);
-  }
-};
-
+    try {
+      setMenuOpen(false);
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      navigate(path);
+    } finally {
+      setTimeout(() => {
+        setLoading(false);
+      }, 200);
+    }
+  };
 
   // Obtenção da rota atual para atualizar título e efeitos
   const location = useLocation();
@@ -93,10 +92,7 @@ export function MainLayout() {
   const logoutVisible = useMediaQuery("(max-width: 639px)");
 
   return (
-    <div
-      className="main-layout w-full min-h-screen flex flex-col bg-forest
-      bg-cover bg-right sm:bg-center bg-no-repeat"
-    >
+    <div className="main-layout w-full min-h-screen flex flex-col bg-background bg-cover bg-right sm:bg-center bg-no-repeat">
       {/* Header */}
       <Header
         text={headerText} // título da página
@@ -110,7 +106,7 @@ export function MainLayout() {
         {/* Overlay para mobile quando menu está aberto */}
         {menuOpen && isMobile && (
           <div
-            className="fixed inset-0 bg-black/50 z-40"
+            className="fixed inset-0 bg-black z-40 opacity-50"
             onClick={() => setMenuOpen(false)}
           />
         )}
@@ -118,8 +114,8 @@ export function MainLayout() {
         {/* Menu lateral */}
         <div
           className={classNames(
-            "bg-dark text-greenLight flex flex-col items-start gap-4 p-4 border-r-2 border-t-2",
-            "border-greenLight transition-transform duration-300 z-50 w-64",
+            "bg-bgComponents text-primary flex flex-col items-start gap-4 p-4 border-r-2 border-t-2",
+            "border-primary transition-transform duration-300 z-50 w-64",
             {
               "fixed top-[80px] sm:top-[84px] left-0 h-full": true, // posição fixa
               "-translate-x-full": !menuOpen, // escondido
@@ -129,7 +125,7 @@ export function MainLayout() {
         >
           {/* Se mobile, mostra avatar e botão de logout no menu */}
           {logoutVisible && (
-            <div className="flex flex-col items-center gap-3">
+            <div className="flex flex-col items-start gap-3">
               <UserIcon userName={user?.name || ""} icon="classic" />
               <Button
                 variant="bottomless"
@@ -138,14 +134,21 @@ export function MainLayout() {
                 size="auto"
                 onClick={handleLogout}
               />
+              <ToggleTheme />
             </div>
           )}
 
           {/* Linha divisória no mobile */}
-          {logoutVisible && <div className="w-full h-[1.5px] bg-greenLight"></div>}
+          {logoutVisible && (
+            <div className="w-full h-[1.5px] bg-textColorHeader"></div>
+          )}
 
           {/* Botões de navegação */}
-          <div className="flex flex-col items-start gap-1">
+          <div
+            className={classNames("flex flex-col items-start gap-1", {
+              "text-xl": !logoutVisible,
+            })}
+          >
             <Button
               variant="bottomless"
               text="Home"
@@ -162,7 +165,7 @@ export function MainLayout() {
         {/* Conteúdo principal */}
         <main
           className={classNames(
-            "flex-1 transition-all duration-300 p-4 sm:p-8 bg-forest w-full",
+            "flex-1 transition-all duration-300 p-4 sm:p-8 bg-background w-full",
             {
               "ml-64": menuOpen && !isMobile, // desloca conteúdo se menu desktop aberto
             }

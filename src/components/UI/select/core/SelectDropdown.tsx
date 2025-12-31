@@ -1,6 +1,7 @@
 import { useRef, useEffect } from "react";
 import type { SelectOption, SelectDropdownProps } from "../Select.types";
 import classNames from "classnames";
+import { useTheme } from "@/providers/hook/useTheme";
 
 /**
  * SelectDropdown
@@ -23,9 +24,12 @@ export const SelectDropdown = ({
   handleSelect,
   maxHeight = "15rem",
   highlightedIndex,
-  theme = "dark",
+  theme: themeProp,
 }: SelectDropdownProps & { highlightedIndex: number }) => {
   const listRef = useRef<HTMLUListElement>(null);
+  const { theme: appTheme } = useTheme();
+
+  const resolvedTheme = themeProp ?? appTheme;
 
   // 🔹 Efeito para manter o item destacado visível dentro do scroll
   useEffect(() => {
@@ -40,30 +44,25 @@ export const SelectDropdown = ({
 
   // ✅ Classe do container do dropdown, com tema e bordas
   const containerClass = classNames(
-    "absolute z-10 w-full mt-1 border-2 rounded-lg overflow-hidden border-greenLight shadow-greenMid",
+    "absolute z-10 w-full mt-1 border-2 rounded-lg overflow-hidden border-primary shadow-theme",
     {
-      "bg-white": theme === "light",
-      "bg-dark": theme === "dark",
+      "bg-white": resolvedTheme === "light",
+      "bg-bgComponents": resolvedTheme === "dark",
     }
   );
 
   // ✅ Gera classes para cada opção dependendo se está selecionada ou destacada
   const optionClass = (isSelected: boolean, isHighlighted: boolean) =>
-    classNames("p-3 cursor-pointer font-lato font-semibold transition-colors", {
-      // Tema light
-      "bg-gray-400 text-black": isSelected && theme === "light",
-      "bg-gray-300 text-black":
-        !isSelected && isHighlighted && theme === "light",
-      "text-black hover:bg-gray-300":
-        !isSelected && !isHighlighted && theme === "light",
-
-      // Tema dark
-      "bg-greenMid text-white": isSelected && theme === "dark",
-      "bg-greenDark text-white":
-        !isSelected && isHighlighted && theme === "dark",
-      "text-white hover:bg-greenDark":
-        !isSelected && !isHighlighted && theme === "dark",
-    });
+    classNames(
+      "p-3 cursor-pointer font-lato font-semibold transition-colors",
+      {
+        "text-black": resolvedTheme === "light",
+        "text-textColor": resolvedTheme === "dark",
+        "bg-primary": isSelected,
+        "bg-buttonSolidHover": !isSelected && isHighlighted,
+        "hover:bg-buttonSolidHover": !isSelected && !isHighlighted,
+      }
+    );
 
   return (
     <div className={containerClass} style={{ maxHeight }}>
@@ -89,12 +88,7 @@ export const SelectDropdown = ({
           ))
         ) : (
           // ⚠️ Mensagem caso não haja opções
-          <li
-            className={classNames("p-3 font-lato font-semibold italic", {
-              "text-gray-400": theme === "light",
-              "text-greenLight": theme === "dark",
-            })}
-          >
+          <li className="p-3 font-lato font-semibold italic text-textColorHeader">
             No options found
           </li>
         )}

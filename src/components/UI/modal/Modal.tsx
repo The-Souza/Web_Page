@@ -13,18 +13,17 @@ export function Modal({
   // Aqui habilitamos o scroll vertical quando o conteúdo ultrapassa a altura máxima
   // e utilizamos uma classe customizada para esconder a scrollbar.
   const wrapperScroll = classNames(
-    "overflow-y-auto max-h-[70vh] sm:max-h-[70vh] scrollbar-hidden"
+    "overflow-y-auto max-h-[70vh] sm:max-h-[90vh] scrollbar-hidden"
   );
 
   // Classes do container principal do modal.
   // Inclui estilo base (cores, bordas, sombras, padding) e limites de tamanho.
   // Também ajusta largura/altura dependendo do variant ("default" ou "confirm").
   const classModal = classNames(
-    "relative bg-dark border-2 border-greenLight rounded-2xl shadow-xl z-50",
-    "max-h-[90vh] sm:max-h-[80vh]", // Limita o tamanho total do modal
+    "relative bg-bgComponents border-2 border-primary rounded-lg shadow-xl z-50 max-h-[90vh]", // Limita o tamanho total do modal
     {
       // Modal padrão: largura maior e altura automática
-      "w-[90%] md:w-[70%] xl:w-[50%] h-auto p-6 md:p-10": variant === "default",
+      "w-[90%] md:w-[70%] xl:w-[50%] h-auto p-6 md:p-8": variant === "default",
 
       // Modal de confirmação: tamanho ajustável sem limite de altura
       "w-auto h-auto max-h-none p-6": variant === "confirm",
@@ -43,7 +42,7 @@ export function Modal({
         >
           {/* Overlay escurecido atrás do modal */}
           <div
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            className="absolute inset-0 bg-background/60 backdrop-blur-sm"
             onClick={onClose} // fecha ao clicar fora do modal
           />
 
@@ -55,7 +54,9 @@ export function Modal({
             exit={{ scale: 0.9, opacity: 0 }} // animação de saída
           >
             {/* Área que contém o conteúdo do modal, com scroll quando necessário */}
-            <div className={wrapperScroll}>{children}</div>
+            <div className={wrapperScroll}>
+              <div className="m-1">{children}</div>
+            </div>
           </motion.div>
         </motion.div>
       )}

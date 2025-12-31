@@ -73,7 +73,7 @@ export const Toast = forwardRef<ToastContextType, object>((_, ref) => {
 
   // 🔹 Classes do wrapper principal
   const wrapperClass = classNames(
-    "w-full max-w-[calc(100%-2rem)] sm:max-w-[30.8125rem] h-auto py-3 px-4 mx-auto flex gap-3 rounded transition-opacity duration-300",
+    "w-full max-w-[calc(100%-2rem)] sm:max-w-[30.8125rem] h-auto py-3 px-4 mx-auto flex gap-3 rounded-lg transition-opacity duration-300",
     typeVariant.bgColor
   );
 

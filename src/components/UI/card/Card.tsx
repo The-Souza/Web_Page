@@ -31,10 +31,10 @@ export function Card({
 
   // Classes base do container
   const baseClasses =
-    "bg-dark flex flex-col gap-2 p-6 rounded-2xl border-2 border-greenLight";
+    "bg-textColorHover flex flex-col gap-2 p-6 rounded-lg border-2 border-primary";
   
   // Classes do valor
-  const textClass = classNames("font-lato font-bold text-lg text-white tracking-tight", {
+  const textClass = classNames("font-lato font-bold text-lg text-textColor tracking-tight", {
     "opacity-60": isEmpty, // valor vazio fica mais transparente
   });
 

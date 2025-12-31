@@ -38,7 +38,7 @@ export const AuthLinkButton = ({ text, to }: AuthLinkButtonProps): JSX.Element =
   };
 
   const linkClass = classNames(
-    "text-greenLight text-sm hover:underline focus:underline focus:outline-none"
+    "text-textColorHeader text-sm hover:underline focus:underline focus:outline-none"
   );
 
   return (

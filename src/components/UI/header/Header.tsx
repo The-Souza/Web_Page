@@ -1,6 +1,6 @@
 import type { HeaderProps } from "./Header.types";
 import classNames from "classnames";
-import { Title, Button, UserIcon } from "@/components/index";
+import { Title, Button, UserIcon, ToggleTheme } from "@/components/index";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 /**
@@ -33,8 +33,7 @@ export function Header({
 
   // Classes CSS dinâmicas do header
   const headerClass = classNames(
-    "fixed top-0 left-0 flex w-full h-auto justify-between items-center py-5 px-5 sm:px-10 z-50",
-    "bg-dark border-b-2 border-b-greenLight"
+    "fixed top-0 left-0 flex w-full bg-bgComponents h-auto justify-between items-center py-5 px-5 sm:px-10 z-50 border-b-2 border-b-primary",
   );
 
   return (
@@ -49,7 +48,7 @@ export function Header({
           {/* Bars */}
           <i
             className={classNames(
-              "fa-solid fa-bars text-greenLight fa-2xl absolute transition-all duration-200",
+              "fa-solid fa-bars text-textColorHeader fa-2xl absolute transition-all duration-200",
               {
                 "opacity-0 rotate-90 scale-75": menuOpen,
                 "opacity-100 rotate-0 scale-100": !menuOpen,
@@ -60,7 +59,7 @@ export function Header({
           {/* X */}
           <i
             className={classNames(
-              "fa-solid fa-xmark text-greenLight fa-2xl absolute transition-all duration-200",
+              "fa-solid fa-xmark text-textColorHeader fa-2xl absolute transition-all duration-200",
               {
                 "opacity-100 rotate-0 scale-100": menuOpen,
                 "opacity-0 -rotate-90 scale-75": !menuOpen,
@@ -76,6 +75,7 @@ export function Header({
       {/* Lado direito: avatar do usuário e botão de logout (apenas desktop) */}
       {!isMobile && (
         <div className="flex items-center gap-3">
+          <ToggleTheme />
           <UserIcon userName={userName} icon="classic" />
           <Button
             variant="border"

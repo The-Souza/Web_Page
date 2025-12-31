@@ -26,7 +26,7 @@ export const AuthLinksContainer = ({
   const count = Children.count(children);
 
   const containerClass = classNames(
-    "flex gap-2 w-full text-greenLight text-md",
+    "flex gap-2 w-full text-primary text-md",
     {
       "justify-center": count === 1,
       "justify-between": count > 1,

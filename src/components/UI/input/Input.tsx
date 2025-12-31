@@ -15,19 +15,19 @@ import type { InputProps } from "./Input.types";
 export const Input = forwardRef<HTMLInputElement, InputProps>(
   (
     {
-      label,          // Label do input
-      error,          // Mensagem de erro
-      type = "text",  // Tipo do input
-      placeholder,    // Placeholder do input
+      label, // Label do input
+      error, // Mensagem de erro
+      type = "text", // Tipo do input
+      placeholder, // Placeholder do input
       disabled = false, // Estado desabilitado
-      name,           // Nome do input
-      value,          // Valor controlado
-      defaultValue,   // Valor inicial não-controlado
-      onChange,       // Callback de mudança
-      onBlur,         // Callback de blur
-      autoComplete,   // Sugestão de preenchimento
+      name, // Nome do input
+      value, // Valor controlado
+      defaultValue, // Valor inicial não-controlado
+      onChange, // Callback de mudança
+      onBlur, // Callback de blur
+      autoComplete, // Sugestão de preenchimento
       theme = "light", // Tema (light ou dark)
-      ...props        // Props adicionais
+      ...props // Props adicionais
     },
     ref
   ) => {
@@ -36,30 +36,29 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
 
     // Classes dinâmicas do input
     const inputClass = classNames(
-      "w-full p-2 rounded-lg border-2 font-lato font-semibold",
+      "w-full py-2 px-4 rounded-lg border-2 font-lato font-semibold bg-gray-100 placeholder-gray-400",
       {
-        "border-greenLight hover:ring-1 hover:ring-greenLight focus:outline-none focus:ring-1 focus:ring-greenLight":
+        "border-primary hover:ring-1 hover:ring-primary focus:outline-none focus:ring-1 focus:ring-primary":
           !disabled && !error,
         "border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500":
           error && !disabled,
 
-        "bg-white text-black placeholder-gray-500": theme === "light",
-        "opacity-50 cursor-not-allowed border-greenLight":
-          disabled && theme === "light",
+        "opacity-50 cursor-not-allowed border-primary": disabled,
 
-        "bg-dark text-greenLight placeholder-greenDark": theme === "dark",
-        "opacity-50 cursor-not-allowed border-greenMid":
-          disabled && theme === "dark",
+        "text-white": theme === "dark",
+        "text-black": theme === "light",
       }
     );
 
     // Classes do label
-    const labelClass = classNames("font-semibold text-md font-lato", {
-      "text-greenLight": !disabled,
-      "opacity-50 cursor-not-allowed text-greenMid": disabled,
-    });
+    const labelClass = classNames(
+      "font-semibold text-md font-lato text-textColorHeader",
+      {
+        "opacity-50 cursor-not-allowed": disabled,
+      }
+    );
 
-    const errorClass = "text-sm font-lato text-red-500"; // Classe do erro
+    const errorClass = "text-sm font-lato text-red-500 mt-1"; // Classe do erro
     const inputId = props.id || name; // ID para associar label e input
 
     // AutoComplete padrão inteligente baseado no tipo de input
@@ -77,7 +76,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     const togglePassword = () => setShowPassword((prev) => !prev);
 
     return (
-      <div className="w-full flex flex-col gap-1 relative">
+      <div className="w-full max-h-[96px] flex flex-col gap-1 relative">
         {/* Label */}
         {label && (
           <label htmlFor={inputId} className={labelClass}>
@@ -90,12 +89,16 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             id={inputId}
             ref={ref}
             name={name}
-            type={type === "password" ? (showPassword ? "text" : "password") : type}
+            type={
+              type === "password" ? (showPassword ? "text" : "password") : type
+            }
             placeholder={placeholder}
             className={inputClass}
             disabled={disabled}
             // 🔹 Suporte a input controlado ou não-controlado
-            {...(isControlled ? { value, onChange } : { defaultValue, onChange })}
+            {...(isControlled
+              ? { value, onChange }
+              : { defaultValue, onChange })}
             onBlur={onBlur}
             autoComplete={defaultAutoComplete}
             aria-label={label || placeholder}

@@ -10,10 +10,12 @@ import {
 } from "recharts";
 import { Title } from "@/components";
 import type { CustomBarChartProps } from "./Chart.types";
-import { defaultChartColors, defaultChartFont } from "./Chart.config";
+import { defaultChartFont } from "./Chart.config";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { useMemo } from "react";
 import type { ReactNode } from "react";
+import { useThemeColors } from "./hook/useThemeColors";
+import { useTheme } from "@/providers/hook/useTheme";
 
 /**
  * CustomBarChart
@@ -31,10 +33,18 @@ export const CustomBarChart = ({
   data,
   title = "",
   height = 500,
-  colors = defaultChartColors,
   font = defaultChartFont,
 }: CustomBarChartProps) => {
   const isMobile = useMediaQuery("(max-width: 768px)");
+  const { theme } = useTheme();
+  const themeColors = useThemeColors();
+  const colors = {
+    paid: themeColors.barsPaid,
+    unpaid: themeColors.barsUnpaid,
+    grid: themeColors.shadow,
+    text: themeColors.text,
+    bg: themeColors.background,
+  };
 
   // Ordena e normaliza os dados para renderização
   const sortedData = useMemo(() => {
@@ -62,19 +72,16 @@ export const CustomBarChart = ({
   }
 
   return (
-    <div
-      className="bg-dark rounded-2xl border-2 border-greenLight p-6 flex flex-col gap-4"
-      style={{ backgroundColor: colors.background }}
-    >
+    <div className="bg-bgComponents rounded-lg border-2 border-primary p-6 flex flex-col gap-4">
       {title && <Title text={title} size="xl" />}
 
       {/* Caso não haja valores, mostra mensagem centralizada */}
       {!hasAnyValue ? (
-        <div className="flex justify-center items-center text-greenLight text-xl italic font-lato">
+        <div className="flex justify-center items-center text-textColorHeader text-xl italic font-lato">
           No data available
         </div>
       ) : (
-        <ResponsiveContainer width="100%" height={height}>
+        <ResponsiveContainer key={theme} width="100%" height={height}>
           <BarChart
             data={sortedData}
             layout={isMobile ? "vertical" : "horizontal"} // layout responsivo
@@ -87,25 +94,21 @@ export const CustomBarChart = ({
                 id="paidGradient"
                 x1="0"
                 y1="0"
-                x2={isMobile ? "1" : "0"}
-                y2={isMobile ? "0" : "1"}
+                x2="0"
+                y2="0"
               >
-                <stop offset="0%" stopColor={colors.paid} stopOpacity={0.8} />
-                <stop offset="100%" stopColor={colors.paid} stopOpacity={0.3} />
+                <stop offset="0%" stopColor={colors.paid} />
+                <stop offset="100%" stopColor={colors.paid} />
               </linearGradient>
               <linearGradient
                 id="unpaidGradient"
                 x1="0"
                 y1="0"
-                x2={isMobile ? "1" : "0"}
-                y2={isMobile ? "0" : "1"}
+                x2="0"
+                y2="0"
               >
-                <stop offset="0%" stopColor={colors.unpaid} stopOpacity={0.8} />
-                <stop
-                  offset="100%"
-                  stopColor={colors.unpaid}
-                  stopOpacity={0.3}
-                />
+                <stop offset="0%" stopColor={colors.unpaid} />
+                <stop offset="100%" stopColor={colors.unpaid} />
               </linearGradient>
             </defs>
 
@@ -120,7 +123,7 @@ export const CustomBarChart = ({
                   dataKey="month"
                   stroke={colors.paid}
                   tick={{
-                    fill: font.color,
+                    fill: colors.text,
                     fontFamily: font.family,
                     fontSize: isMobile ? font.sizeMobile : font.sizeDesktop,
                   }}
@@ -131,7 +134,7 @@ export const CustomBarChart = ({
                   type="number"
                   stroke={colors.paid}
                   tick={{
-                    fill: font.color,
+                    fill: colors.text,
                     fontFamily: font.family,
                     fontSize: isMobile ? font.sizeMobile : font.sizeDesktop,
                   }}
@@ -146,7 +149,7 @@ export const CustomBarChart = ({
                   dataKey="month"
                   stroke={colors.paid}
                   tick={{
-                    fill: font.color,
+                    fill: colors.text,
                     fontFamily: font.family,
                     fontSize: isMobile ? font.sizeMobile : font.sizeDesktop,
                   }}
@@ -156,7 +159,7 @@ export const CustomBarChart = ({
                 <YAxis
                   stroke={colors.paid}
                   tick={{
-                    fill: font.color,
+                    fill: colors.text,
                     fontFamily: font.family,
                     fontSize: isMobile ? font.sizeMobile : font.sizeDesktop,
                   }}
@@ -175,13 +178,13 @@ export const CustomBarChart = ({
                 return (
                   <div
                     style={{
-                      backgroundColor: "#1c1c1c",
+                      backgroundColor: colors.bg,
                       border: `2px solid ${colors.paid}`,
                       borderRadius: "16px",
                       padding: "16px",
                       fontFamily: font.family,
                       fontSize: isMobile ? font.sizeMobile : font.sizeDesktop,
-                      color: font.color,
+                      color: colors.text,
                     }}
                   >
                     <div>{label}</div>
@@ -215,7 +218,7 @@ export const CustomBarChart = ({
             {/* Legenda */}
             <Legend
               wrapperStyle={{
-                color: font.color,
+                color: colors.text,
                 fontFamily: font.family,
                 fontSize: isMobile ? font.sizeMobile : font.sizeDesktop,
               }}
@@ -228,15 +231,24 @@ export const CustomBarChart = ({
               name="Paid"
               stackId="a"
               fill="url(#paidGradient)"
-              radius={isMobile ? [0, 0, 0, 0] : [0, 0, 0, 0]}
+              radius={[0, 0, 0, 0]}
               label={
                 isMobile
                   ? false
                   : {
                       position: "top",
-                      fill: font.color,
+                      fill: colors.text,
                       fontSize: font.sizeDesktop,
                       fontFamily: font.family,
+                      formatter: (label: ReactNode) => {
+                        const n = Number(label as number);
+                        return !isNaN(n)
+                          ? n.toLocaleString("pt-BR", {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })
+                          : label;
+                      },
                     }
               }
               barSize={isMobile ? 20 : undefined}
@@ -248,10 +260,10 @@ export const CustomBarChart = ({
               name="Unpaid"
               stackId="a"
               fill="url(#unpaidGradient)"
-              radius={isMobile ? [0, 0, 0, 0] : [0, 0, 0, 0]}
+              radius={[0, 0, 0, 0]}
               label={{
                 position: isMobile ? "right" : "top",
-                fill: font.color,
+                fill: colors.text,
                 fontSize: isMobile ? font.sizeMobile : font.sizeDesktop,
                 fontFamily: font.family,
                 formatter: (label: ReactNode) => {

@@ -5,13 +5,11 @@
  * - paid: cor das barras de valores pagos.
  * - unpaid: cor das barras de valores não pagos.
  * - grid: cor das linhas do grid do gráfico.
- * - background: cor de fundo do contêiner do gráfico.
  */
 export interface ChartColorScheme {
   paid: string;
   unpaid: string;
   grid: string;
-  background: string;
 }
 
 /**

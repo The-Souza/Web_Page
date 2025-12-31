@@ -17,7 +17,7 @@ export const AuthForm = ({
 }: AuthFormProps): JSX.Element => {
   const isMobile = useMediaQuery("(max-width: 640px)"); // detecta se é tela pequena
   const formClass = classNames(
-    "bg-dark rounded-2xl flex flex-col p-8 sm:p-10 items-center justify-center gap-6 border-2 border-greenLight",
+    "bg-bgComponents rounded-lg flex flex-col p-8 sm:p-10 items-center justify-center gap-6 border-2 border-primary",
     {
       "w-full": isMobile,           // ocupa largura total em telas pequenas
       "w-[31.25rem]": !isMobile,    // largura fixa em telas maiores

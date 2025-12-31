@@ -23,7 +23,7 @@ input[type="number"] {
 }
 
 .my-scroll::-webkit-scrollbar-thumb {
-  background: #058c42;
+  background: #16db65;
   border-radius: 24px;
 }
 

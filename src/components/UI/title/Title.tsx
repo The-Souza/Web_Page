@@ -27,7 +27,7 @@ export class Title extends Component<TitleProps> {
 
     // Combina classes base com a classe de tamanho
     const titleClass = classNames(
-      "font-extrabold font-raleway text-greenLight", // estilo base
+      "font-extrabold font-raleway text-textColorHeader", // estilo base
       textSizeClass // tamanho específico
     );
 

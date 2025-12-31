@@ -74,7 +74,7 @@ export const Select = forwardRef<SelectHandle, SelectProps>(
     }));
 
     // 🔹 Estado local para controlar índice destacado no teclado
-    const [highlightedIndex, setHighlightedIndex] = useState<number>(0);
+    const [highlightedIndex, setHighlightedIndex] = useState<number>(-1);
 
     // 🔹 Efeito para fechar dropdown ao clicar fora
     useEffect(() => {
@@ -90,6 +90,10 @@ export const Select = forwardRef<SelectHandle, SelectProps>(
       return () =>
         document.removeEventListener("mousedown", handleClickOutside);
     }, [resetSelect]);
+
+    useEffect(() => {
+      setHighlightedIndex(-1);
+    }, [isOpen]);
 
     // 🔹 Função para selecionar uma opção
     const handleSelect = (option: SelectOption) => {
@@ -160,8 +164,8 @@ export const Select = forwardRef<SelectHandle, SelectProps>(
 
     // 🔹 Classe para o label, mudando cor se disabled
     const labelClass = classNames("block mb-1 text-md font-bold font-lato", {
-      "text-greenLight": !disabled,
-      "text-greenDark": disabled,
+      "text-textColorHeader": !disabled,
+      "opacity-50": disabled,
     });
 
     return (
@@ -181,6 +185,7 @@ export const Select = forwardRef<SelectHandle, SelectProps>(
           handleKeyDown={handleKeyDown}
           placeholder={placeholder}
           theme={theme}
+          error={error}
         />
 
         {/* Dropdown de opções */}
@@ -203,7 +208,7 @@ export const Select = forwardRef<SelectHandle, SelectProps>(
         {/* Mensagem de erro para campos obrigatórios */}
         {!isValid && required && !disabled && (
           <span className="text-red-500 text-sm font-lato mt-1 block">
-            {error || "This field is required"}
+            {error}
           </span>
         )}
       </div>

@@ -29,10 +29,10 @@ export class UserIcon extends Component<UserIconProps> {
     return (
       <div className="flex items-center gap-3">
         {/* Ícone selecionado */}
-        <span className="text-greenLight">{USER_ICON[icon]()}</span>
+        <span className="text-textColorHeader">{USER_ICON[icon]()}</span>
 
         {/* Nome do usuário */}
-        <span className="text-greenLight text-lg font-extrabold font-lato">
+        <span className="text-textColorHeader text-lg font-extrabold font-lato">
           {userName}
         </span>
       </div>

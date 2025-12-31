@@ -391,11 +391,9 @@ export default function RegisterAccount() {
   // 🖥️ RENDERIZAÇÃO
   // ------------------------------------------------------------
   return (
-    <div className="flex flex-col gap-4 text-greenLight">
+    <div className="flex flex-col gap-4 text-textColor">
       {/* HEADER + FILTROS ------------------------------------- */}
       <div className="flex flex-col gap-4 items-start w-full">
-        <Title text="Accounts" size="2xl" />
-
         <div className="w-full flex flex-col xl:flex-row gap-4 items-end justify-between">
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 w-full xl:w-auto">
             <Select
@@ -599,9 +597,9 @@ export default function RegisterAccount() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <Input
                 {...register("address")}
-                theme="light"
                 label="Address"
-                placeholder="Ex: Rua XYZ, nº 123"
+                type="text"
+                placeholder="Ex: Casa"
                 error={errors.address?.message}
               />
 
@@ -647,7 +645,6 @@ export default function RegisterAccount() {
               <Input
                 {...register("consumption")}
                 label="Consumption"
-                theme="light"
                 placeholder="123,450"
                 type="text"
                 inputMode="decimal"
@@ -657,8 +654,7 @@ export default function RegisterAccount() {
               <Input
                 {...register("days")}
                 label="Days"
-                theme="light"
-                placeholder="Ex: 1 to 31"
+                placeholder="Ex: 31"
                 type="number"
                 error={errors.days?.message}
               />
@@ -675,7 +671,7 @@ export default function RegisterAccount() {
               {/* Campo Paid — APENAS NO MODAL DE CRIAÇÃO */}
               {!editingAccount && (
                 <div className="flex flex-col items-start justify-center gap-1">
-                  <span className="font-lato font-semibold">
+                  <span className="font-lato font-semibold text-textColorHeader">
                     {paidValue ? "Paid" : "Unpaid"}
                   </span>
 
@@ -684,12 +680,12 @@ export default function RegisterAccount() {
                     onClick={() => setValue("paid", !paidValue)}
                     className={`
                     relative w-14 h-8 rounded-full transition-colors
-                    ${paidValue ? "bg-greenLight" : "bg-red-400"}
+                    ${paidValue ? "bg-primary" : "bg-buttonSolidRed"}
                   `}
                   >
                     <span
                       className={`
-                        absolute top-1 left-1 w-6 h-6 bg-white rounded-full transition-transform
+                        absolute top-1 left-1 w-6 h-6 bg-bgComponents rounded-full transition-transform
                         ${paidValue ? "translate-x-6" : "translate-x-0"}
                       `}
                     />
@@ -719,10 +715,10 @@ export default function RegisterAccount() {
         variant="confirm"
         onClose={() => setDeleteModalOpen(false)}
       >
-        <div className="flex flex-col items-center gap-2 text-greenLight">
+        <div className="flex flex-col items-center gap-2 text-primary">
           <Title text="Delete Account" size="2xl" />
 
-          <p className="font-lato text-md leading-10">
+          <p className="font-lato text-textColor text-md leading-10">
             Are you sure you want to delete this account?
           </p>
 

@@ -4,6 +4,7 @@ import { BrowserRouter } from "react-router-dom";
 import { App } from "./App";
 import { Providers } from "@/providers/providers";
 import "@/styles/index.css";
+import "@/styles/theme.css";
 
 // Obtém o elemento raiz da aplicação
 const rootElement = document.getElementById("root");

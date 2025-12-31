@@ -21,12 +21,12 @@ export function LoadingOverlay({ message }: LoadingOverlayProps) {
       className="fixed inset-0 z-50 flex items-center justify-center"
     >
       {/* Fundo semi-transparente com blur */}
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
+      <div className="absolute inset-0 bg-background/70 backdrop-blur-sm" />
 
       <div className="relative z-10 flex flex-col items-center gap-4">
         {/* Ícone animado de engrenagem */}
         <i
-          className="fa-solid fa-gear text-green-400"
+          className="fa-solid fa-gear text-textColorHeader"
           style={{
             fontSize: 64,
             animation: "spin 2000ms linear infinite",
@@ -40,7 +40,7 @@ export function LoadingOverlay({ message }: LoadingOverlayProps) {
           {[0, 1, 2].map((i) => (
             <span
               key={i}
-              className="block w-3 h-3 bg-green-400 rounded-full"
+              className="block w-3 h-3 bg-textColorHeader rounded-full"
               style={{
                 animation: `loadingDots 900ms ${i * 120}ms infinite ease-in-out`,
               }}
@@ -50,7 +50,7 @@ export function LoadingOverlay({ message }: LoadingOverlayProps) {
 
         {/* Mensagem opcional abaixo dos pontinhos */}
         {message && (
-          <div className="text-greenLight font-semibold">{message}</div>
+          <div className="text-textColorHeader font-semibold">{message}</div>
         )}
 
         {/* Animações CSS */}

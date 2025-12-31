@@ -1,0 +1,47 @@
+/* LIGHT THEME */
+:root {
+  --color-bgComponents: #f6fbf8;
+  --color-bgTableHeader: #4ade80;
+  --color-primary: #16db65;
+  --color-primary-muted: #8fe8b6;
+  --color-accent: #058c42;
+  --color-textColor: #020202;
+  --color-textColorHover: #ffffff;
+  --color-textColorHeader: #020202;
+  --color-textColorCard: #058c42;
+  --color-placeholder: #9ca3af ;
+  
+  --color-bg: #8fe8b6;
+
+  --shadow-color: rgba(13, 40, 24, 0.15);
+
+  --button-solidHover-bg: #16a34a;
+  --button-solidRed-bg: #ef4444;
+  --button-solidHoverRed-bg: #dc2626;
+  --button-border-bg: #020202;
+  --button-borderText-bg: #020202;
+}
+
+/* DARK THEME */
+.dark {
+  --color-bgComponents: #020202;
+  --color-bgTableHeader: #15803d;
+  --color-primary: #16db65;
+  --color-primary-muted: #058c42;
+  --color-accent: #04471c;
+  --color-textColor: #ffffff;
+  --color-textColorHover: #020202;
+  --color-textColorHeader: #16db65;
+  --color-textColorCard: #16db65;
+  --color-placeholder: #058c42;
+
+  --color-bg: #04471c;
+
+  --shadow-color: rgba(22, 219, 101, 0.5);
+
+  --button-solidHover-bg: #16a34a;
+  --button-solidRed-bg: #ef4444;
+  --button-solidHoverRed-bg: #dc2626;
+  --button-border-bg: #16db65;
+  --button-borderText-bg: #16db65;
+}

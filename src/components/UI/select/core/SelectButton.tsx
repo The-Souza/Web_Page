@@ -1,6 +1,7 @@
 import { useRef } from "react";
 import classNames from "classnames";
 import type { SelectButtonProps } from "../Select.types";
+import { useTheme } from "@/providers/hook/useTheme";
 
 /**
  * SelectButton
@@ -31,22 +32,27 @@ export const SelectButton = ({
   filter,
   setFilter,
   handleKeyDown,
-  theme = "dark",
+  theme: themeProp,
+  error,
 }: SelectButtonProps) => {
   const inputRef = useRef<HTMLInputElement>(null); // 🔹 Referência para foco do input
+  const { theme: appTheme } = useTheme();
+
+  const resolvedTheme = themeProp ?? appTheme;
 
   // ✅ Classes do botão principal, dependendo do estado e tema
   const buttonClass = classNames(
-    "w-full flex h-11 px-4 items-center justify-between border-2 rounded-lg font-lato font-semibold",
+    "w-full flex h-11 px-4 items-center justify-between border-2 rounded-lg font-lato font-semibold transition-colors",
     {
-      "border-greenLight hover:ring-1 hover:ring-greenLight": !disabled,
-      "ring-1 ring-greenLight": isOpen, // destaque quando aberto
+      "border-primary hover:ring-1 hover:ring-primary": !disabled,
+      "ring-1 ring-primary": isOpen, // destaque quando aberto
 
-      "bg-white": theme === "light",
-      "opacity-50 cursor-not-allowed border-greenLight": disabled && theme === "light",
+      "bg-gray-100": resolvedTheme === "light",
+      "bg-bgComponents": resolvedTheme === "dark",
+      "border-red-500 focus-within:ring-1 focus-within:ring-red-500":
+        error && !disabled,
 
-      "bg-dark": theme === "dark",
-      "opacity-50 border-greenMid cursor-not-allowed": disabled && theme === "dark",
+      "opacity-50 cursor-not-allowed border-primary": disabled,
     }
   );
 
@@ -54,12 +60,8 @@ export const SelectButton = ({
   const inputClass = classNames(
     "bg-transparent outline-none w-full font-lato font-semibold transition-colors",
     {
-      "text-gray-500": theme === "light" && !selectedValue, // placeholder light
-      "text-greenDark": theme === "dark" && !selectedValue, // placeholder dark
-
-      "text-black": theme === "light" && (isOpen || selectedValue), // digitando ou selecionado
-      "text-white": theme === "dark" && (isOpen || selectedValue), // digitando ou selecionado
-
+      "text-gray-400": !selectedValue && resolvedTheme === "light",
+      "text-placeholder": !selectedValue && resolvedTheme === "dark",
       "cursor-pointer": !disabled,
       "cursor-not-allowed opacity-50": disabled,
     }
@@ -67,8 +69,8 @@ export const SelectButton = ({
 
   // ✅ Classes do ícone de dropdown, rotaciona quando aberto
   const iconClass = classNames("fas fa-caret-down ml-2 transition-transform", {
-    "text-greenLight": theme === "dark",
-    "text-dark": theme === "light",
+    "text-black": resolvedTheme === "light",
+    "text-textColorHeader": resolvedTheme === "dark",
     "rotate-180": isOpen, // seta para cima quando aberto
     "opacity-50": disabled,
   });

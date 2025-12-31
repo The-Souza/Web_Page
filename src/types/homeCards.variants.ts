@@ -9,8 +9,8 @@
 export const COLORS = {
   paid: "#00ff9f",
   unpaid: "#ff4444",
-  positive: "text-green-400",
-  negative: "text-red-400",
+  positive: "text-textColorCard",
+  negative: "text-red-500",
 };
 
 /**

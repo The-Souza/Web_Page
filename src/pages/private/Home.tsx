@@ -57,7 +57,7 @@ export default function Home() {
       color = COLORS.positive; // Pagou menos → verde
       sign = "-";
     } else {
-      color = "text-white"; // Sem diferença
+      color = "text-textColor"; // Sem diferença
     }
 
     return (
@@ -74,7 +74,7 @@ export default function Home() {
   }, [loading, setLoading]);
 
   return (
-    <div className="flex flex-col gap-4 text-greenLight">
+    <div className="flex flex-col gap-4 text-textColor">
       {!loading && (
         <>
           {/* 🔹 Título e filtros */}

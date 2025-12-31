@@ -27,10 +27,10 @@ export function Table<T extends Record<string, unknown>>({
   });
 
   return (
-    <div className="w-full rounded-2xl border-2 border-greenLight bg-dark overflow-hidden">
+    <div className="w-full rounded-lg border-2 border-primary bg-bgComponents overflow-hidden">
       <div className="overflow-x-auto my-scroll">
-        <table className="min-w-[800px] w-full text-center bg-dark">
-          <thead className="uppercase text-sm font-raleway text-greenLight font-semibold bg-greenDark">
+        <table className="min-w-[800px] w-full text-center bg-bgComponents">
+          <thead className="uppercase text-sm font-raleway text-textColor font-semibold bg-bgTableHeader">
             <tr>
               {/* Cabeçalho da tabela */}
               {columns.map((col, index) => (
@@ -59,7 +59,7 @@ export function Table<T extends Record<string, unknown>>({
               <tr>
                 <td
                   colSpan={columns.length}
-                  className="text-center py-6 text-greenLight text-xl font-lato italic"
+                  className="text-center py-6 text-textColorHeader text-xl font-lato italic"
                 >
                   {emptyMessage}
                 </td>
@@ -72,7 +72,7 @@ export function Table<T extends Record<string, unknown>>({
                 return (
                   <tr
                     key={key}
-                    className="transition-colors border-t font-lato text-white border-greenLight/30 hover:bg-greenDark/30"
+                    className="transition-colors border-t font-lato text-textColor border-green-500/30 hover:bg-accent/30"
                   >
                     {/* Células da linha */}
                     {columns.map((col, colIndex) => {

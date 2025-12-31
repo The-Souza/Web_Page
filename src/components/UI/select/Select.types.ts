@@ -95,6 +95,7 @@ export interface SelectHandle {
  */
 export interface SelectButtonProps {
   isOpen: boolean;
+  error?: string;
   disabled: boolean;
   selectedLabel: string | null;
   selectedValue?: string | null;

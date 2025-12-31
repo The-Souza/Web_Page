@@ -8,11 +8,11 @@ import type { CardIconKey } from "./Card.types";
  * Usado no componente Card para renderizar ícones pré-definidos.
  */
 export const CARD_ICONS: Record<CardIconKey, () => ReactNode> = {
-  money: () => <i className="fa-solid fa-dollar-sign fa-lg text-current" />, // ícone de dinheiro
-  water: () => <i className="fa-solid fa-droplet fa-lg text-current" />,      // ícone de água
-  gas: () => <i className="fa-solid fa-fire-flame-simple fa-lg text-current" />, // ícone de gás
-  internet: () => <i className="fa-solid fa-wifi fa-lg text-current" />,      // ícone de internet
-  energy: () => <i className="fa-solid fa-bolt fa-lg text-current" />,       // ícone de energia
+  money: () => <i className="fa-solid fa-dollar-sign fa-lg text-textColorHeader" />, // ícone de dinheiro
+  water: () => <i className="fa-solid fa-droplet fa-lg text-textColorHeader" />,      // ícone de água
+  gas: () => <i className="fa-solid fa-fire-flame-simple fa-lg text-textColorHeader" />, // ícone de gás
+  internet: () => <i className="fa-solid fa-wifi fa-lg text-textColorHeader" />,      // ícone de internet
+  energy: () => <i className="fa-solid fa-bolt fa-lg text-textColorHeader" />,       // ícone de energia
 };
 
 /**

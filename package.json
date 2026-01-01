@@ -1,5 +1,5 @@
 {
-  "name": "web-page",
+  "name": "account-management",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -73,13 +73,13 @@
   "main": "eslint.config.js",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/The-Souza/Web_Page.git"
+    "url": "git+https://github.com/The-Souza/Account-Management.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/The-Souza/Web_Page/issues"
+    "url": "https://github.com/The-Souza/Account-Management/issues"
   },
-  "homepage": "https://github.com/The-Souza/Web_Page#readme"
+  "homepage": "https://github.com/The-Souza/Account-Management#readme"
 }

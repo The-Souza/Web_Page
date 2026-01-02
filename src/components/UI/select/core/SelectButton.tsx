@@ -60,6 +60,8 @@ export const SelectButton = ({
   const inputClass = classNames(
     "bg-transparent outline-none w-full font-lato font-semibold transition-colors",
     {
+      "text-black": selectedValue && resolvedTheme === "light",
+      "text-textColor": selectedValue && resolvedTheme === "dark",
       "text-gray-400": !selectedValue && resolvedTheme === "light",
       "text-placeholder": !selectedValue && resolvedTheme === "dark",
       "cursor-pointer": !disabled,

@@ -391,7 +391,7 @@ export default function RegisterAccount() {
   // 🖥️ RENDERIZAÇÃO
   // ------------------------------------------------------------
   return (
-    <div className="flex flex-col gap-4 text-textColor">
+    <div className="flex flex-col gap-4">
       {/* HEADER + FILTROS ------------------------------------- */}
       <div className="flex flex-col gap-4 items-start w-full">
         <div className="w-full flex flex-col xl:flex-row gap-4 items-end justify-between">

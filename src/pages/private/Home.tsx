@@ -74,7 +74,7 @@ export default function Home() {
   }, [loading, setLoading]);
 
   return (
-    <div className="flex flex-col gap-4 text-textColor">
+    <div className="flex flex-col gap-4">
       {!loading && (
         <>
           {/* 🔹 Título e filtros */}
